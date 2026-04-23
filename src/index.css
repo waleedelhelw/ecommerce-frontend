@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  html {
+    direction: rtl;
+    font-family: 'Cairo', sans-serif;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 min-h-screen;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 text-white px-6 py-2.5 rounded-lg
+           hover:bg-blue-700 transition-colors duration-200
+           font-medium text-sm disabled:opacity-50
+           disabled:cursor-not-allowed cursor-pointer;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 px-6 py-2.5 rounded-lg
+           hover:bg-gray-300 transition-colors duration-200
+           font-medium text-sm cursor-pointer;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white px-6 py-2.5 rounded-lg
+           hover:bg-red-700 transition-colors duration-200
+           font-medium text-sm cursor-pointer;
+  }
+
+  .btn-success {
+    @apply bg-green-600 text-white px-6 py-2.5 rounded-lg
+           hover:bg-green-700 transition-colors duration-200
+           font-medium text-sm cursor-pointer;
+  }
+
+  .btn-outline {
+    @apply border-2 border-blue-600 text-blue-600 px-6 py-2.5
+           rounded-lg hover:bg-blue-600 hover:text-white
+           transition-colors duration-200 font-medium text-sm cursor-pointer;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg
+           focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           outline-none transition-all duration-200
+           placeholder:text-gray-400;
+  }
+
+  .input-error {
+    @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100
+           hover:shadow-md transition-shadow duration-200;
+  }
+}
