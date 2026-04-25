@@ -7,6 +7,30 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import adminCategoryService from '../../api/admin/adminCategoryService';
 import toast from 'react-hot-toast';
 
+// ✅ Helper function لاستخراج الـ Array من أي شكل response
+const extractArray = (data) => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.data)) return data.data;
+  if (Array.isArray(data.items)) return data.items;
+  if (Array.isArray(data.categories)) return data.categories;
+  if (Array.isArray(data.$values)) return data.$values;
+
+  // لو الـ data object وفيه key واحد بس وهو array
+  const keys = Object.keys(data);
+  for (const key of keys) {
+    if (Array.isArray(data[key])) return data[key];
+  }
+
+  return [];
+};
+
+// ✅ Helper function لاستخراج عدد الصفحات
+const extractTotalPages = (data) => {
+  if (!data || typeof data !== 'object') return 1;
+  return data.totalPages || data.pageCount || data.total_pages || 1;
+};
+
 const AdminCategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,24 +39,24 @@ const AdminCategoriesPage = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // ✅ useCallback عشان نتجنب مشكلة stale closure
   const fetchCategories = useCallback(async (signal) => {
     try {
       setLoading(true);
       const data = await adminCategoryService.getCategories({
         pageNumber: currentPage,
         pageSize: 10,
-        signal, // ✅ لدعم الـ abort
       });
 
-      // ✅ استخدام nullish coalescing بدل || عشان القيم الفارغة
-      const items = data?.items ?? data?.categories ?? data ?? [];
-      const pages = data?.totalPages ?? 1;
+      // ✅ استخراج الـ array بطريقة آمنة
+      const items = extractArray(data);
+      const pages = extractTotalPages(data);
+
+      console.log('📋 Extracted categories:', items);
+      console.log('📄 Total pages:', pages);
 
       setCategories(items);
       setTotalPages(pages);
     } catch (error) {
-      // ✅ تجاهل الـ abort errors
       if (error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
         return;
       }
@@ -43,17 +67,12 @@ const AdminCategoriesPage = () => {
     }
   }, [currentPage]);
 
-  // ✅ useEffect مع cleanup
   useEffect(() => {
     const controller = new AbortController();
-
     fetchCategories(controller.signal);
-
-    // ✅ Cleanup: لو المستخدم غيّر الصفحة أو الـ component اتشال
     return () => controller.abort();
   }, [fetchCategories]);
 
-  // ✅ handleDelete مع error handling أفضل
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
 
@@ -63,22 +82,19 @@ const AdminCategoriesPage = () => {
       toast.success('تم حذف التصنيف بنجاح');
       setDeleteTarget(null);
 
-      // ✅ لو كان آخر عنصر في الصفحة، ارجع صفحة لورا
       if (categories.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
       } else {
         fetchCategories();
       }
     } catch (error) {
-      const message =
-        error?.response?.data?.message || 'فشل حذف التصنيف';
+      const message = error?.response?.data?.message || 'فشل حذف التصنيف';
       toast.error(message);
     } finally {
       setDeleteLoading(false);
     }
   }, [deleteTarget, categories.length, currentPage, fetchCategories]);
 
-  // ✅ الأعمدة مفصولة عن الـ render عشان الأداء
   const columns = [
     {
       header: '#',
@@ -128,7 +144,6 @@ const AdminCategoriesPage = () => {
 
   return (
     <div>
-      {/* ✅ Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">🏷️ إدارة التصنيفات</h1>
         <Link
@@ -140,7 +155,6 @@ const AdminCategoriesPage = () => {
         </Link>
       </div>
 
-      {/* ✅ Table */}
       <DataTable
         columns={columns}
         data={categories}
@@ -148,7 +162,6 @@ const AdminCategoriesPage = () => {
         emptyMessage="لا توجد تصنيفات"
       />
 
-      {/* ✅ Pagination - بيظهر بس لو فيه أكتر من صفحة */}
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
@@ -157,7 +170,6 @@ const AdminCategoriesPage = () => {
         />
       )}
 
-      {/* ✅ Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={!!deleteTarget}
         onClose={() => !deleteLoading && setDeleteTarget(null)}

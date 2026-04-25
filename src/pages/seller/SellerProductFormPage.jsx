@@ -1,20 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiSave, FiArrowRight, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiSave, FiArrowRight, FiPlus, FiTrash2, FiUpload, FiImage, FiLoader } from 'react-icons/fi';
 import { createProduct, updateProduct, getMyProductById } from '../../api/seller/sellerProductService';
 import { getCategories } from '../../api/categoryService';
+import { uploadImage } from '../../utils/cloudinary';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import toast from 'react-hot-toast';
 
 const SellerProductFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
+  const mainImageRef = useRef(null);
+  const additionalImagesRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEdit);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
+
+  // ✅ حالة رفع الصور
+  const [uploadingMain, setUploadingMain] = useState(false);
+  const [uploadingAdditional, setUploadingAdditional] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -24,18 +32,19 @@ const SellerProductFormPage = () => {
     categoryId: '',
     imageUrl: '',
     images: [],
+    isActive: true, // ✅ مهم للـ update
   });
 
-  // تحميل الفئات
   useEffect(() => {
     fetchCategories();
     if (isEdit) fetchProduct();
   }, [id]);
 
+  // ✅ getCategories بترجع array مباشرة
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
-      setCategories(data?.items || data || []);
+      setCategories(data);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
@@ -48,11 +57,12 @@ const SellerProductFormPage = () => {
       setForm({
         name: data.name || '',
         description: data.description || '',
-        price: data.price || '',
-        stockQuantity: data.stockQuantity || '',
+        price: String(data.price || '').replace(/,/g, ''),
+        stockQuantity: String(data.stockQuantity || '').replace(/,/g, ''),
         categoryId: data.categoryId || '',
         imageUrl: data.imageUrl || '',
         images: data.images || [],
+        isActive: data.isActive !== undefined ? data.isActive : true, // ✅ الحالة من الـ API
       });
     } catch (err) {
       setError('حدث خطأ في تحميل بيانات المنتج');
@@ -66,18 +76,93 @@ const SellerProductFormPage = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // إضافة صورة جديدة
-  const addImage = () => {
-    setForm((prev) => ({
-      ...prev,
-      images: [
-        ...prev.images,
-        { imageUrl: '', altText: '', displayOrder: prev.images.length + 1, isMain: false },
-      ],
-    }));
+  // ═══════════════════════════════════════
+  // ✅ رفع الصورة الرئيسية من الجهاز
+  // ═══════════════════════════════════════
+  const handleMainImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('يرجى اختيار ملف صورة فقط');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      return;
+    }
+
+    try {
+      setUploadingMain(true);
+      const url = await uploadImage(file);
+      setForm((prev) => ({ ...prev, imageUrl: url }));
+      toast.success('تم رفع الصورة الرئيسية بنجاح');
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error('فشل رفع الصورة');
+    } finally {
+      setUploadingMain(false);
+      if (mainImageRef.current) mainImageRef.current.value = '';
+    }
   };
 
-  // تعديل صورة
+  // ✅ حذف الصورة الرئيسية
+  const removeMainImage = () => {
+    setForm((prev) => ({ ...prev, imageUrl: '' }));
+  };
+
+  // ═══════════════════════════════════════
+  // ✅ رفع صور إضافية من الجهاز
+  // ═══════════════════════════════════════
+  const handleAdditionalImagesUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const invalidFiles = files.filter((f) => !f.type.startsWith('image/'));
+    if (invalidFiles.length > 0) {
+      toast.error('يرجى اختيار ملفات صور فقط');
+      return;
+    }
+
+    const oversizedFiles = files.filter((f) => f.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      toast.error('حجم كل صورة يجب أن يكون أقل من 5 ميجابايت');
+      return;
+    }
+
+    try {
+      setUploadingAdditional(true);
+      const currentLength = form.images.length;
+
+      const uploadPromises = files.map(async (file, index) => {
+        const url = await uploadImage(file);
+        return {
+          imageUrl: url,
+          altText: file.name.replace(/\.[^/.]+$/, ''),
+          displayOrder: currentLength + index + 1,
+          isMain: false,
+        };
+      });
+
+      const newImages = await Promise.all(uploadPromises);
+
+      setForm((prev) => ({
+        ...prev,
+        images: [...prev.images, ...newImages],
+      }));
+
+      toast.success(`تم رفع ${newImages.length} صورة بنجاح`);
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error('فشل رفع بعض الصور');
+    } finally {
+      setUploadingAdditional(false);
+      if (additionalImagesRef.current) additionalImagesRef.current.value = '';
+    }
+  };
+
+  // ✅ تعديل بيانات صورة إضافية
   const updateImage = (index, field, value) => {
     setForm((prev) => {
       const newImages = [...prev.images];
@@ -86,7 +171,7 @@ const SellerProductFormPage = () => {
     });
   };
 
-  // حذف صورة
+  // ✅ حذف صورة إضافية
   const removeImage = (index) => {
     setForm((prev) => ({
       ...prev,
@@ -94,11 +179,13 @@ const SellerProductFormPage = () => {
     }));
   };
 
+  // ═══════════════════════════════════════
+  // ✅ إرسال الفورم
+  // ═══════════════════════════════════════
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!form.name || !form.price || !form.categoryId) {
       setError('يرجى ملء جميع الحقول المطلوبة');
       return;
@@ -106,22 +193,59 @@ const SellerProductFormPage = () => {
 
     try {
       setLoading(true);
+
+      const cleanPrice = String(form.price).replace(/[,\s]/g, '');
+      const cleanStock = String(form.stockQuantity).replace(/[,\s]/g, '');
+
       const payload = {
-        ...form,
-        price: parseFloat(form.price),
-        stockQuantity: parseInt(form.stockQuantity) || 0,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        price: parseFloat(cleanPrice),
+        stockQuantity: parseInt(cleanStock) || 0,
         categoryId: parseInt(form.categoryId),
+        imageUrl: form.imageUrl || null,
+        isActive: form.isActive, // ✅ مهم جداً للـ update
+        images: form.images
+          .filter((img) => img.imageUrl && img.imageUrl.trim())
+          .map((img, index) => ({
+            imageUrl: img.imageUrl.trim(),
+            altText: img.altText?.trim() || '',
+            displayOrder: img.displayOrder || index + 1,
+            isMain: img.isMain || false,
+          })),
       };
+
+      console.log('📤 Payload:', JSON.stringify(payload, null, 2));
 
       if (isEdit) {
         await updateProduct(id, payload);
+        toast.success('تم تحديث المنتج بنجاح');
       } else {
         await createProduct(payload);
+        toast.success('تم إضافة المنتج بنجاح');
       }
 
       navigate('/seller/products');
     } catch (err) {
-      setError(err.response?.data?.message || 'حدث خطأ في حفظ المنتج');
+      const errorData = err.response?.data;
+      let errorMessage = 'حدث خطأ في حفظ المنتج';
+
+      if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (errorData?.errors) {
+        const errors = errorData.errors;
+        const errorMessages = [];
+        for (const key in errors) {
+          if (Array.isArray(errors[key])) {
+            errorMessages.push(...errors[key]);
+          } else {
+            errorMessages.push(errors[key]);
+          }
+        }
+        errorMessage = errorMessages.join(' | ');
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -146,7 +270,9 @@ const SellerProductFormPage = () => {
       {error && <ErrorMessage message={error} />}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ═══════════════════════════════════════ */}
         {/* البيانات الأساسية */}
+        {/* ═══════════════════════════════════════ */}
         <div className="bg-white rounded-xl border p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">البيانات الأساسية</h2>
 
@@ -192,7 +318,7 @@ const SellerProductFormPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الكمية بالمخزن</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الكمية بالمخزن *</label>
               <input
                 type="number"
                 name="stockQuantity"
@@ -201,6 +327,7 @@ const SellerProductFormPage = () => {
                 className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 placeholder="0"
                 min="0"
+                required
               />
             </div>
 
@@ -219,92 +346,232 @@ const SellerProductFormPage = () => {
                 ))}
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رابط الصورة الرئيسية</label>
-              <input
-                type="url"
-                name="imageUrl"
-                value={form.imageUrl}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
           </div>
         </div>
 
-        {/* الصور المتعددة */}
+        {/* ═══════════════════════════════════════ */}
+        {/* ✅ الصورة الرئيسية - رفع من الجهاز */}
+        {/* ═══════════════════════════════════════ */}
+        <div className="bg-white rounded-xl border p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">الصورة الرئيسية</h2>
+
+          {form.imageUrl ? (
+            <div className="relative inline-block">
+              <img
+                src={form.imageUrl}
+                alt="الصورة الرئيسية"
+                className="w-48 h-48 object-cover rounded-xl border-2 border-green-200"
+              />
+              <button
+                type="button"
+                onClick={removeMainImage}
+                className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-lg"
+                title="حذف الصورة"
+              >
+                <FiTrash2 size={14} />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => !uploadingMain && mainImageRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
+                ${uploadingMain
+                  ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
+                  : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
+                }`}
+            >
+              {uploadingMain ? (
+                <div className="flex flex-col items-center gap-2">
+                  <FiLoader size={32} className="text-green-500 animate-spin" />
+                  <p className="text-sm text-gray-500">جاري رفع الصورة...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <FiUpload size={32} className="text-gray-400" />
+                  <p className="text-sm font-medium text-gray-600">اضغط لرفع الصورة الرئيسية</p>
+                  <p className="text-xs text-gray-400">PNG, JPG, WEBP - حد أقصى 5MB</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <input
+            ref={mainImageRef}
+            type="file"
+            accept="image/*"
+            onChange={handleMainImageUpload}
+            className="hidden"
+          />
+        </div>
+
+        {/* ═══════════════════════════════════════ */}
+        {/* ✅ الصور الإضافية - رفع من الجهاز */}
+        {/* ═══════════════════════════════════════ */}
         <div className="bg-white rounded-xl border p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-800">صور إضافية</h2>
             <button
               type="button"
-              onClick={addImage}
-              className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 font-medium"
+              onClick={() => !uploadingAdditional && additionalImagesRef.current?.click()}
+              disabled={uploadingAdditional}
+              className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 font-medium disabled:opacity-50"
             >
-              <FiPlus size={16} />
-              إضافة صورة
+              {uploadingAdditional ? (
+                <>
+                  <FiLoader size={16} className="animate-spin" />
+                  جاري الرفع...
+                </>
+              ) : (
+                <>
+                  <FiPlus size={16} />
+                  إضافة صور
+                </>
+              )}
             </button>
           </div>
 
+          <input
+            ref={additionalImagesRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleAdditionalImagesUpload}
+            className="hidden"
+          />
+
           {form.images.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-4">
-              لا توجد صور إضافية. اضغط "إضافة صورة" لإضافة المزيد.
-            </p>
+            <div
+              onClick={() => !uploadingAdditional && additionalImagesRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
+                ${uploadingAdditional
+                  ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
+                  : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
+                }`}
+            >
+              {uploadingAdditional ? (
+                <div className="flex flex-col items-center gap-2">
+                  <FiLoader size={32} className="text-green-500 animate-spin" />
+                  <p className="text-sm text-gray-500">جاري رفع الصور...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <FiImage size={32} className="text-gray-400" />
+                  <p className="text-sm font-medium text-gray-600">اضغط لرفع صور إضافية</p>
+                  <p className="text-xs text-gray-400">يمكنك اختيار عدة صور - PNG, JPG, WEBP</p>
+                </div>
+              )}
+            </div>
           ) : (
-            <div className="space-y-3">
-              {form.images.map((img, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input
-                      type="url"
-                      value={img.imageUrl}
-                      onChange={(e) => updateImage(index, 'imageUrl', e.target.value)}
-                      className="px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="رابط الصورة"
+            <div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
+                {form.images.map((img, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={img.imageUrl}
+                      alt={img.altText || `صورة ${index + 1}`}
+                      className={`w-full h-32 object-cover rounded-lg border-2 transition-colors
+                        ${img.isMain ? 'border-green-500' : 'border-gray-200 group-hover:border-green-300'}`}
                     />
-                    <input
-                      type="text"
-                      value={img.altText}
-                      onChange={(e) => updateImage(index, 'altText', e.target.value)}
-                      className="px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="وصف الصورة"
-                    />
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="number"
-                        value={img.displayOrder}
-                        onChange={(e) => updateImage(index, 'displayOrder', parseInt(e.target.value))}
-                        className="w-20 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="ترتيب"
-                        min="0"
-                      />
-                      <label className="flex items-center gap-1 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={img.isMain}
-                          onChange={(e) => updateImage(index, 'isMain', e.target.checked)}
-                          className="rounded"
-                        />
+
+                    {img.isMain && (
+                      <span className="absolute top-1 right-1 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                         رئيسية
-                      </label>
+                      </span>
+                    )}
+
+                    <div className="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow"
+                        title="حذف"
+                      >
+                        <FiTrash2 size={12} />
+                      </button>
+                    </div>
+
+                    <div className="mt-2 space-y-1">
+                      <input
+                        type="text"
+                        value={img.altText || ''}
+                        onChange={(e) => updateImage(index, 'altText', e.target.value)}
+                        className="w-full px-2 py-1 border rounded text-xs outline-none focus:ring-1 focus:ring-green-500"
+                        placeholder="وصف الصورة"
+                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={img.displayOrder || 0}
+                          onChange={(e) => updateImage(index, 'displayOrder', parseInt(e.target.value) || 0)}
+                          className="w-16 px-2 py-1 border rounded text-xs outline-none focus:ring-1 focus:ring-green-500"
+                          placeholder="ترتيب"
+                          min="0"
+                        />
+                        <label className="flex items-center gap-1 text-xs text-gray-600">
+                          <input
+                            type="checkbox"
+                            checked={img.isMain || false}
+                            onChange={(e) => updateImage(index, 'isMain', e.target.checked)}
+                            className="rounded text-green-500"
+                          />
+                          رئيسية
+                        </label>
+                      </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                  >
-                    <FiTrash2 size={16} />
-                  </button>
+                ))}
+
+                {/* ✅ زر إضافة المزيد */}
+                <div
+                  onClick={() => !uploadingAdditional && additionalImagesRef.current?.click()}
+                  className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition-colors"
+                >
+                  {uploadingAdditional ? (
+                    <FiLoader size={24} className="text-green-500 animate-spin" />
+                  ) : (
+                    <>
+                      <FiPlus size={24} className="text-gray-400" />
+                      <span className="text-xs text-gray-400 mt-1">إضافة</span>
+                    </>
+                  )}
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </div>
 
+        {/* ═══════════════════════════════════════ */}
+        {/* ✅ حالة المنتج - في حالة التعديل بس */}
+        {/* ═══════════════════════════════════════ */}
+        {isEdit && (
+          <div className="bg-white rounded-xl border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">حالة المنتج</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {form.isActive ? 'المنتج نشط ومعروض للعملاء' : 'المنتج غير نشط ومخفي عن العملاء'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, isActive: !prev.isActive }))}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  form.isActive ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    form.isActive ? 'left-6' : 'left-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════ */}
         {/* زر الحفظ */}
+        {/* ═══════════════════════════════════════ */}
         <div className="flex justify-end gap-3">
           <button
             type="button"
@@ -315,7 +582,7 @@ const SellerProductFormPage = () => {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || uploadingMain || uploadingAdditional}
             className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
           >
             <FiSave size={18} />

@@ -3,12 +3,30 @@ import { Link } from 'react-router-dom';
 import { FiEye, FiCheck, FiX, FiSlash } from 'react-icons/fi';
 import DataTable from '../../components/admin/DataTable';
 import Pagination from '../../components/common/Pagination';
-import Badge from '../../components/common/Badge';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { getAllSellers, approveSeller, rejectSeller, suspendSeller } from '../../api/admin/adminSellerService';
 import { sellerStatusMap, getStatusInfo } from '../../utils/orderStatusMap';
 import { formatDate } from '../../utils/formatDate';
 import toast from 'react-hot-toast';
+
+// ✅ الـ Backend بيستخدم userId في الـ approve/reject/suspend
+const getSellerActionId = (seller) => {
+  return seller.userId || seller.id;
+};
+
+const extractArray = (data) => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.items)) return data.items;
+  if (Array.isArray(data.data)) return data.data;
+  if (Array.isArray(data.sellers)) return data.sellers;
+  if (Array.isArray(data.$values)) return data.$values;
+  const keys = Object.keys(data);
+  for (const key of keys) {
+    if (Array.isArray(data[key])) return data[key];
+  }
+  return [];
+};
 
 const AdminSellersPage = () => {
   const [sellers, setSellers] = useState([]);
@@ -28,7 +46,9 @@ const AdminSellersPage = () => {
         pageSize: 10,
         status: statusFilter || undefined,
       });
-      setSellers(data?.items || data || []);
+
+      const items = extractArray(data);
+      setSellers(items);
       setTotalPages(data?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching sellers:', error);
@@ -42,7 +62,9 @@ const AdminSellersPage = () => {
     fetchSellers();
   }, [currentPage, statusFilter]);
 
-  const handleApprove = async (id) => {
+  // ✅ كل الـ actions بتستخدم userId
+  const handleApprove = async (seller) => {
+    const id = getSellerActionId(seller);
     try {
       setActionLoading(true);
       await approveSeller(id);
@@ -56,11 +78,12 @@ const AdminSellersPage = () => {
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReject = async (seller) => {
     if (!rejectReason.trim()) {
       toast.error('يرجى إدخال سبب الرفض');
       return;
     }
+    const id = getSellerActionId(seller);
     try {
       setActionLoading(true);
       await rejectSeller(id, rejectReason);
@@ -75,7 +98,8 @@ const AdminSellersPage = () => {
     }
   };
 
-  const handleSuspend = async (id) => {
+  const handleSuspend = async (seller) => {
+    const id = getSellerActionId(seller);
     try {
       setActionLoading(true);
       await suspendSeller(id);
@@ -144,8 +168,9 @@ const AdminSellersPage = () => {
       header: 'إجراءات',
       render: (row) => (
         <div className="flex items-center gap-1">
+          {/* ✅ صفحة التفاصيل تستخدم userId كمان */}
           <Link
-            to={`/admin/sellers/${row.id}`}
+            to={`/admin/sellers/${getSellerActionId(row)}`}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
             title="عرض"
           >
@@ -211,25 +236,27 @@ const AdminSellersPage = () => {
 
       <DataTable columns={columns} data={sellers} loading={loading} emptyMessage="لا يوجد بائعين" />
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
 
-      {/* Approve Dialog */}
+      {/* ✅ Approve Dialog */}
       {actionDialog?.type === 'approve' && (
         <ConfirmDialog
           isOpen={true}
           onClose={() => setActionDialog(null)}
-          onConfirm={() => handleApprove(actionDialog.seller.id)}
+          onConfirm={() => handleApprove(actionDialog.seller)}
           title="قبول البائع"
           message={`هل أنت متأكد من قبول "${actionDialog.seller.storeName}" كبائع على المنصة؟`}
           confirmText={actionLoading ? 'جاري القبول...' : 'نعم، قبول'}
         />
       )}
 
-      {/* Reject Dialog */}
+      {/* ✅ Reject Dialog */}
       {actionDialog?.type === 'reject' && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
@@ -246,7 +273,7 @@ const AdminSellersPage = () => {
             />
             <div className="flex gap-3">
               <button
-                onClick={() => handleReject(actionDialog.seller.id)}
+                onClick={() => handleReject(actionDialog.seller)}
                 disabled={actionLoading}
                 className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium"
               >
@@ -263,12 +290,12 @@ const AdminSellersPage = () => {
         </div>
       )}
 
-      {/* Suspend Dialog */}
+      {/* ✅ Suspend Dialog */}
       {actionDialog?.type === 'suspend' && (
         <ConfirmDialog
           isOpen={true}
           onClose={() => setActionDialog(null)}
-          onConfirm={() => handleSuspend(actionDialog.seller.id)}
+          onConfirm={() => handleSuspend(actionDialog.seller)}
           title="إيقاف البائع"
           message={`هل أنت متأكد من إيقاف "${actionDialog.seller.storeName}"؟ لن يتمكن من البيع حتى يتم إعادة تفعيله.`}
           confirmText={actionLoading ? 'جاري الإيقاف...' : 'نعم، إيقاف'}

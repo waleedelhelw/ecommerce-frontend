@@ -4,22 +4,22 @@ const BASE = '/customer/orders';
 
 export const createOrder = async (data) => {
   const response = await API.post(BASE, data);
-  return response.data;
+  return response.data.data;
 };
 
 export const getMyOrders = async (params) => {
   const response = await API.get(BASE, { params });
-  return response.data;
+  return response.data.data;
 };
 
 export const getOrderById = async (id) => {
   const response = await API.get(`${BASE}/${id}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const cancelOrder = async (id) => {
   const response = await API.put(`${BASE}/${id}/cancel`);
-  return response.data;
+  return response.data.data;
 };
 
 // ✅ Default export للتوافق مع الملفات القديمة

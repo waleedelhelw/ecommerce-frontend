@@ -24,6 +24,7 @@ const SellerOrdersPage = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getMyOrders({
         pageNumber: currentPage,
         pageSize: 10,

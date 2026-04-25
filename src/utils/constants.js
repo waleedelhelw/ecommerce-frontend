@@ -52,11 +52,23 @@ export const SORT_OPTIONS = [
   { value: 'name', label: 'الاسم' },
 ];
 
-// ============ Payment Methods ============
+// ============ Payment Methods (للـ Checkout Form) ============
 export const PAYMENT_METHODS = [
   { value: 'CashOnDelivery', label: '💵 الدفع عند الاستلام' },
   { value: 'CreditCard', label: '💳 بطاقة ائتمان' },
+  { value: 'DebitCard', label: '💳 بطاقة خصم' },
+  { value: 'BankTransfer', label: '🏦 تحويل بنكي' },
+  { value: 'Wallet', label: '👛 محفظة إلكترونية' },
 ];
+
+// ✅ جديد - لعرض اسم طريقة الدفع في صفحة التفاصيل
+export const PAYMENT_LABELS = {
+  CashOnDelivery: '💵 الدفع عند الاستلام',
+  CreditCard: '💳 بطاقة ائتمان',
+  DebitCard: '💳 بطاقة خصم',
+  BankTransfer: '🏦 تحويل بنكي',
+  Wallet: '👛 محفظة إلكترونية',
+};
 
 // ============ Routes ============
 export const ROUTES = {

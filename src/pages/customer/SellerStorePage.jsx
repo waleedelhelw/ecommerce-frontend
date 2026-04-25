@@ -10,7 +10,8 @@ import Pagination from '../../components/common/Pagination';
 import { formatDate } from '../../utils/formatDate';
 
 const SellerStorePage = () => {
-  const { id } = useParams();
+  // ✅ بنستخدم sellerId بدل id
+  const { sellerId } = useParams();
   const [seller, setSeller] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +22,7 @@ const SellerStorePage = () => {
 
   useEffect(() => {
     fetchSeller();
-  }, [id]);
+  }, [sellerId]);
 
   useEffect(() => {
     if (seller) {
@@ -32,7 +33,9 @@ const SellerStorePage = () => {
   const fetchSeller = async () => {
     try {
       setLoading(true);
-      const data = await getSellerById(id);
+      setError(null);
+      // ✅ بنبعت sellerId للـ API
+      const data = await getSellerById(sellerId);
       setSeller(data);
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل بيانات المتجر');
@@ -44,7 +47,8 @@ const SellerStorePage = () => {
   const fetchProducts = async () => {
     try {
       setProductsLoading(true);
-      const data = await getSellerProducts(id, {
+      // ✅ بنبعت sellerId للـ API
+      const data = await getSellerProducts(sellerId, {
         pageNumber: currentPage,
         pageSize: 12,
       });
@@ -86,7 +90,10 @@ const SellerStorePage = () => {
                   src={seller.logoUrl}
                   alt={seller.storeName}
                   className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<span class="text-3xl">🏪</span>'; }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<span class="text-3xl">🏪</span>';
+                  }}
                 />
               ) : (
                 <span className="text-3xl">🏪</span>

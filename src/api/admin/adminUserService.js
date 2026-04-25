@@ -5,7 +5,7 @@ const BASE = '/superadmin/users';
 // ============ كل المستخدمين ============
 export const getAllUsers = async (params) => {
   const response = await API.get(BASE, { params });
-  return response.data;
+  return response.data.data;
 };
 
 // ============ مستخدم بالمعرّف ============
@@ -14,7 +14,7 @@ export const getUserById = async (id) => {
   return response.data.data;
 };
 
-// ============ تفعيل / حظر مستخدم 🆕 ============
+// ============ تفعيل / حظر مستخدم ============
 export const toggleUserStatus = async (id) => {
   const response = await API.put(`${BASE}/${id}/toggle-status`);
   return response.data.data;

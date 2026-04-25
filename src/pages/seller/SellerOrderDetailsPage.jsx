@@ -7,7 +7,8 @@ import ErrorMessage from '../../components/common/ErrorMessage';
 import { formatPrice } from '../../utils/formatPrice';
 import { formatDate } from '../../utils/formatDate';
 import { orderStatusMap, getStatusInfo } from '../../utils/orderStatusMap';
-import { ORDER_STATUS } from '../../utils/constants';
+import { ORDER_STATUS, PAYMENT_LABELS } from '../../utils/constants';
+import toast from 'react-hot-toast';
 
 const SellerOrderDetailsPage = () => {
   const { id } = useParams();
@@ -25,6 +26,7 @@ const SellerOrderDetailsPage = () => {
   const fetchOrder = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getOrderById(id);
       setOrder(data);
       setNewStatus(data.status);
@@ -40,12 +42,19 @@ const SellerOrderDetailsPage = () => {
     try {
       setUpdating(true);
       await updateOrderStatus(id, newStatus);
+      toast.success('تم تحديث حالة الطلب بنجاح');
       fetchOrder();
     } catch (err) {
-      setError(err.response?.data?.message || 'حدث خطأ في تحديث الحالة');
+      toast.error(err.response?.data?.message || 'حدث خطأ في تحديث الحالة');
     } finally {
       setUpdating(false);
     }
+  };
+
+  // Helper لعرض طريقة الدفع
+  const getPaymentMethodLabel = (method) => {
+    if (!method) return 'غير محدد';
+    return PAYMENT_LABELS?.[method] || method;
   };
 
   if (loading) return <LoadingSpinner />;
@@ -80,6 +89,7 @@ const SellerOrderDetailsPage = () => {
                     src={item.productImageUrl || '/placeholder-product.png'}
                     alt={item.productName}
                     className="w-14 h-14 rounded-lg object-cover"
+                    onError={(e) => { e.target.src = '/placeholder-product.png'; }}
                   />
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">{item.productName}</p>
@@ -98,7 +108,11 @@ const SellerOrderDetailsPage = () => {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">عنوان الشحن</h2>
             <div className="text-gray-600 space-y-1">
               <p>{order.shippingAddress}</p>
-              <p>{order.shippingCity}, {order.shippingCountry}</p>
+              <p>
+                {order.shippingCity}
+                {order.shippingCity && order.shippingCountry && '، '}
+                {order.shippingCountry}
+              </p>
               {order.orderNotes && (
                 <p className="mt-3 text-sm bg-yellow-50 p-3 rounded-lg">
                   📝 ملاحظات: {order.orderNotes}
@@ -127,6 +141,15 @@ const SellerOrderDetailsPage = () => {
                 <span className="font-medium text-gray-700">نصيبك</span>
                 <span className="font-bold text-green-600">{formatPrice(order.sellerAmount)}</span>
               </div>
+              {order.paymentMethod && (
+                <>
+                  <hr />
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">طريقة الدفع</span>
+                    <span className="font-medium">{getPaymentMethodLabel(order.paymentMethod)}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

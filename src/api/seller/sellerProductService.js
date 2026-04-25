@@ -16,13 +16,36 @@ export const getMyProductById = async (id) => {
 
 // ============ إنشاء منتج (مع صور متعددة) ============
 export const createProduct = async (data) => {
-  const response = await API.post(BASE, data);
+  // ✅ تنظيف الـ payload قبل الإرسال
+  const cleanData = {
+    ...data,
+    price: typeof data.price === 'string'
+      ? parseFloat(data.price.replace(/[,\s]/g, ''))
+      : data.price,
+    stockQuantity: typeof data.stockQuantity === 'string'
+      ? parseInt(data.stockQuantity.replace(/[,\s]/g, '')) || 0
+      : data.stockQuantity || 0,
+  };
+
+  console.log('📤 Create product payload:', JSON.stringify(cleanData, null, 2));
+
+  const response = await API.post(BASE, cleanData);
   return response.data.data;
 };
 
 // ============ تحديث منتج ============
 export const updateProduct = async (id, data) => {
-  const response = await API.put(`${BASE}/${id}`, data);
+  const cleanData = {
+    ...data,
+    price: typeof data.price === 'string'
+      ? parseFloat(data.price.replace(/[,\s]/g, ''))
+      : data.price,
+    stockQuantity: typeof data.stockQuantity === 'string'
+      ? parseInt(data.stockQuantity.replace(/[,\s]/g, '')) || 0
+      : data.stockQuantity || 0,
+  };
+
+  const response = await API.put(`${BASE}/${id}`, cleanData);
   return response.data.data;
 };
 

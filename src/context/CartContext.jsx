@@ -1,6 +1,8 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
 import cartService from '../api/cartService';
+import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
+import { ROLES } from '../utils/constants';
 
 export const CartContext = createContext();
 
@@ -9,10 +11,18 @@ export const CartProvider = ({ children }) => {
   const [cartCount, setCartCount] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { isAuthenticated, user } = useAuth();
+
+  // ✅ الحل: استخدام ROLES.CUSTOMER بدل 'customer'
+  const isCustomer = isAuthenticated && user?.role === ROLES.CUSTOMER;
 
   const fetchCart = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!isCustomer) {
+      setCartItems([]);
+      setCartCount(0);
+      setCartTotal(0);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -25,13 +35,17 @@ export const CartProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isCustomer]);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
   const addToCart = async (productId, quantity = 1) => {
+    if (!isCustomer) {
+      toast.error('يجب تسجيل الدخول كعميل أولاً');
+      return;
+    }
     try {
       await cartService.addToCart(productId, quantity);
       await fetchCart();
@@ -41,7 +55,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ cartItemId
   const updateQuantity = async (cartItemId, quantity) => {
     try {
       await cartService.updateQuantity(cartItemId, quantity);
@@ -51,7 +64,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ cartItemId مش productId
   const removeFromCart = async (cartItemId) => {
     try {
       await cartService.removeFromCart(cartItemId);

@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiPackage } from 'react-icons/fi';
 import { getMyProducts, deleteProduct } from '../../api/seller/sellerProductService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import Pagination from '../../components/common/Pagination';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { formatPrice } from '../../utils/formatPrice';
+import toast from 'react-hot-toast';
+
+// ✅ Helper: استخراج الـ array
+const extractArray = (data) => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
 
 const SellerProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -25,12 +35,15 @@ const SellerProductsPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getMyProducts({
         pageNumber: currentPage,
         pageSize: 10,
         searchTerm: searchTerm || undefined,
       });
-      setProducts(data?.items || data || []);
+
+      const items = extractArray(data);
+      setProducts(items);
       setTotalPages(data?.totalPages || 1);
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل المنتجات');
@@ -39,15 +52,24 @@ const SellerProductsPage = () => {
     }
   };
 
+  // ✅ حذف المنتج
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
       setDeleteLoading(true);
       await deleteProduct(deleteId);
+      toast.success('تم حذف المنتج بنجاح');
       setDeleteId(null);
-      fetchProducts();
+
+      // ✅ لو آخر منتج في الصفحة
+      if (products.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      } else {
+        fetchProducts();
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'حدث خطأ في حذف المنتج');
+      console.error('Delete error:', err.response?.data);
+      toast.error(err.response?.data?.message || 'حدث خطأ في حذف المنتج');
     } finally {
       setDeleteLoading(false);
     }
@@ -169,7 +191,6 @@ const SellerProductsPage = () => {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="p-4 border-t">
               <Pagination
@@ -182,16 +203,16 @@ const SellerProductsPage = () => {
         </div>
       )}
 
-      {/* Confirm Delete */}
-      {deleteId && (
-        <ConfirmDialog
-          title="حذف المنتج"
-          message="هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء."
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteId(null)}
-          loading={deleteLoading}
-        />
-      )}
+      {/* ✅ Confirm Delete - متوافق مع الـ ConfirmDialog component */}
+      <ConfirmDialog
+        isOpen={!!deleteId}
+        onClose={() => !deleteLoading && setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="حذف المنتج"
+        message="هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText={deleteLoading ? 'جاري الحذف...' : 'حذف'}
+        danger
+      />
     </div>
   );
 };

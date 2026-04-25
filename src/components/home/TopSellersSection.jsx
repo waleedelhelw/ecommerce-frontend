@@ -47,7 +47,9 @@ const TopSellersSection = () => {
           {sellers.map((seller) => (
             <Link
               key={seller.id}
-              to={`/sellers/${seller.id}`}
+              // ✅ بنستخدم seller.id
+              to={`/sellers/${seller.userId}`}
+
               className="bg-white rounded-xl border p-5 hover:shadow-lg transition-shadow text-center group"
             >
               {/* اللوجو */}

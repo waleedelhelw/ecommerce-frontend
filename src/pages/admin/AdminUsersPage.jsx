@@ -24,8 +24,10 @@ const AdminUsersPage = () => {
       if (searchTerm) params.searchTerm = searchTerm;
 
       const data = await adminUserService.getUsers(params);
-      setUsers(data.items || data.users || data || []);
-      setTotalPages(data.totalPages || 1);
+      // ✅ الـ Service دلوقتي بيرجع response.data.data
+      // اللي هو { items: [...], totalPages, ... }
+      setUsers(data?.items || data || []);
+      setTotalPages(data?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('فشل في تحميل المستخدمين');
@@ -48,6 +50,31 @@ const AdminUsersPage = () => {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    try {
+      await adminUserService.deleteUser(userId);
+      toast.success('تم حذف المستخدم');
+      fetchUsers();
+    } catch (error) {
+      toast.error('فشل حذف المستخدم');
+    }
+  };
+
+  // ✅ Helper لعرض الدور بالعربي
+  const getRoleBadge = (role) => {
+    switch (role) {
+      case 'SuperAdmin':
+        return <Badge variant="primary">سوبر أدمن</Badge>;
+      case 'Seller':
+        return <Badge variant="warning">بائع</Badge>;
+      case 'Customer':
+        return <Badge variant="default">عميل</Badge>;
+      default:
+        return <Badge variant="default">{role}</Badge>;
+    }
+  };
+
   const columns = [
     {
       header: '#',
@@ -55,10 +82,14 @@ const AdminUsersPage = () => {
     },
     {
       header: 'الاسم',
+      // ✅ الـ API بيرجع name مش firstName + lastName
       render: (row) => (
-        <span className="font-medium">
-          {row.firstName} {row.lastName}
-        </span>
+        <div>
+          <span className="font-medium">{row.name}</span>
+          {row.phone && (
+            <p className="text-xs text-gray-400">{row.phone}</p>
+          )}
+        </div>
       ),
     },
     {
@@ -67,16 +98,13 @@ const AdminUsersPage = () => {
     },
     {
       header: 'الدور',
-      render: (row) => (
-        <Badge variant={row.role === 'Admin' ? 'primary' : 'default'}>
-          {row.role === 'Admin' ? 'مدير' : 'عميل'}
-        </Badge>
-      ),
+      // ✅ بيعرض كل الأدوار صح
+      render: (row) => getRoleBadge(row.role),
     },
     {
       header: 'الحالة',
       render: (row) =>
-        row.isActive !== false ? (
+        row.isActive ? (
           <Badge variant="success">نشط</Badge>
         ) : (
           <Badge variant="danger">محظور</Badge>
@@ -86,24 +114,33 @@ const AdminUsersPage = () => {
       header: 'تاريخ التسجيل',
       render: (row) => (
         <span className="text-sm text-gray-500">
-          {formatDate(row.createdAt || row.registrationDate)}
+          {formatDate(row.createdAt)}
         </span>
       ),
     },
     {
       header: 'إجراءات',
+      // ✅ السوبر أدمن مش بيتحظر أو يتحذف
       render: (row) =>
-        row.role !== 'Admin' ? (
-          <button
-            onClick={() => handleToggleStatus(row.id)}
-            className={`text-sm font-medium px-3 py-1 rounded-lg ${
-              row.isActive !== false
-                ? 'text-red-600 hover:bg-red-50'
-                : 'text-green-600 hover:bg-green-50'
-            }`}
-          >
-            {row.isActive !== false ? 'حظر' : 'تفعيل'}
-          </button>
+        row.role !== 'SuperAdmin' ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleToggleStatus(row.id)}
+              className={`text-sm font-medium px-3 py-1 rounded-lg ${
+                row.isActive
+                  ? 'text-red-600 hover:bg-red-50'
+                  : 'text-green-600 hover:bg-green-50'
+              }`}
+            >
+              {row.isActive ? 'حظر' : 'تفعيل'}
+            </button>
+            <button
+              onClick={() => handleDeleteUser(row.id)}
+              className="text-sm font-medium px-3 py-1 rounded-lg text-red-600 hover:bg-red-50"
+            >
+              حذف
+            </button>
+          </div>
         ) : (
           <span className="text-sm text-gray-400">—</span>
         ),
@@ -126,11 +163,13 @@ const AdminUsersPage = () => {
 
       <DataTable columns={columns} data={users} loading={loading} emptyMessage="لا يوجد مستخدمين" />
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 };

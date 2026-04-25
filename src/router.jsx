@@ -130,8 +130,9 @@ const router = createBrowserRouter([
         path: '/sellers',
         element: <SellersPage />,
       },
+      // ✅ التعديل المهم: sellerId بدل id
       {
-        path: '/sellers/:id',
+        path: '/sellers/:sellerId',
         element: <SellerStorePage />,
       },
 
@@ -210,7 +211,7 @@ const router = createBrowserRouter([
   },
 
   // ══════════════════════════════════════════
-  // لوحة تحكم البائع (Seller) 🆕
+  // لوحة تحكم البائع (Seller)
   // ══════════════════════════════════════════
   {
     path: '/seller',
@@ -311,6 +312,10 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <DashboardPage />,
+      },
+      {
+        path: 'dashboard',
         element: <DashboardPage />,
       },
       {

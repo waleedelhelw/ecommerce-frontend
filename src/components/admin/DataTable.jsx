@@ -10,7 +10,10 @@ const DataTable = ({ columns, data, loading, emptyMessage = 'لا توجد بي�
     );
   }
 
-  if (!data || data.length === 0) {
+  // ✅ حماية إضافية: تأكد إن data هي array
+  const safeData = Array.isArray(data) ? data : [];
+
+  if (safeData.length === 0) {
     return (
       <div className="bg-white rounded-xl border">
         <EmptyState icon="📭" title={emptyMessage} message="لم يتم العثور على نتائج" />
@@ -35,7 +38,7 @@ const DataTable = ({ columns, data, loading, emptyMessage = 'لا توجد بي�
             </tr>
           </thead>
           <tbody>
-            {data.map((row, rowIndex) => (
+            {safeData.map((row, rowIndex) => (
               <tr
                 key={row.id || rowIndex}
                 className="border-b border-gray-100 hover:bg-gray-50 transition-colors"

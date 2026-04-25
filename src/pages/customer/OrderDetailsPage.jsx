@@ -10,6 +10,7 @@ import orderService from '../../api/orderService';
 import { formatDate } from '../../utils/formatDate';
 import { formatPrice } from '../../utils/formatPrice';
 import { orderStatusMap } from '../../utils/orderStatusMap';
+import { PAYMENT_LABELS } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 const OrderDetailsPage = () => {
@@ -50,6 +51,12 @@ const OrderDetailsPage = () => {
     } finally {
       setCancelLoading(false);
     }
+  };
+
+  // ✅ جديد - Helper function لعرض طريقة الدفع
+  const getPaymentMethodLabel = (method) => {
+    if (!method) return 'غير محدد';
+    return PAYMENT_LABELS[method] || method;
   };
 
   if (loading) return <LoadingScreen />;
@@ -93,12 +100,15 @@ const OrderDetailsPage = () => {
               <span className="text-gray-500">تاريخ الطلب:</span>
               <span className="font-medium">{formatDate(order.createdAt || order.orderDate)}</span>
             </div>
+            {/* ✅ عرض طريقة الدفع بشكل صحيح */}
             <div className="flex justify-between">
               <span className="text-gray-500">طريقة الدفع:</span>
-              <span className="font-medium">{order.paymentMethod || 'غير محدد'}</span>
+              <span className="font-medium">
+                {getPaymentMethodLabel(order.paymentMethod)}
+              </span>
             </div>
 
-            {/* 🆕 معلومات البائع */}
+            {/* معلومات البائع */}
             {(order.storeName || order.sellerName) && (
               <div className="flex justify-between">
                 <span className="text-gray-500">المتجر:</span>
@@ -112,9 +122,24 @@ const OrderDetailsPage = () => {
             )}
 
             <hr />
+
+            {/* ✅ تفاصيل المبالغ */}
+            <div className="flex justify-between">
+              <span className="text-gray-500">المجموع:</span>
+              <span className="font-medium">{formatPrice(order.totalPrice || order.totalAmount)}</span>
+            </div>
+
+            {order.commissionAmount > 0 && (
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>عمولة المنصة:</span>
+                <span>{formatPrice(order.commissionAmount)}</span>
+              </div>
+            )}
+
+            <hr />
             <div className="flex justify-between text-lg font-bold">
               <span>الإجمالي:</span>
-              <span className="text-blue-600">{formatPrice(order.totalAmount || order.totalPrice)}</span>
+              <span className="text-blue-600">{formatPrice(order.totalPrice || order.totalAmount)}</span>
             </div>
           </div>
         </div>
@@ -124,22 +149,23 @@ const OrderDetailsPage = () => {
           <div className="space-y-2 text-sm">
             <p>{order.shippingAddress || 'غير محدد'}</p>
             <p>
-              {order.shippingCity || order.city}
-              {(order.shippingCity || order.city) && '، '}
-              {order.shippingCountry || order.country || ''}
+              {order.shippingCity}
+              {order.shippingCity && order.shippingCountry && '، '}
+              {order.shippingCountry || ''}
             </p>
           </div>
-          {(order.orderNotes || order.notes) && (
+          {order.orderNotes && (
             <div className="mt-4 pt-4 border-t">
               <h3 className="font-medium text-sm text-gray-500 mb-1">📝 ملاحظات:</h3>
-              <p className="text-sm">{order.orderNotes || order.notes}</p>
+              <p className="text-sm">{order.orderNotes}</p>
             </div>
           )}
         </div>
       </div>
 
+      {/* ✅ استخدام order.items بدل order.orderItems */}
       <div className="mb-6">
-        <OrderItems items={order.orderItems || order.items || []} />
+        <OrderItems items={order.items || order.orderItems || []} />
       </div>
 
       <div className="flex gap-3">

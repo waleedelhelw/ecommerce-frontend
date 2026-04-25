@@ -74,7 +74,9 @@ const SellersPage = () => {
           {filteredSellers.map((seller) => (
             <Link
               key={seller.id}
-              to={`/sellers/${seller.id}`}
+              // ✅ بنستخدم seller.id لأن الـ API بيقبل SellerProfile.Id
+              to={`/sellers/${seller.userId}`}
+
               className="bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-shadow group"
             >
               {/* البانر */}
