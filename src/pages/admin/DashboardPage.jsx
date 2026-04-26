@@ -6,12 +6,14 @@ import RecentOrdersTable from '../../components/admin/RecentOrdersTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { getDashboardStats, getSalesReport, getTopSelling, getTopRated } from '../../api/admin/adminDashboardService';
+import { getAllOrders } from '../../api/admin/adminOrderService';
 
 const DashboardPage = () => {
   const [dashboard, setDashboard] = useState(null);
   const [salesReport, setSalesReport] = useState([]);
   const [topSelling, setTopSelling] = useState([]);
   const [topRated, setTopRated] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,25 +22,54 @@ const DashboardPage = () => {
       setLoading(true);
       setError(null);
 
-      const [dashData, salesData, topSellingData, topRatedData] = await Promise.allSettled([
+      // ✅ حساب تاريخ آخر 30 يوم للـ sales report
+      const endDate = new Date().toISOString();
+      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [dashData, salesData, topSellingData, topRatedData, ordersData] = await Promise.allSettled([
         getDashboardStats(),
-        getSalesReport(),
+        getSalesReport({ startDate, endDate }),
         getTopSelling(),
         getTopRated(),
+        getAllOrders({ pageNumber: 1, pageSize: 5 }),
       ]);
 
       if (dashData.status === 'fulfilled') setDashboard(dashData.value);
+
+      // ✅ Fix: استخرج dailySales من الـ response
       if (salesData.status === 'fulfilled') {
         const sales = salesData.value;
-        setSalesReport(Array.isArray(sales) ? sales : sales?.items || sales?.data || []);
+        if (sales?.dailySales && Array.isArray(sales.dailySales)) {
+          setSalesReport(sales.dailySales);
+        } else if (Array.isArray(sales)) {
+          setSalesReport(sales);
+        } else {
+          setSalesReport([]);
+        }
       }
+
       if (topSellingData.status === 'fulfilled') {
         const top = topSellingData.value;
         setTopSelling(Array.isArray(top) ? top : top?.items || top?.data || []);
       }
+
       if (topRatedData.status === 'fulfilled') {
         const rated = topRatedData.value;
         setTopRated(Array.isArray(rated) ? rated : rated?.items || rated?.data || []);
+      }
+
+      // ✅ Fix: جلب آخر الطلبات
+      if (ordersData.status === 'fulfilled') {
+        const orders = ordersData.value;
+        if (Array.isArray(orders)) {
+          setRecentOrders(orders.slice(0, 5));
+        } else if (orders?.items) {
+          setRecentOrders(orders.items.slice(0, 5));
+        } else if (orders?.data) {
+          setRecentOrders(Array.isArray(orders.data) ? orders.data.slice(0, 5) : []);
+        } else {
+          setRecentOrders([]);
+        }
       }
     } catch (err) {
       setError('فشل في تحميل البيانات');
@@ -159,8 +190,8 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Recent Orders */}
-      <RecentOrdersTable orders={dashboard?.recentOrders || []} />
+      {/* ✅ Fix: Recent Orders */}
+      <RecentOrdersTable orders={recentOrders} />
     </div>
   );
 };

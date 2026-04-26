@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login as loginApi } from '../../api/authService';
+import { GoogleLogin } from '@react-oauth/google';
+import { login as loginApi, googleLogin as googleLoginApi } from '../../api/authService';
 import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
@@ -32,10 +33,8 @@ const LoginPage = () => {
       const response = await loginApi(email, password);
 
       if (response.success && response.data) {
-        // حفظ البيانات في الـ Context
         login(response.data);
 
-        // التوجيه بناءً على الـ Role
         const userData = response.data;
         let redirectPath = '/';
 
@@ -64,14 +63,64 @@ const LoginPage = () => {
 
         navigate(redirectPath);
       } else {
+        // ✅ لو البريد مش مفعّل، حوّله لصفحة التحقق
+        if (response.message?.includes('غير مفعّل')) {
+          navigate('/verify-email', {
+            state: { email: email },
+          });
+          return;
+        }
         setApiError(response.message || 'فشل تسجيل الدخول');
       }
     } catch (err) {
-      const errorMsg =
-        err.response?.data?.message ||
-        err.response?.data?.errors?.join(', ') ||
-        'فشل تسجيل الدخول، تحقق من البيانات';
+      const errorMsg = err.response?.data?.message || 'فشل تسجيل الدخول، تحقق من البيانات';
+
+      // ✅ لو البريد مش مفعّل
+      if (errorMsg.includes('غير مفعّل')) {
+        navigate('/verify-email', {
+          state: { email: email },
+        });
+        return;
+      }
+
       setApiError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Google Login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      setApiError('');
+      const response = await googleLoginApi(credentialResponse.credential);
+
+      if (response.success && response.data) {
+        login(response.data);
+
+        const userData = response.data;
+        let redirectPath = '/';
+
+        switch (userData.role) {
+          case 'SuperAdmin':
+            redirectPath = '/admin';
+            break;
+          case 'Seller':
+            redirectPath = userData.sellerStatus === 'Approved'
+              ? '/seller/dashboard'
+              : '/seller/pending-approval';
+            break;
+          default:
+            redirectPath = '/';
+        }
+
+        navigate(redirectPath);
+      } else {
+        setApiError(response.message || 'فشل تسجيل الدخول بـ Google');
+      }
+    } catch (err) {
+      setApiError(err.response?.data?.message || 'فشل تسجيل الدخول بـ Google');
     } finally {
       setLoading(false);
     }
@@ -85,14 +134,30 @@ const LoginPage = () => {
         <p className="text-gray-500 mt-1">أدخل بياناتك للوصول لحسابك</p>
       </div>
 
-      {/* خطأ API */}
       {apiError && <ErrorMessage message={apiError} />}
+
+      {/* ✅ Google Login Button */}
+      <div className="mb-6">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => setApiError('فشل تسجيل الدخول بـ Google')}
+          text="signin_with"
+          shape="rectangular"
+          width="100%"
+          locale="ar"
+        />
+      </div>
+
+      {/* فاصل */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex-1 h-px bg-gray-200"></div>
+        <span className="text-sm text-gray-400">أو ادخل بالبريد</span>
+        <div className="flex-1 h-px bg-gray-200"></div>
+      </div>
 
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            البريد الإلكتروني
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
           <input
             type="email"
             value={email}
@@ -101,18 +166,14 @@ const LoginPage = () => {
               if (errors.email) setErrors((p) => ({ ...p, email: '' }));
               setApiError('');
             }}
-            placeholder="example@email.com"
+            placeholder="example@gmail.com"
             className={`input-field ${errors.email ? 'input-error' : ''}`}
           />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-          )}
+          {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            كلمة المرور
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
           <input
             type="password"
             value={password}
@@ -124,21 +185,14 @@ const LoginPage = () => {
             placeholder="••••••••"
             className={`input-field ${errors.password ? 'input-error' : ''}`}
           />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-500">{errors.password}</p>
-          )}
+          {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary w-full text-base py-3"
-        >
+        <button type="submit" disabled={loading} className="btn-primary w-full text-base py-3">
           {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
         </button>
       </form>
 
-      {/* روابط */}
       <div className="mt-6 space-y-3 text-center text-sm">
         <p className="text-gray-500">
           ليس لديك حساب؟{' '}
@@ -146,8 +200,6 @@ const LoginPage = () => {
             إنشاء حساب جديد
           </Link>
         </p>
-
-        {/* 🆕 لينك تسجيل البائع */}
         <div className="pt-3 border-t">
           <p className="text-gray-500">
             عايز تبيع على منصتنا؟{' '}

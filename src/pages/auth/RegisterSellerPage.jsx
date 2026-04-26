@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerSeller } from '../../api/authService';
-import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
 const RegisterSellerPage = () => {
   const navigate = useNavigate();
-  const { login: authLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -25,6 +23,7 @@ const RegisterSellerPage = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
@@ -36,13 +35,23 @@ const RegisterSellerPage = () => {
       return;
     }
 
+    if (form.password.length < 6) {
+      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await registerSeller(form);
 
-      if (response.success && response.data) {
-        authLogin(response.data);
-        navigate('/seller/pending-approval');
+      if (response.success) {
+        // ✅ التحويل لصفحة التحقق من البريد
+        navigate('/verify-email', {
+          state: {
+            email: form.email,
+            role: 'Seller',
+          },
+        });
       } else {
         setError(response.message || 'حدث خطأ في التسجيل');
       }
@@ -95,7 +104,7 @@ const RegisterSellerPage = () => {
                 value={form.email}
                 onChange={handleChange}
                 className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="example@email.com"
+                placeholder="example@gmail.com"
                 required
               />
             </div>
@@ -121,7 +130,7 @@ const RegisterSellerPage = () => {
                 value={form.password}
                 onChange={handleChange}
                 className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="كلمة المرور"
+                placeholder="كلمة المرور (6 أحرف على الأقل)"
                 required
               />
             </div>
@@ -192,6 +201,13 @@ const RegisterSellerPage = () => {
                 placeholder="01098765432"
               />
             </div>
+          </div>
+
+          {/* ملاحظة */}
+          <div className="bg-blue-50 rounded-lg p-3">
+            <p className="text-xs text-blue-600">
+              📧 سيتم إرسال كود تحقق إلى بريدك الإلكتروني لتفعيل حسابك
+            </p>
           </div>
 
           {/* زر التسجيل */}

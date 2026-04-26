@@ -63,8 +63,8 @@ const AdminSellerDetailsPage = () => {
   };
 
   const handleUpdateCommission = async () => {
-    if (!newCommission || newCommission < 0 || newCommission > 100) {
-      toast.error('يرجى إدخال نسبة صحيحة (0-100)');
+if (newCommission === '' || newCommission === null || newCommission < 0 || newCommission > 100) {
+        toast.error('يرجى إدخال نسبة صحيحة (0-100)');
       return;
     }
     try {

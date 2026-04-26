@@ -12,7 +12,7 @@ export const register = async (data) => {
   return response.data;
 };
 
-// ============ تسجيل بائع جديد 🆕 ============
+// ============ تسجيل بائع جديد ============
 export const registerSeller = async (data) => {
   const response = await API.post('/auth/register-seller', {
     name: data.name,
@@ -37,10 +37,27 @@ export const login = async (email, password) => {
   return response.data;
 };
 
-// ============ تسجيل دخول بـ Google 🆕 ============
+// ============ تسجيل دخول بـ Google ============
 export const googleLogin = async (idToken) => {
   const response = await API.post('/auth/google-login', {
     idToken,
+  });
+  return response.data;
+};
+
+// ✅ التحقق من البريد الإلكتروني
+export const verifyEmail = async (email, code) => {
+  const response = await API.post('/auth/verify-email', {
+    email,
+    code,
+  });
+  return response.data;
+};
+
+// ✅ إعادة إرسال كود التحقق
+export const resendVerification = async (email) => {
+  const response = await API.post('/auth/resend-verification', {
+    email,
   });
   return response.data;
 };
@@ -69,12 +86,14 @@ export const logoutApi = async () => {
   const response = await API.post('/auth/logout');
   return response.data.data;
 };
-// ✅ Default export للتوافق مع الملفات القديمة
+
 const authService = {
   register,
   registerSeller,
   login,
   googleLogin,
+  verifyEmail,
+  resendVerification,
   refreshToken,
   changePassword,
   logout: logoutApi,

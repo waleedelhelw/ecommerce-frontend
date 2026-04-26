@@ -33,6 +33,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import RegisterSellerPage from './pages/auth/RegisterSellerPage';
 import ChangePasswordPage from './pages/auth/ChangePasswordPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 
 // Seller Pages
 import SellerDashboardPage from './pages/seller/SellerDashboardPage';
@@ -96,6 +97,11 @@ const router = createBrowserRouter([
           </GuestRoute>
         ),
       },
+      {
+        path: '/verify-email',
+        element: <VerifyEmailPage />,
+     },
+
     ],
   },
 

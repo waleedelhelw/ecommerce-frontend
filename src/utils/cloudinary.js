@@ -1,5 +1,5 @@
-const CLOUD_NAME = 'VITE_CLOUDINARY_CLOUD_NAME';       // غيّره
-const UPLOAD_PRESET = 'VITE_CLOUDINARY_UPLOAD_PRESET';  // غيّره
+const CLOUD_NAME = 'VITE_CLOUDINARY_CLOUD_NAME';       // 
+const UPLOAD_PRESET = 'VITE_CLOUDINARY_UPLOAD_PRESET';  // 
 
 export const uploadImage = async (file) => {
   const formData = new FormData();

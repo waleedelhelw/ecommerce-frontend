@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { register as registerApi } from '../../api/authService';
+import { GoogleLogin } from '@react-oauth/google';
+import { register as registerApi, googleLogin as googleLoginApi } from '../../api/authService';
 import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
@@ -55,10 +56,14 @@ const RegisterPage = () => {
         phone: formData.phone,
       });
 
-      if (response.success && response.data) {
-        // تسجيل الدخول تلقائياً بعد التسجيل
-        login(response.data);
-        navigate('/');
+      if (response.success) {
+        // ✅ التحويل لصفحة التحقق من البريد
+        navigate('/verify-email', {
+          state: {
+            email: formData.email,
+            role: 'Customer',
+          },
+        });
       } else {
         if (response.errors && Array.isArray(response.errors)) {
           setApiErrors(response.errors);
@@ -77,6 +82,26 @@ const RegisterPage = () => {
     }
   };
 
+  // ✅ Google Login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      setApiError('');
+      const response = await googleLoginApi(credentialResponse.credential);
+
+      if (response.success && response.data) {
+        login(response.data);
+        navigate('/');
+      } else {
+        setApiError(response.message || 'فشل تسجيل الدخول بـ Google');
+      }
+    } catch (err) {
+      setApiError(err.response?.data?.message || 'فشل تسجيل الدخول بـ Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8">
       <div className="text-center mb-8">
@@ -85,7 +110,6 @@ const RegisterPage = () => {
         <p className="text-gray-500 mt-1">انضم إلينا وابدأ التسوق</p>
       </div>
 
-      {/* أخطاء API */}
       {apiError && <ErrorMessage message={apiError} />}
 
       {apiErrors.length > 0 && (
@@ -99,8 +123,26 @@ const RegisterPage = () => {
         </div>
       )}
 
+      {/* ✅ Google Login Button */}
+      <div className="mb-6">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => setApiError('فشل تسجيل الدخول بـ Google')}
+          text="signup_with"
+          shape="rectangular"
+          width="100%"
+          locale="ar"
+        />
+      </div>
+
+      {/* فاصل */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex-1 h-px bg-gray-200"></div>
+        <span className="text-sm text-gray-400">أو سجّل بالبريد</span>
+        <div className="flex-1 h-px bg-gray-200"></div>
+      </div>
+
       <form onSubmit={handleSubmit}>
-        {/* الاسم */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل *</label>
           <input
@@ -114,7 +156,6 @@ const RegisterPage = () => {
           {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
         </div>
 
-        {/* البريد */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني *</label>
           <input
@@ -122,13 +163,12 @@ const RegisterPage = () => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="example@email.com"
+            placeholder="example@gmail.com"
             className={`input-field ${errors.email ? 'input-error' : ''}`}
           />
           {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
         </div>
 
-        {/* الهاتف */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
           <input
@@ -141,7 +181,6 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* كلمة المرور */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور *</label>
           <input
@@ -155,7 +194,6 @@ const RegisterPage = () => {
           {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
         </div>
 
-        {/* تأكيد كلمة المرور */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-1">تأكيد كلمة المرور *</label>
           <input
@@ -169,25 +207,16 @@ const RegisterPage = () => {
           {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary w-full text-base py-3"
-        >
+        <button type="submit" disabled={loading} className="btn-primary w-full text-base py-3">
           {loading ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
         </button>
       </form>
 
-      {/* روابط */}
       <div className="mt-6 space-y-3 text-center text-sm">
         <p className="text-gray-500">
           لديك حساب بالفعل؟{' '}
-          <Link to="/login" className="text-blue-600 font-medium">
-            تسجيل الدخول
-          </Link>
+          <Link to="/login" className="text-blue-600 font-medium">تسجيل الدخول</Link>
         </p>
-
-        {/* 🆕 لينك تسجيل البائع */}
         <div className="pt-3 border-t">
           <p className="text-gray-500">
             عايز تبيع على منصتنا؟{' '}

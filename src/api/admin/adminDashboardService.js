@@ -1,3 +1,4 @@
+import { data } from 'react-router-dom';
 import API from '../axiosInstance';
 
 const BASE = '/superadmin/dashboard';
@@ -5,7 +6,7 @@ const BASE = '/superadmin/dashboard';
 // ============ إحصائيات الداشبورد ============
 export const getDashboardStats = async () => {
   const response = await API.get(BASE);
-  return response.data;
+  return response.data.data;
 };
 
 // ============ تقرير المبيعات 🆕 ============
