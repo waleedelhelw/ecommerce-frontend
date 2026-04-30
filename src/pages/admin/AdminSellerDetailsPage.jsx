@@ -9,6 +9,14 @@ import { formatDate } from '../../utils/formatDate';
 import { sellerStatusMap, getStatusInfo } from '../../utils/orderStatusMap';
 import toast from 'react-hot-toast';
 
+const PAYOUT_METHOD_LABELS = {
+  BankTransfer: '🏦 تحويل بنكي',
+  VodafoneCash: '📱 فودافون كاش',
+  EtisalatCash: '📱 اتصالات كاش',
+  OrangeCash: '📱 أورانج كاش',
+  InstaPay: '🏦 إنستاباي',
+};
+
 const AdminSellerDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -63,8 +71,8 @@ const AdminSellerDetailsPage = () => {
   };
 
   const handleUpdateCommission = async () => {
-if (newCommission === '' || newCommission === null || newCommission < 0 || newCommission > 100) {
-        toast.error('يرجى إدخال نسبة صحيحة (0-100)');
+    if (newCommission === '' || newCommission === null || newCommission < 0 || newCommission > 100) {
+      toast.error('يرجى إدخال نسبة صحيحة (0-100)');
       return;
     }
     try {
@@ -85,6 +93,12 @@ if (newCommission === '' || newCommission === null || newCommission < 0 || newCo
 
   const status = getStatusInfo(sellerStatusMap, seller.status);
 
+  // ✅ هل البائع عنده بيانات سحب؟
+  const hasPayoutInfo = seller.preferredPayoutMethod
+    || seller.bankName
+    || seller.walletNumber
+    || seller.instaPayAccount;
+
   return (
     <div>
       {/* العنوان */}
@@ -94,7 +108,10 @@ if (newCommission === '' || newCommission === null || newCommission < 0 || newCo
         </button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-800">{seller.storeName}</h1>
-          <p className="text-gray-500 text-sm">{seller.sellerName || seller.userName}</p>
+          <p className="text-gray-500 text-sm">
+            {seller.sellerName || seller.userName}
+            <span className="text-gray-400 mr-2">— ID: {seller.userId || id}</span>
+          </p>
         </div>
         <span className={`text-sm px-3 py-1.5 rounded-full ${status.color}`}>
           {status.icon} {status.label}
@@ -157,6 +174,70 @@ if (newCommission === '' || newCommission === null || newCommission < 0 || newCo
                 </div>
               )}
             </div>
+          </div>
+
+          {/* ✅ بيانات السحب */}
+          <div className="bg-white rounded-xl border p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">💳 بيانات السحب</h2>
+
+            {hasPayoutInfo ? (
+              <div className="space-y-4">
+                {/* طريقة السحب المفضلة */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-xs text-gray-500 mb-1">طريقة السحب المفضلة</p>
+                  <p className="font-bold text-blue-700 text-lg">
+                    {PAYOUT_METHOD_LABELS[seller.preferredPayoutMethod] || seller.preferredPayoutMethod || '—'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  {/* بيانات بنكية */}
+                  {(seller.bankName || seller.bankAccountNumber) && (
+                    <>
+                      <div>
+                        <p className="text-gray-500">🏦 البنك</p>
+                        <p className="font-medium">{seller.bankName || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">رقم الحساب</p>
+                        <p className="font-medium font-mono tracking-wider">{seller.bankAccountNumber || '—'}</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-gray-500">اسم صاحب الحساب</p>
+                        <p className="font-medium">{seller.bankAccountHolder || '—'}</p>
+                      </div>
+                    </>
+                  )}
+
+                  {/* بيانات المحفظة */}
+                  {seller.walletNumber && (
+                    <>
+                      <div>
+                        <p className="text-gray-500">📱 رقم المحفظة</p>
+                        <p className="font-medium font-mono tracking-wider">{seller.walletNumber}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">مزود الخدمة</p>
+                        <p className="font-medium">{seller.walletProvider || '—'}</p>
+                      </div>
+                    </>
+                  )}
+
+                  {/* InstaPay */}
+                  {seller.instaPayAccount && (
+                    <div className="sm:col-span-2">
+                      <p className="text-gray-500">🏦 حساب إنستاباي</p>
+                      <p className="font-medium font-mono">{seller.instaPayAccount}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <span className="text-4xl">🚫</span>
+                <p className="text-gray-500 mt-2">البائع لم يضف بيانات السحب بعد</p>
+              </div>
+            )}
           </div>
 
           {/* الإحصائيات */}

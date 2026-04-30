@@ -27,6 +27,8 @@ import WishlistPage from './pages/customer/WishlistPage';
 import ProfilePage from './pages/customer/ProfilePage';
 import SellersPage from './pages/customer/SellersPage';
 import SellerStorePage from './pages/customer/SellerStorePage';
+import PaymentPage from './pages/customer/PaymentPage';
+
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -60,6 +62,9 @@ import AdminLogsPage from './pages/admin/AdminLogsPage';
 import AdminSellersPage from './pages/admin/AdminSellersPage';
 import AdminSellerDetailsPage from './pages/admin/AdminSellerDetailsPage';
 import AdminPayoutsPage from './pages/admin/AdminPayoutsPage';
+import AdminPaymentReviewPage from './pages/admin/AdminPaymentReviewPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminShippingOptionsPage from './pages/admin/AdminShippingOptionsPage';
 
 // Error Pages
 import NotFoundPage from './pages/errors/NotFoundPage';
@@ -172,6 +177,15 @@ const router = createBrowserRouter([
         element: (
           <CustomerRoute>
             <OrderDetailsPage />
+          </CustomerRoute>
+        ),
+      },
+
+            {
+        path: '/orders/:id/payment',
+        element: (
+          <CustomerRoute>
+            <PaymentPage />
           </CustomerRoute>
         ),
       },
@@ -371,6 +385,18 @@ const router = createBrowserRouter([
       {
         path: 'logs',
         element: <AdminLogsPage />,
+      },
+            {
+        path: 'payments',
+        element: <AdminPaymentReviewPage />,
+      },
+      {
+        path: 'settings',
+        element: <AdminSettingsPage />,
+      },
+      {
+        path: 'shipping',
+        element: <AdminShippingOptionsPage />,
       },
     ],
   },

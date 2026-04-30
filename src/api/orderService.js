@@ -22,7 +22,24 @@ export const cancelOrder = async (id) => {
   return response.data.data;
 };
 
-// ✅ Default export للتوافق مع الملفات القديمة
+// ✅ رفع إيصال الدفع
+export const uploadReceipt = async (orderId, data) => {
+  const response = await API.post(`${BASE}/${orderId}/upload-receipt`, data);
+  return response.data.data;
+};
+
+// ✅ تأكيد الاستلام
+export const confirmDelivery = async (orderId) => {
+  const response = await API.put(`${BASE}/${orderId}/confirm-delivery`);
+  return response.data.data;
+};
+
+// ✅ جلب Timeline الطلب
+export const getOrderTimeline = async (orderId) => {
+  const response = await API.get(`${BASE}/${orderId}/timeline`);
+  return response.data.data;
+};
+
 const orderService = {
   createOrder,
   getOrders: getMyOrders,
@@ -30,6 +47,9 @@ const orderService = {
   getOrder: getOrderById,
   getOrderById,
   cancelOrder,
+  uploadReceipt,
+  confirmDelivery,
+  getOrderTimeline,
 };
 
 export default orderService;

@@ -14,11 +14,18 @@ export const getOrderById = async (id) => {
   return response.data.data;
 };
 
+// ✅ 🆕 تحديث حالة الطلب
+export const updateOrderStatus = async (id, status) => {
+  const response = await API.put(`${BASE}/${id}/status`, { status });
+  return response.data.data;
+};
+
 const adminOrderService = {
   getOrders: getAllOrders,
   getAllOrders,
   getOrder: getOrderById,
   getOrderById,
+  updateOrderStatus,
 };
 
 export default adminOrderService;

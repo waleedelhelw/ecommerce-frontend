@@ -1,7 +1,6 @@
 import API from '../axiosInstance';
 
-const BASE = '/superadmin/users';
-
+const BASE = '/admin/users';
 // ============ كل المستخدمين ============
 export const getAllUsers = async (params) => {
   const response = await API.get(BASE, { params });

@@ -13,13 +13,19 @@ export const SELLER_STATUS = {
   SUSPENDED: 'Suspended',
 };
 
-// ============ Order Status ============
+// ============ ✅ Order Status - محدّث ============
 export const ORDER_STATUS = {
-  PENDING: 'Pending',
+  PENDING_PAYMENT: 'PendingPayment',
+  WAITING_CONFIRMATION: 'WaitingConfirmation',
+  PAYMENT_CONFIRMED: 'PaymentConfirmed',
+  PAYMENT_FAILED: 'PaymentFailed',
   PROCESSING: 'Processing',
+  READY_TO_SHIP: 'ReadyToShip',
   SHIPPED: 'Shipped',
   DELIVERED: 'Delivered',
+  COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
+  REFUNDED: 'Refunded',
 };
 
 // ============ Payout Status ============
@@ -52,22 +58,34 @@ export const SORT_OPTIONS = [
   { value: 'name', label: 'الاسم' },
 ];
 
-// ============ Payment Methods (للـ Checkout Form) ============
+// ============ ✅ Payment Methods - محدّث (متوافق مع الباك إند) ============
 export const PAYMENT_METHODS = [
-  { value: 'CashOnDelivery', label: '💵 الدفع عند الاستلام' },
-  { value: 'CreditCard', label: '💳 بطاقة ائتمان' },
-  { value: 'DebitCard', label: '💳 بطاقة خصم' },
-  { value: 'BankTransfer', label: '🏦 تحويل بنكي' },
-  { value: 'Wallet', label: '👛 محفظة إلكترونية' },
+  { value: 'CashOnDelivery', label: '💵 الدفع عند الاستلام', icon: '💵', hasFee: true },
+  { value: 'VodafoneCash', label: '📱 فودافون كاش', icon: '📱', settingKey: 'PlatformWalletVodafone' },
+  { value: 'EtisalatCash', label: '📱 إتصالات كاش', icon: '📱', settingKey: 'PlatformWalletEtisalat' },
+  { value: 'OrangeCash', label: '📱 أورانج كاش', icon: '📱', settingKey: 'PlatformWalletOrange' },
+  { value: 'InstaPay', label: '🏦 إنستاباي', icon: '🏦', settingKey: 'PlatformInstaPay' },
+  { value: 'BankTransfer', label: '🏦 تحويل بنكي', icon: '🏦', settingKey: 'PlatformBankAccount' },
 ];
 
-// ✅ جديد - لعرض اسم طريقة الدفع في صفحة التفاصيل
+// ✅ لعرض اسم طريقة الدفع في صفحة التفاصيل
 export const PAYMENT_LABELS = {
   CashOnDelivery: '💵 الدفع عند الاستلام',
-  CreditCard: '💳 بطاقة ائتمان',
-  DebitCard: '💳 بطاقة خصم',
+  VodafoneCash: '📱 فودافون كاش',
+  EtisalatCash: '📱 إتصالات كاش',
+  OrangeCash: '📱 أورانج كاش',
+  InstaPay: '🏦 إنستاباي',
   BankTransfer: '🏦 تحويل بنكي',
-  Wallet: '👛 محفظة إلكترونية',
+};
+
+// ============ ✅ Payment Status ============
+export const PAYMENT_STATUS = {
+  PENDING: 'Pending',
+  WAITING_CONFIRMATION: 'WaitingConfirmation',
+  CONFIRMED: 'Confirmed',
+  COMPLETED: 'Completed',
+  FAILED: 'Failed',
+  REFUNDED: 'Refunded',
 };
 
 // ============ Routes ============
@@ -87,6 +105,7 @@ export const ROUTES = {
   ORDERS: '/orders',
   WISHLIST: '/wishlist',
   PROFILE: '/profile',
+  PAYMENT: '/orders/:id/payment', // 🆕
 
   // Seller
   SELLER_DASHBOARD: '/seller/dashboard',
@@ -108,6 +127,9 @@ export const ROUTES = {
   ADMIN_REVIEWS: '/admin/reviews',
   ADMIN_PAYOUTS: '/admin/payouts',
   ADMIN_LOGS: '/admin/logs',
+  ADMIN_PAYMENTS: '/admin/payments',   // 🆕
+  ADMIN_SETTINGS: '/admin/settings',   // 🆕
+  ADMIN_SHIPPING: '/admin/shipping',   // 🆕
 
   // Errors
   UNAUTHORIZED: '/unauthorized',

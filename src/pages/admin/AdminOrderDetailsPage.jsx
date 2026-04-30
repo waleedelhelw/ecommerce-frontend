@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
-import { getOrderById } from '../../api/admin/adminOrderService';
+import { getOrderById, updateOrderStatus } from '../../api/admin/adminOrderService';
+import adminPaymentService from '../../api/admin/adminPaymentService';
 import OrderStatusBadge from '../../components/admin/OrderStatusBadge';
+import OrderTimeline from '../../components/order/OrderTimeline';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { formatPrice } from '../../utils/formatPrice';
 import { formatDate } from '../../utils/formatDate';
+import { PAYMENT_LABELS } from '../../utils/constants';
+import { paymentStatusMap, getStatusInfo } from '../../utils/orderStatusMap';
+import toast from 'react-hot-toast';
 
 const AdminOrderDetailsPage = () => {
   const { id } = useParams();
@@ -14,6 +19,10 @@ const AdminOrderDetailsPage = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const fetchOrder = async () => {
     try {
@@ -32,9 +41,90 @@ const AdminOrderDetailsPage = () => {
     fetchOrder();
   }, [id]);
 
+  // ✅ تأكيد الدفع
+  const handleConfirmPayment = async () => {
+    if (!order?.payment?.id) return;
+    try {
+      setActionLoading(true);
+      await adminPaymentService.confirmPayment(order.payment.id);
+      toast.success('تم تأكيد الدفع بنجاح ✅');
+      fetchOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل تأكيد الدفع');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ✅ رفض الدفع
+  const handleRejectPayment = async () => {
+    if (!rejectReason.trim()) {
+      toast.error('يرجى كتابة سبب الرفض');
+      return;
+    }
+    try {
+      setActionLoading(true);
+      await adminPaymentService.rejectPayment(order.payment.id, rejectReason);
+      toast.success('تم رفض الإيصال ❌');
+      setShowRejectModal(false);
+      setRejectReason('');
+      fetchOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل رفض الإيصال');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ✅ تحديث حالة الطلب (للأدمن)
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      setActionLoading(true);
+      await updateOrderStatus(id, newStatus);
+      toast.success('تم تحديث حالة الطلب بنجاح');
+      fetchOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل تحديث الحالة');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} onRetry={fetchOrder} />;
   if (!order) return null;
+
+  const paymentStatus = order.payment
+    ? getStatusInfo(paymentStatusMap, order.payment.status)
+    : null;
+
+  const grandTotal = (order.totalPrice || 0) + (order.shippingCost || 0) + (order.codFee || 0);
+
+  // ✅ هل الإيصال محتاج مراجعة؟
+  const needsPaymentReview = order.status === 'WaitingConfirmation' && order.payment?.receiptImageUrl;
+
+  // ✅ الحالات اللي الأدمن يقدر يغيرها
+  const getAvailableActions = () => {
+    const actions = [];
+    switch (order.status) {
+      case 'PaymentConfirmed':
+        actions.push({ status: 'Processing', label: '🔄 بدء التجهيز', color: 'bg-blue-600 hover:bg-blue-700' });
+        actions.push({ status: 'Cancelled', label: '❌ إلغاء الطلب', color: 'bg-red-600 hover:bg-red-700' });
+        break;
+      case 'Processing':
+        actions.push({ status: 'Cancelled', label: '❌ إلغاء الطلب', color: 'bg-red-600 hover:bg-red-700' });
+        break;
+      case 'Delivered':
+        actions.push({ status: 'Completed', label: '🎉 إكمال الطلب', color: 'bg-emerald-600 hover:bg-emerald-700' });
+        actions.push({ status: 'Refunded', label: '🔄 استرجاع', color: 'bg-amber-600 hover:bg-amber-700' });
+        break;
+      default:
+        break;
+    }
+    return actions;
+  };
+
+  const availableActions = getAvailableActions();
 
   return (
     <div>
@@ -52,6 +142,85 @@ const AdminOrderDetailsPage = () => {
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
+
+      {/* ✅ تنبيه مراجعة الإيصال */}
+      {needsPaymentReview && (
+        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-5 mb-6">
+          <div className="flex items-start gap-4">
+            <span className="text-3xl">🧾</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-orange-800 text-lg">إيصال دفع يحتاج مراجعة!</h3>
+              <p className="text-sm text-orange-700 mt-1">
+                العميل رفع إيصال دفع بقيمة{' '}
+                <strong>{formatPrice(order.payment.amount)}</strong> عبر{' '}
+                <strong>{PAYMENT_LABELS[order.payment.paymentMethod] || order.payment.paymentMethod}</strong>
+              </p>
+
+              {/* صورة الإيصال */}
+              <div
+                className="mt-3 cursor-pointer inline-block"
+                onClick={() => setPreviewImage(order.payment.receiptImageUrl)}
+              >
+                <img
+                  src={order.payment.receiptImageUrl}
+                  alt="إيصال الدفع"
+                  className="w-48 h-48 object-cover rounded-xl border-2 border-orange-200 hover:opacity-90 transition-opacity"
+                />
+                <p className="text-xs text-orange-600 mt-1">🔍 اضغط للتكبير</p>
+              </div>
+
+              {/* أزرار التأكيد/الرفض */}
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleConfirmPayment}
+                  disabled={actionLoading}
+                  className="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium transition-colors"
+                >
+                  {actionLoading ? 'جاري التأكيد...' : '✅ تأكيد الدفع'}
+                </button>
+                <button
+                  onClick={() => setShowRejectModal(true)}
+                  disabled={actionLoading}
+                  className="bg-red-600 text-white px-6 py-2.5 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition-colors"
+                >
+                  ❌ رفض الإيصال
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ أزرار تحديث الحالة */}
+      {availableActions.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+          <p className="text-sm text-blue-700 font-medium mb-3">⚡ إجراءات متاحة:</p>
+          <div className="flex gap-3 flex-wrap">
+            {availableActions.map((action) => (
+              <button
+                key={action.status}
+                onClick={() => handleStatusUpdate(action.status)}
+                disabled={actionLoading}
+                className={`text-white px-4 py-2 rounded-lg disabled:opacity-50 text-sm font-medium transition-colors ${action.color}`}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Timeline */}
+      {order.timeline && order.timeline.length > 0 && (
+        <div className="bg-white rounded-xl border p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">📍 مسار الطلب</h2>
+          <OrderTimeline
+            currentStatus={order.status}
+            timeline={order.timeline}
+            paymentMethod={order.paymentMethod || order.payment?.paymentMethod}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* العمود الرئيسي */}
@@ -110,34 +279,89 @@ const AdminOrderDetailsPage = () => {
               )}
             </div>
           </div>
+
+          {/* ✅ بيانات الشحن (لو اتشحن) */}
+          {order.trackingNumber && (
+            <div className="bg-white rounded-xl border p-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">📍 بيانات الشحن</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                {order.shippingCompany && (
+                  <div>
+                    <p className="text-gray-500">شركة الشحن</p>
+                    <p className="font-medium">{order.shippingCompany}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-gray-500">رقم التتبع</p>
+                  <p className="font-mono font-bold text-purple-600">{order.trackingNumber}</p>
+                </div>
+                {order.shippedAt && (
+                  <div>
+                    <p className="text-gray-500">تاريخ الشحن</p>
+                    <p className="font-medium">{formatDate(order.shippedAt)}</p>
+                  </div>
+                )}
+                {order.deliveredAt && (
+                  <div>
+                    <p className="text-gray-500">تاريخ التسليم</p>
+                    <p className="font-medium">{formatDate(order.deliveredAt)}</p>
+                  </div>
+                )}
+                {order.trackingUrl && (
+                  <div className="sm:col-span-2">
+                    <a
+                      href={order.trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-600 hover:underline text-sm"
+                    >
+                      📍 رابط تتبع الشحنة ←
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* العمود الجانبي */}
         <div className="space-y-6">
-          {/* ملخص الطلب */}
+          {/* ✅ ملخص الطلب - محدّث */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">💰 ملخص الطلب</h2>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">الإجمالي</span>
-                <span className="font-bold text-lg">
-                  {formatPrice(order.totalAmount || order.totalPrice)}
-                </span>
+                <span className="text-gray-500">سعر المنتجات</span>
+                <span className="font-medium">{formatPrice(order.totalPrice)}</span>
               </div>
-              {(order.commissionAmount > 0) && (
+              {order.shippingCost > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">العمولة</span>
-                  <span className="font-medium text-red-600">
-                    {formatPrice(order.commissionAmount)}
-                  </span>
+                  <span className="text-gray-500">الشحن</span>
+                  <span className="font-medium">{formatPrice(order.shippingCost)}</span>
                 </div>
               )}
-              {(order.sellerAmount > 0) && (
+              {order.codFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">رسوم COD</span>
+                  <span className="font-medium text-orange-600">{formatPrice(order.codFee)}</span>
+                </div>
+              )}
+              <hr />
+              <div className="flex justify-between font-bold text-lg">
+                <span>الإجمالي</span>
+                <span className="text-blue-600">{formatPrice(order.grandTotal || grandTotal)}</span>
+              </div>
+              <hr />
+              {order.commissionAmount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">عمولة المنصة</span>
+                  <span className="font-medium text-red-600">{formatPrice(order.commissionAmount)}</span>
+                </div>
+              )}
+              {order.sellerAmount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">نصيب البائع</span>
-                  <span className="font-medium text-green-600">
-                    {formatPrice(order.sellerAmount)}
-                  </span>
+                  <span className="font-medium text-green-600">{formatPrice(order.sellerAmount)}</span>
                 </div>
               )}
             </div>
@@ -149,9 +373,7 @@ const AdminOrderDetailsPage = () => {
             <div className="space-y-2 text-sm">
               <p>
                 <span className="text-gray-500">الاسم: </span>
-                <span className="font-medium">
-                  {order.customerName || order.userName || 'غير معروف'}
-                </span>
+                <span className="font-medium">{order.customerName || order.userName || 'غير معروف'}</span>
               </p>
               {(order.customerEmail || order.userEmail) && (
                 <p>
@@ -179,28 +401,119 @@ const AdminOrderDetailsPage = () => {
             </div>
           )}
 
-          {/* الدفع */}
-          {order.payment && (
-            <div className="bg-white rounded-xl border p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">💳 الدفع</h2>
-              <div className="space-y-2 text-sm">
-                <p>
-                  <span className="text-gray-500">الطريقة: </span>
-                  <span className="font-medium">
-                    {order.payment.paymentMethod || order.paymentMethod || '—'}
-                  </span>
-                </p>
-                <p>
-                  <span className="text-gray-500">الحالة: </span>
-                  <span className="font-medium">
-                    {order.payment.status || order.paymentStatus || '—'}
-                  </span>
-                </p>
+          {/* ✅ الدفع - محدّث */}
+          <div className="bg-white rounded-xl border p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">💳 الدفع</h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">الطريقة</span>
+                <span className="font-medium">
+                  {PAYMENT_LABELS[order.paymentMethod || order.payment?.paymentMethod] || '—'}
+                </span>
               </div>
+              {paymentStatus && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">الحالة</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${paymentStatus.color}`}>
+                    {paymentStatus.icon} {paymentStatus.label}
+                  </span>
+                </div>
+              )}
+              {order.payment?.reference && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">المرجع</span>
+                  <span className="font-mono text-xs">{order.payment.reference}</span>
+                </div>
+              )}
+              {order.payment?.confirmedAt && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">تاريخ التأكيد</span>
+                  <span className="font-medium">{formatDate(order.payment.confirmedAt)}</span>
+                </div>
+              )}
+              {order.payment?.rejectionReason && (
+                <div className="mt-2 p-2 bg-red-50 rounded-lg">
+                  <p className="text-xs text-red-600">
+                    ❌ سبب الرفض: {order.payment.rejectionReason}
+                  </p>
+                </div>
+              )}
+
+              {/* صورة الإيصال */}
+              {order.payment?.receiptImageUrl && (
+                <div className="mt-3">
+                  <p className="text-gray-500 mb-1">الإيصال:</p>
+                  <img
+                    src={order.payment.receiptImageUrl}
+                    alt="إيصال الدفع"
+                    className="w-full rounded-lg border cursor-pointer hover:opacity-90"
+                    onClick={() => setPreviewImage(order.payment.receiptImageUrl)}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
+
+      {/* ✅ Modal رفض الإيصال */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">❌ رفض الإيصال</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              يرجى كتابة سبب الرفض (سيتم إرساله للعميل):
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="مثال: الإيصال غير واضح / المبلغ غير صحيح..."
+              rows={3}
+              className="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-red-500 mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={handleRejectPayment}
+                disabled={actionLoading}
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
+              >
+                {actionLoading ? 'جاري الرفض...' : '❌ تأكيد الرفض'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason('');
+                }}
+                className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 text-sm font-medium"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Modal عرض الصورة */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh]">
+            <img
+              src={previewImage}
+              alt="إيصال الدفع"
+              className="max-w-full max-h-[90vh] rounded-xl object-contain"
+            />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-2 left-2 bg-white/80 text-black w-8 h-8 rounded-full flex items-center justify-center hover:bg-white"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

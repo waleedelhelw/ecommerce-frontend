@@ -11,6 +11,9 @@ import {
   FiX,
   FiDollarSign,
   FiUserCheck,
+  FiCreditCard,
+  FiSettings,
+  FiTruck,
 } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -22,9 +25,12 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/admin/products', icon: <FiPackage size={20} />, label: 'المنتجات' },
     { path: '/admin/categories', icon: <FiGrid size={20} />, label: 'التصنيفات' },
     { path: '/admin/orders', icon: <FiShoppingBag size={20} />, label: 'الطلبات' },
+    { path: '/admin/payments', icon: <FiCreditCard size={20} />, label: 'مراجعة الإيصالات', badge: true },
     { path: '/admin/users', icon: <FiUsers size={20} />, label: 'المستخدمين' },
     { path: '/admin/reviews', icon: <FiStar size={20} />, label: 'التقييمات' },
     { path: '/admin/payouts', icon: <FiDollarSign size={20} />, label: 'السحوبات' },
+    { path: '/admin/shipping', icon: <FiTruck size={20} />, label: 'خيارات الشحن' },
+    { path: '/admin/settings', icon: <FiSettings size={20} />, label: 'الإعدادات' },
     { path: '/admin/logs', icon: <FiFileText size={20} />, label: 'السجلات' },
   ];
 
@@ -49,11 +55,12 @@ const Sidebar = ({ isOpen, onClose }) => {
           fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50
           transform transition-transform duration-300 ease-in-out
           lg:sticky lg:top-0 lg:translate-x-0 lg:shadow-none lg:border-l lg:z-auto
+          flex flex-col
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b h-14 sm:h-16">
+        <div className="flex items-center justify-between p-4 border-b h-14 sm:h-16 shrink-0">
           <Link to="/admin" onClick={onClose} className="flex items-center gap-2">
             <span className="text-xl">⚙️</span>
             <span className="text-base font-bold text-blue-600">SuperAdmin</span>
@@ -67,7 +74,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         {/* Menu */}
-        <nav className="p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {menuItems.map((item) => (
             <Link
               key={item.path}
@@ -80,13 +87,16 @@ const Sidebar = ({ isOpen, onClose }) => {
                 }`}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.badge && (
+                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+              )}
             </Link>
           ))}
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t bg-white">
+        <div className="p-3 border-t shrink-0">
           <Link
             to="/"
             onClick={onClose}

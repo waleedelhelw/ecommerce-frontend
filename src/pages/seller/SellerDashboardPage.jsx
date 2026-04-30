@@ -58,6 +58,15 @@ const SellerDashboardPage = () => {
       icon: <FiDollarSign size={24} />,
       color: 'bg-yellow-500',
       bgLight: 'bg-yellow-50',
+      subtitle: 'متاح للسحب الآن',
+    },
+    {
+      title: 'رصيد معلق',
+      value: formatPrice(stats?.pendingBalance || 0),
+      icon: <FiClock size={24} />,
+      color: 'bg-orange-500',
+      bgLight: 'bg-orange-50',
+      subtitle: 'سيتوفر خلال أيام',
     },
     {
       title: 'نسبة العمولة',
@@ -79,15 +88,8 @@ const SellerDashboardPage = () => {
       value: stats?.totalOrders || 0,
       subtitle: `${stats?.pendingOrders || 0} في الانتظار`,
       icon: <FiShoppingBag size={24} />,
-      color: 'bg-orange-500',
-      bgLight: 'bg-orange-50',
-    },
-    {
-      title: 'الطلبات المسلّمة',
-      value: stats?.deliveredOrders || 0,
-      icon: <FiShoppingBag size={24} />,
-      color: 'bg-green-500',
-      bgLight: 'bg-green-50',
+      color: 'bg-cyan-500',
+      bgLight: 'bg-cyan-50',
     },
     {
       title: 'التقييم',
@@ -110,10 +112,7 @@ const SellerDashboardPage = () => {
       {/* كروت الإحصائيات */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((card, index) => (
-          <div
-            key={index}
-            className={`${card.bgLight} rounded-xl p-5 border`}
-          >
+          <div key={index} className={`${card.bgLight} rounded-xl p-5 border`}>
             <div className="flex items-center justify-between mb-3">
               <div className={`${card.color} text-white p-2.5 rounded-lg`}>
                 {card.icon}
@@ -127,6 +126,58 @@ const SellerDashboardPage = () => {
           </div>
         ))}
       </div>
+
+      {/* ✅ تفاصيل الرصيد المعلق */}
+      {stats?.pendingEarnings?.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 mb-8">
+          <h2 className="text-lg font-bold text-orange-800 mb-4 flex items-center gap-2">
+            <FiClock size={20} />
+            تفاصيل الرصيد المعلق
+          </h2>
+          <div className="space-y-3">
+            {stats.pendingEarnings.map((earning) => (
+              <div
+                key={earning.orderId}
+                className="bg-white rounded-lg p-4 flex items-center justify-between"
+              >
+                <div>
+                  <p className="font-medium text-gray-800">
+                    طلب #{earning.orderId}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {earning.remainingDays > 0
+                      ? `متبقي ${earning.remainingDays} يوم`
+                      : 'جاهز للسحب'}
+                  </p>
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-green-600">
+                    {formatPrice(earning.amount)}
+                  </p>
+                  {/* شريط تقدم */}
+                  <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-2">
+                    <div
+                      className="h-full bg-orange-500 rounded-full transition-all"
+                      style={{
+                        width: `${Math.max(0, 100 - (earning.remainingDays / 5) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-orange-200 flex justify-between items-center">
+            <span className="text-sm text-orange-700 font-medium">
+              إجمالي الرصيد المعلق
+            </span>
+            <span className="text-lg font-bold text-orange-800">
+              {formatPrice(stats.pendingBalance || 0)}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* روابط سريعة */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

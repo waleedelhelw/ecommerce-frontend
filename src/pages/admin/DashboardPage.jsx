@@ -125,11 +125,16 @@ const DashboardPage = () => {
         />
       </div>
 
-      {/* تنبيهات سريعة */}
-      {((dashboard?.pendingSellers || 0) > 0 || (dashboard?.pendingPayouts || 0) > 0) && (
+            {/* تنبيهات سريعة */}
+      {((dashboard?.pendingSellers || 0) > 0 || (dashboard?.pendingPayouts || 0) > 0 || (dashboard?.pendingPayments || 0) > 0) && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-8">
           <h3 className="font-bold text-yellow-800 mb-2">⚠️ يتطلب انتباهك</h3>
           <div className="flex flex-wrap gap-4">
+            {(dashboard?.pendingPayments || 0) > 0 && (
+              <Link to="/admin/payments" className="text-sm text-yellow-700 hover:underline">
+                🧾 {dashboard.pendingPayments} إيصال دفع في انتظار المراجعة
+              </Link>
+            )}
             {(dashboard?.pendingSellers || 0) > 0 && (
               <Link to="/admin/sellers?status=Pending" className="text-sm text-yellow-700 hover:underline">
                 🏪 {dashboard.pendingSellers} بائع في انتظار الموافقة

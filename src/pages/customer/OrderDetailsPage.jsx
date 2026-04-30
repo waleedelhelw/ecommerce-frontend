@@ -21,6 +21,8 @@ const OrderDetailsPage = () => {
   const [error, setError] = useState(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [showConfirmDeliveryDialog, setShowConfirmDeliveryDialog] = useState(false);
 
   const fetchOrder = async () => {
     try {
@@ -53,7 +55,22 @@ const OrderDetailsPage = () => {
     }
   };
 
-  // ✅ جديد - Helper function لعرض طريقة الدفع
+  // ✅ تأكيد استلام الطلب
+  const handleConfirmDelivery = async () => {
+    try {
+      setConfirmLoading(true);
+      await orderService.confirmDelivery(id);
+      toast.success('تم تأكيد الاستلام بنجاح! شكراً لك 🎉');
+      setShowConfirmDeliveryDialog(false);
+      fetchOrder();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'فشل تأكيد الاستلام');
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
+  // ✅ Helper function لعرض طريقة الدفع
   const getPaymentMethodLabel = (method) => {
     if (!method) return 'غير محدد';
     return PAYMENT_LABELS[method] || method;
@@ -65,6 +82,8 @@ const OrderDetailsPage = () => {
 
   const status = orderStatusMap[order.status] || orderStatusMap.Pending;
   const canCancel = order.status === 'Pending' || order.status === 'Processing';
+const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Delivered';
+  const needsPayment = order.status === 'PendingPayment' || order.status === 'PaymentFailed';
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -82,6 +101,59 @@ const OrderDetailsPage = () => {
           {status.icon} {status.label}
         </span>
       </div>
+
+      {/* ✅ تنبيهات مهمة حسب حالة الطلب */}
+      {needsPayment && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">💳</span>
+            <div>
+              <p className="font-bold text-orange-800">الطلب في انتظار الدفع</p>
+              <p className="text-sm text-orange-600">
+                {order.status === 'PaymentFailed'
+                  ? 'الإيصال السابق اترفض — يمكنك رفع إيصال جديد'
+                  : 'يرجى إتمام الدفع ورفع إيصال التحويل'}
+              </p>
+            </div>
+          </div>
+          <Link
+            to={`/orders/${order.id}/payment`}
+            className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
+          >
+            💳 إتمام الدفع
+          </Link>
+        </div>
+      )}
+
+      {order.status === 'WaitingConfirmation' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+          <span className="text-2xl">⏳</span>
+          <div>
+            <p className="font-bold text-blue-800">جاري مراجعة الإيصال</p>
+            <p className="text-sm text-blue-600">تم رفع الإيصال بنجاح وجاري المراجعة من الإدارة</p>
+          </div>
+        </div>
+      )}
+
+      {canConfirmDelivery && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📦</span>
+            <div>
+              <p className="font-bold text-green-800">
+                {order.status === 'Shipped' ? 'طلبك في الطريق إليك!' : 'تم توصيل طلبك'}
+              </p>
+              <p className="text-sm text-green-600">لو استلمت الطلب، أكد الاستلام عشان البائع ياخد فلوسه</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowConfirmDeliveryDialog(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+          >
+            ✅ تأكيد الاستلام
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border p-6 mb-6">
         <h2 className="font-bold mb-4">مسار الطلب</h2>
@@ -129,6 +201,20 @@ const OrderDetailsPage = () => {
               <span className="font-medium">{formatPrice(order.totalPrice || order.totalAmount)}</span>
             </div>
 
+            {order.shippingCost > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">الشحن:</span>
+                <span className="font-medium">{formatPrice(order.shippingCost)}</span>
+              </div>
+            )}
+
+            {order.codFee > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">رسوم الدفع عند الاستلام:</span>
+                <span className="font-medium text-orange-600">{formatPrice(order.codFee)}</span>
+              </div>
+            )}
+
             {order.commissionAmount > 0 && (
               <div className="flex justify-between text-xs text-gray-400">
                 <span>عمولة المنصة:</span>
@@ -139,7 +225,13 @@ const OrderDetailsPage = () => {
             <hr />
             <div className="flex justify-between text-lg font-bold">
               <span>الإجمالي:</span>
-              <span className="text-blue-600">{formatPrice(order.totalPrice || order.totalAmount)}</span>
+              <span className="text-blue-600">
+                {formatPrice(
+                  (order.totalPrice || order.totalAmount || 0) +
+                  (order.shippingCost || 0) +
+                  (order.codFee || 0)
+                )}
+              </span>
             </div>
           </div>
         </div>
@@ -160,6 +252,21 @@ const OrderDetailsPage = () => {
               <p className="text-sm">{order.orderNotes}</p>
             </div>
           )}
+
+          {/* ✅ عرض إيصال الدفع لو موجود */}
+          {order.payment?.receiptImageUrl && (
+            <div className="mt-4 pt-4 border-t">
+              <h3 className="font-medium text-sm text-gray-500 mb-2">🧾 إيصال الدفع:</h3>
+              <a
+                href={order.payment.receiptImageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline text-sm"
+              >
+                📄 عرض الإيصال
+              </a>
+            </div>
+          )}
         </div>
       </div>
 
@@ -168,17 +275,54 @@ const OrderDetailsPage = () => {
         <OrderItems items={order.items || order.orderItems || []} />
       </div>
 
-      <div className="flex gap-3">
+      {/* ✅ الأزرار */}
+      <div className="flex flex-wrap gap-3">
+        {/* زرار تأكيد الاستلام */}
+        {canConfirmDelivery && (
+          <button
+            onClick={() => setShowConfirmDeliveryDialog(true)}
+            disabled={confirmLoading}
+            className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium
+                       hover:bg-green-700 disabled:opacity-50 transition-colors"
+          >
+            {confirmLoading ? 'جاري التأكيد...' : '✅ تأكيد الاستلام'}
+          </button>
+        )}
+
+        {/* زرار إتمام الدفع */}
+        {needsPayment && (
+          <Link
+            to={`/orders/${order.id}/payment`}
+            className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium
+                       hover:bg-blue-700 transition-colors"
+          >
+            💳 إتمام الدفع
+          </Link>
+        )}
+
+        {/* زرار إلغاء الطلب */}
         {canCancel && (
           <button onClick={() => setShowCancelDialog(true)} className="btn-danger">
             ❌ إلغاء الطلب
           </button>
         )}
+
         <button onClick={() => navigate('/orders')} className="btn-secondary">
           ← رجوع لطلباتي
         </button>
       </div>
 
+      {/* ✅ Dialog تأكيد الاستلام */}
+      <ConfirmDialog
+        isOpen={showConfirmDeliveryDialog}
+        onClose={() => setShowConfirmDeliveryDialog(false)}
+        onConfirm={handleConfirmDelivery}
+        title="تأكيد استلام الطلب"
+        message="هل استلمت الطلب فعلاً؟ بعد التأكيد هيتم تحويل المبلغ للبائع ومش هتقدر ترجع الطلب."
+        confirmText={confirmLoading ? 'جاري التأكيد...' : '✅ أيوه، استلمت الطلب'}
+      />
+
+      {/* Dialog إلغاء الطلب */}
       <ConfirmDialog
         isOpen={showCancelDialog}
         onClose={() => setShowCancelDialog(false)}

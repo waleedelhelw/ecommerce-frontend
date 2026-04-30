@@ -14,10 +14,17 @@ export const processPayout = async (payoutId, data) => {
   return response.data.data;
 };
 
-// ✅ Default export
+// ✅ 🆕 رفع إيصال التحويل
+export const uploadPayoutReceipt = async (payoutId, data) => {
+  const response = await API.put(`${BASE}/${payoutId}/upload-receipt`, data);
+  return response.data.data;
+};
+
 const adminPayoutService = {
   getPayouts: getAllPayouts,
+  getAllPayouts,
   processPayout,
+  uploadPayoutReceipt,
 };
 
 export default adminPayoutService;
