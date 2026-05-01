@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="80" fill="white" opacity="0.05"/>
+  <circle cx="1100" cy="530" r="120" fill="white" opacity="0.05"/>
+  <circle cx="900" cy="80" r="60" fill="white" opacity="0.08"/>
+
+  <!-- Logo Box -->
+  <rect x="500" y="120" width="200" height="200" rx="40" fill="white"/>
+
+  <!-- Shopping Bag inside logo -->
+  <path d="M540 200 L660 200 L655 290 Q654 300 644 300 L556 300 Q546 300 545 290 Z" fill="#667eea"/>
+  <path d="M565 200 L565 175 Q565 155 600 155 Q635 155 635 175 L635 200" stroke="#667eea" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Brand Name -->
+  <text x="600" y="400" font-family="Tajawal, Arial, sans-serif" font-size="96" font-weight="900" fill="white" text-anchor="middle">تسوّق</text>
+
+  <!-- Tagline -->
+  <text x="600" y="465" font-family="Tajawal, Arial, sans-serif" font-size="36" font-weight="500" fill="white" text-anchor="middle" opacity="0.95">منصة التسوق الإلكتروني الأولى</text>
+
+  <!-- Sub tagline -->
+  <text x="600" y="520" font-family="Tajawal, Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" opacity="0.8">🛍️ اشترِ • بِع • اربح</text>
+
+  <!-- Website URL -->
+  <text x="600" y="580" font-family="Arial, sans-serif" font-size="22" fill="white" text-anchor="middle" opacity="0.7">tasawwaq.vercel.app</text>
+</svg>

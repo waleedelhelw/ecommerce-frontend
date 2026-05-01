@@ -5,19 +5,35 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-site-verification" content="CU3bfrii-sdQ5PZi4KFY1GTKMX4WcjI1sF2sN8RJE-c" />
     <meta name="theme-color" content="#667eea" />
+
+    <!-- ✅ PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- ✅ Canonical URL -->
+    <link rel="canonical" href="https://tasawwaq.vercel.app" />
 
     <!-- ✅ SEO Meta Tags -->
     <title>تسوّق | منصة التسوق الإلكتروني الأولى</title>
     <meta name="description" content="تسوّق - منصة التسوق الإلكتروني الأولى. اشترِ من آلاف المنتجات أو افتح متجرك الخاص واربح من بيع منتجاتك بسهولة وأمان." />
-    <meta name="keywords" content="تسوق, تسوق اونلاين, متجر الكتروني, شراء, بيع, افتح متجرك, تجارة الكترونية, tasawwaq" />
+    <meta name="keywords" content="تسوق, تسوق اونلاين, متجر الكتروني, شراء, بيع, افتح متجرك, تجارة الكترونية, tasawwaq, متجر الكتروني مصر" />
     <meta name="author" content="Tasawwaq" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- ✅ Geo Tags (للسيو المحلي) -->
+    <meta name="geo.region" content="EG" />
+    <meta name="geo.placename" content="Egypt" />
+    <meta name="language" content="Arabic" />
 
     <!-- ✅ Open Graph (Facebook / WhatsApp / LinkedIn) -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="تسوّق | منصة التسوق الإلكتروني" />
     <meta property="og:description" content="اشترِ من آلاف المنتجات أو افتح متجرك الخاص واربح من بيع منتجاتك." />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://tasawwaq.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:url" content="https://tasawwaq.vercel.app" />
     <meta property="og:site_name" content="تسوّق" />
     <meta property="og:locale" content="ar_EG" />
@@ -26,15 +42,65 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="تسوّق | منصة التسوق الإلكتروني" />
     <meta name="twitter:description" content="اشترِ أو بِع منتجاتك على تسوّق." />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:image" content="https://tasawwaq.vercel.app/og-image.png" />
 
     <!-- ✅ Tajawal Font (Arabic) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- ✅ Structured Data (JSON-LD) - WebSite Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "تسوّق",
+      "alternateName": "Tasawwaq",
+      "url": "https://tasawwaq.vercel.app",
+      "description": "منصة التسوق الإلكتروني الأولى. اشترِ من آلاف المنتجات أو افتح متجرك الخاص.",
+      "inLanguage": "ar-EG",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://tasawwaq.vercel.app/products?search={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- ✅ Structured Data - Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "تسوّق",
+      "alternateName": "Tasawwaq",
+      "url": "https://tasawwaq.vercel.app",
+      "logo": "https://tasawwaq.vercel.app/favicon.svg",
+      "description": "منصة التسوق الإلكتروني الأولى في مصر",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "EG",
+        "addressLocality": "Cairo"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "email": "info@tasawwaq.com",
+        "availableLanguage": ["Arabic", "English"]
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="text-align: center; padding: 20px; font-family: Arial;">
+        ❌ يجب تفعيل JavaScript لتشغيل الموقع
+      </p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

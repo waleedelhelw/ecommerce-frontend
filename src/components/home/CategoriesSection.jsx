@@ -49,9 +49,14 @@ const CategoriesSection = () => {
   if (categories.length === 0) return null;
 
   return (
-    <section className="py-12">
+    <section className="py-12" aria-labelledby="categories-section-title">
       <div className="max-w-7xl mx-auto px-4">
-        <h2 className="text-2xl font-bold text-center mb-8">تسوق حسب التصنيف</h2>
+        <h2
+          id="categories-section-title"
+          className="text-2xl font-bold text-center mb-8"
+        >
+          تسوق حسب التصنيف
+        </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {categories.map((category, index) => (
@@ -61,10 +66,12 @@ const CategoriesSection = () => {
               className={`bg-gradient-to-br ${colors[index % colors.length]} 
                          rounded-xl p-5 flex items-center justify-center text-center
                          hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
+              aria-label={`تصفح منتجات ${category.name}`}
             >
-              <span className="text-white font-bold text-sm leading-tight">
+              {/* ✅ تغيير span لـ h3 (أفضل للـ SEO) */}
+              <h3 className="text-white font-bold text-sm leading-tight">
                 {category.name}
-              </span>
+              </h3>
             </Link>
           ))}
         </div>

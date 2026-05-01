@@ -37,11 +37,23 @@ const NewArrivalsSection = () => {
   if (products.length === 0) return null;
 
   return (
-    <section className="py-12">
+    <section
+      className="py-12"
+      aria-labelledby="new-arrivals-section-title"
+    >
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold">🆕 وصل حديثاً</h2>
-          <Link to="/products" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+          <h2
+            id="new-arrivals-section-title"
+            className="text-2xl font-bold"
+          >
+            <span aria-hidden="true">🆕</span> وصل حديثاً
+          </h2>
+          <Link
+            to="/products"
+            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            aria-label="عرض كل المنتجات الجديدة"
+          >
             عرض الكل ←
           </Link>
         </div>

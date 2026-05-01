@@ -3,12 +3,12 @@ const WhyUsSection = () => {
     {
       icon: '🚚',
       title: 'شحن سريع',
-      description: 'توصيل سريع لجميع المحافظات',
+      description: 'توصيل سريع لجميع المحافظات في مصر',
     },
     {
       icon: '🔒',
       title: 'دفع آمن',
-      description: 'طرق دفع متعددة وآمنة',
+      description: 'طرق دفع متعددة وآمنة 100%',
     },
     {
       icon: '🔄',
@@ -23,16 +23,33 @@ const WhyUsSection = () => {
   ];
 
   return (
-    <section className="py-12 bg-gray-100">
+    <section
+      className="py-12 bg-gray-100"
+      aria-labelledby="why-us-section-title"
+    >
       <div className="max-w-7xl mx-auto px-4">
-        <h2 className="text-2xl font-bold text-center mb-8">💪 لماذا تختارنا</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <h2
+          id="why-us-section-title"
+          className="text-2xl font-bold text-center mb-8"
+        >
+          <span aria-hidden="true">💪</span> لماذا تختارنا
+        </h2>
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          role="list"
+        >
           {features.map((feature, index) => (
-            <div key={index} className="bg-white rounded-xl p-6 text-center">
-              <span className="text-4xl mb-3 block">{feature.icon}</span>
+            <article
+              key={index}
+              className="bg-white rounded-xl p-6 text-center"
+              role="listitem"
+            >
+              <span className="text-4xl mb-3 block" aria-hidden="true">
+                {feature.icon}
+              </span>
               <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
               <p className="text-gray-500 text-sm">{feature.description}</p>
-            </div>
+            </article>
           ))}
         </div>
       </div>

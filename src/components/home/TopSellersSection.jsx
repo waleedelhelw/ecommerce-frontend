@@ -25,20 +25,31 @@ const TopSellersSection = () => {
   if (loading || sellers.length === 0) return null;
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section
+      className="py-12 bg-gray-50"
+      aria-labelledby="top-sellers-section-title"
+    >
       <div className="max-w-7xl mx-auto px-4">
         {/* العنوان */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">🏪 تسوّق من متاجرنا</h2>
-            <p className="text-gray-500 mt-1">اكتشف أفضل البائعين على منصتنا</p>
+            <h2
+              id="top-sellers-section-title"
+              className="text-2xl font-bold text-gray-800"
+            >
+              <span aria-hidden="true">🏪</span> تسوّق من متاجرنا
+            </h2>
+            <p className="text-gray-500 mt-1">
+              اكتشف أفضل البائعين على منصتنا
+            </p>
           </div>
           <Link
             to="/sellers"
             className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium text-sm"
+            aria-label="عرض كل المتاجر"
           >
             عرض الكل
-            <FiArrowLeft size={16} />
+            <FiArrowLeft size={16} aria-hidden="true" />
           </Link>
         </div>
 
@@ -47,22 +58,25 @@ const TopSellersSection = () => {
           {sellers.map((seller) => (
             <Link
               key={seller.id}
-              // ✅ بنستخدم seller.id
               to={`/sellers/${seller.userId}`}
-
               className="bg-white rounded-xl border p-5 hover:shadow-lg transition-shadow text-center group"
+              aria-label={`زيارة متجر ${seller.storeName}`}
             >
               {/* اللوجو */}
               <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full overflow-hidden flex items-center justify-center mb-3">
                 {seller.logoUrl ? (
                   <img
                     src={seller.logoUrl}
-                    alt={seller.storeName}
+                    alt={`شعار متجر ${seller.storeName}`}
                     className="w-full h-full object-cover"
-                    onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '🏪'; }}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = '🏪';
+                    }}
                   />
                 ) : (
-                  <span className="text-2xl">🏪</span>
+                  <span className="text-2xl" aria-hidden="true">🏪</span>
                 )}
               </div>
 
@@ -73,12 +87,14 @@ const TopSellersSection = () => {
               <div className="flex items-center justify-center gap-3 mt-2 text-xs text-gray-500">
                 {seller.rating > 0 && (
                   <span className="flex items-center gap-1">
-                    <FiStar size={12} className="text-yellow-500" />
-                    {seller.rating}
+                    <FiStar size={12} className="text-yellow-500" aria-hidden="true" />
+                    <span aria-label={`التقييم ${seller.rating} من 5`}>
+                      {seller.rating}
+                    </span>
                   </span>
                 )}
                 <span className="flex items-center gap-1">
-                  <FiPackage size={12} />
+                  <FiPackage size={12} aria-hidden="true" />
                   {seller.totalProducts} منتج
                 </span>
               </div>

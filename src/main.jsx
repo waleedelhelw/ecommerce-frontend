@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -11,15 +12,17 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId="VITE_GOOGLE_OAUTH_CLIENT_ID">
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <RouterProvider router={router} />
-            <Toaster position="top-center" />
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
-    </GoogleOAuthProvider>
+    <HelmetProvider>
+      <GoogleOAuthProvider clientId="VITE_GOOGLE_OAUTH_CLIENT_ID">
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <RouterProvider router={router} />
+              <Toaster position="top-center" />
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </GoogleOAuthProvider>
+    </HelmetProvider>
   </React.StrictMode>
 );

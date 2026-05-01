@@ -1,0 +1,56 @@
+# robots.txt for Tasawwaq E-commerce Platform
+# https://tasawwaq.vercel.app
+
+# ✅ Allow all search engines
+User-agent: *
+
+# ✅ Allow public pages
+Allow: /
+Allow: /products
+Allow: /products/
+Allow: /categories
+Allow: /categories/
+Allow: /sellers
+Allow: /sellers/
+Allow: /login
+Allow: /register
+Allow: /register-seller
+
+# ❌ Disallow private/admin pages
+Disallow: /admin/
+Disallow: /seller/dashboard
+Disallow: /seller/products
+Disallow: /seller/orders
+Disallow: /seller/payouts
+Disallow: /seller/profile
+Disallow: /seller/pending
+Disallow: /seller/rejected
+Disallow: /seller/suspended
+Disallow: /profile
+Disallow: /cart
+Disallow: /checkout
+Disallow: /payment
+Disallow: /orders
+Disallow: /orders/
+Disallow: /wishlist
+Disallow: /verify-email
+Disallow: /change-password
+
+# ❌ Disallow API endpoints
+Disallow: /api/
+
+# ✅ Sitemap location
+Sitemap: https://tasawwaq.vercel.app/sitemap.xml
+
+# 🤖 Block bad bots (optional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+# ⏱️ Crawl delay (1 second between requests)
+Crawl-delay: 1

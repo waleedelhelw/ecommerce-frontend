@@ -29,7 +29,6 @@ import SellersPage from './pages/customer/SellersPage';
 import SellerStorePage from './pages/customer/SellerStorePage';
 import PaymentPage from './pages/customer/PaymentPage';
 
-
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -71,6 +70,17 @@ import NotFoundPage from './pages/errors/NotFoundPage';
 import UnauthorizedPage from './pages/errors/UnauthorizedPage';
 import ForbiddenPage from './pages/errors/ForbiddenPage';
 
+// ✅ Static Pages (Public - SEO)
+import AboutPage from './pages/static/AboutPage';
+import ContactPage from './pages/static/ContactPage';
+import FaqPage from './pages/static/FaqPage';
+import HowToSellPage from './pages/static/HowToSellPage';
+import PrivacyPage from './pages/static/PrivacyPage';
+import TermsPage from './pages/static/TermsPage';
+import ShippingPage from './pages/static/ShippingPage';
+import ReturnsPage from './pages/static/ReturnsPage';
+
+
 const router = createBrowserRouter([
   // ══════════════════════════════════════════
   // صفحات المصادقة (Auth)
@@ -105,8 +115,7 @@ const router = createBrowserRouter([
       {
         path: '/verify-email',
         element: <VerifyEmailPage />,
-     },
-
+      },
     ],
   },
 
@@ -141,10 +150,45 @@ const router = createBrowserRouter([
         path: '/sellers',
         element: <SellersPage />,
       },
-      // ✅ التعديل المهم: sellerId بدل id
       {
         path: '/sellers/:sellerId',
         element: <SellerStorePage />,
+      },
+
+      // ══════════════════════════════════════════
+      // ✅ صفحات Static (SEO - Public)
+      // ══════════════════════════════════════════
+      {
+        path: '/about',
+        element: <AboutPage />,
+      },
+      {
+        path: '/contact',
+        element: <ContactPage />,
+      },
+      {
+        path: '/faq',
+        element: <FaqPage />,
+      },
+      {
+        path: '/how-to-sell',
+        element: <HowToSellPage />,
+      },
+      {
+        path: '/privacy',
+        element: <PrivacyPage />,
+      },
+      {
+        path: '/terms',
+        element: <TermsPage />,
+      },
+      {
+        path: '/shipping',
+        element: <ShippingPage />,
+      },
+      {
+        path: '/returns',
+        element: <ReturnsPage />,
       },
 
       // --- صفحات تحتاج تسجيل دخول (Customer) ---
@@ -180,8 +224,7 @@ const router = createBrowserRouter([
           </CustomerRoute>
         ),
       },
-
-            {
+      {
         path: '/orders/:id/payment',
         element: (
           <CustomerRoute>
@@ -386,7 +429,7 @@ const router = createBrowserRouter([
         path: 'logs',
         element: <AdminLogsPage />,
       },
-            {
+      {
         path: 'payments',
         element: <AdminPaymentReviewPage />,
       },

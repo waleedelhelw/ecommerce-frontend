@@ -36,9 +36,15 @@ const FeaturedProducts = () => {
   if (products.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+      role="list"
+      aria-label="قائمة المنتجات المميزة"
+    >
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <div key={product.id} role="listitem">
+          <ProductCard product={product} />
+        </div>
       ))}
     </div>
   );

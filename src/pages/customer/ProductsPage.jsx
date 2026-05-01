@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import SEO from '../../components/common/SEO';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import SearchBar from '../../components/common/SearchBar';
 import ProductGrid from '../../components/product/ProductGrid';
@@ -90,81 +91,116 @@ const ProductsPage = () => {
     });
   };
 
+  // ✅ SEO Dynamic Title & Description
+  const seoTitle = filters.searchTerm
+    ? `نتائج البحث عن "${filters.searchTerm}"`
+    : 'كل المنتجات';
+
+  const seoDescription = filters.searchTerm
+    ? `نتائج البحث عن "${filters.searchTerm}" في تسوّق. اكتشف ${totalItems} منتج بأفضل الأسعار.`
+    : `اكتشف آلاف المنتجات على تسوّق. تصفّح ${totalItems > 0 ? totalItems : 'آلاف'} منتج من بائعين موثوقين بأفضل الأسعار وتوصيل لكل مصر.`;
+
+  // ✅ Breadcrumb Schema
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'الرئيسية',
+        item: 'https://tasawwaq.vercel.app',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'المنتجات',
+        item: 'https://tasawwaq.vercel.app/products',
+      },
+    ],
+  };
+
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
+        <SEO title="خطأ في تحميل المنتجات" noindex={true} />
         <ErrorMessage message={error} onRetry={fetchProducts} />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <Breadcrumb
-        items={[
-          { label: 'الرئيسية', link: '/' },
-          { label: 'المنتجات' },
-        ]}
+    <>
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        keywords="منتجات, تسوق, شراء اونلاين, متجر الكتروني, اسعار, خصومات"
+        url={`/products${filters.searchTerm ? `?search=${filters.searchTerm}` : ''}`}
+        structuredData={breadcrumbSchema}
       />
 
-      <h1 className="text-2xl font-bold mb-6">📦 المنتجات</h1>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <Breadcrumb items={[{ label: 'المنتجات' }]} />
 
-      {/* Search */}
-      <div className="mb-6">
-        <SearchBar onSearch={handleSearch} placeholder="ابحث عن منتج..." />
-      </div>
+        <h1 className="text-2xl font-bold mb-6">📦 المنتجات</h1>
 
-      {/* Layout */}
-      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Search */}
+        <div className="mb-6">
+          <SearchBar onSearch={handleSearch} placeholder="ابحث عن منتج..." />
+        </div>
 
-        {/* Filter Sidebar - Desktop */}
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <div className="sticky top-20">
-            <ProductFilter
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onReset={handleResetFilters}
-            />
-          </div>
-        </aside>
+        {/* Layout */}
+        <div className="flex flex-col lg:flex-row gap-8">
 
-        {/* Products Section */}
-        <main className="flex-1 min-w-0">
-
-          {/* Mobile Filter */}
-          <div className="lg:hidden mb-4">
-            <ProductFilter
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onReset={handleResetFilters}
-            />
-          </div>
-
-          {/* Sort + Count */}
-          <div className="mb-6">
-            <ProductSort
-              value={filters.sortBy}
-              onChange={handleSortChange}
-              totalItems={totalItems}
-            />
-          </div>
-
-          {/* Grid */}
-          <ProductGrid products={products} loading={loading} />
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8">
-              <Pagination
-                currentPage={filters.pageNumber}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
+          {/* Filter Sidebar - Desktop */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-20">
+              <ProductFilter
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onReset={handleResetFilters}
               />
             </div>
-          )}
-        </main>
+          </aside>
+
+          {/* Products Section */}
+          <main className="flex-1 min-w-0">
+
+            {/* Mobile Filter */}
+            <div className="lg:hidden mb-4">
+              <ProductFilter
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onReset={handleResetFilters}
+              />
+            </div>
+
+            {/* Sort + Count */}
+            <div className="mb-6">
+              <ProductSort
+                value={filters.sortBy}
+                onChange={handleSortChange}
+                totalItems={totalItems}
+              />
+            </div>
+
+            {/* Grid */}
+            <ProductGrid products={products} loading={loading} />
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={filters.pageNumber}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
