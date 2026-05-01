@@ -1,55 +1,119 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🔧 Basic Meta Tags                                      -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🎨 Icons & Theme                                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="google-site-verification" content="CU3bfrii-sdQ5PZi4KFY1GTKMX4WcjI1sF2sN8RJE-c" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
     <meta name="theme-color" content="#667eea" />
+    <meta name="msapplication-TileColor" content="#667eea" />
 
-    <!-- ✅ PWA Manifest -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 📱 PWA                                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="تسوّق" />
+    <meta name="mobile-web-app-capable" content="yes" />
 
-    <!-- ✅ Canonical URL -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🔍 Search Engine Verification                           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <meta name="google-site-verification" content="CU3bfrii-sdQ5PZi4KFY1GTKMX4WcjI1sF2sN8RJE-c" />
+    <!-- <meta name="msvalidate.01" content="BING_VERIFICATION_CODE" /> -->
+    <!-- <meta name="yandex-verification" content="YANDEX_VERIFICATION_CODE" /> -->
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🔗 Canonical URL                                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <link rel="canonical" href="https://tasawwaq.vercel.app" />
 
-    <!-- ✅ SEO Meta Tags -->
-    <title>تسوّق | منصة التسوق الإلكتروني الأولى</title>
-    <meta name="description" content="تسوّق - منصة التسوق الإلكتروني الأولى. اشترِ من آلاف المنتجات أو افتح متجرك الخاص واربح من بيع منتجاتك بسهولة وأمان." />
-    <meta name="keywords" content="تسوق, تسوق اونلاين, متجر الكتروني, شراء, بيع, افتح متجرك, تجارة الكترونية, tasawwaq, متجر الكتروني مصر" />
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 📝 SEO Meta Tags                                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <title>تسوّق | منصة التسوق الإلكتروني الأولى في مصر</title>
+    <meta name="description" content="تسوّق - منصة التسوق الإلكتروني الأولى في مصر. اشترِ من آلاف المنتجات بأفضل الأسعار، أو افتح متجرك الخاص واربح من بيع منتجاتك بسهولة وأمان." />
+    <meta name="keywords" content="تسوق, تسوق اونلاين, متجر الكتروني, شراء, بيع, افتح متجرك, تجارة الكترونية, tasawwaq, متجر الكتروني مصر, توصيل لكل مصر, دفع عند الاستلام" />
     <meta name="author" content="Tasawwaq" />
-    <meta name="robots" content="index, follow" />
+    <meta name="publisher" content="Tasawwaq" />
+    <meta name="copyright" content="© 2026 Tasawwaq" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow" />
+    <meta name="bingbot" content="index, follow" />
+    <meta name="rating" content="general" />
+    <meta name="distribution" content="global" />
+    <meta name="revisit-after" content="3 days" />
 
-    <!-- ✅ Geo Tags (للسيو المحلي) -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🌍 Geo Tags (للسيو المحلي)                             -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <meta name="geo.region" content="EG" />
-    <meta name="geo.placename" content="Egypt" />
+    <meta name="geo.placename" content="Cairo, Egypt" />
+    <meta name="geo.position" content="30.0444;31.2357" />
+    <meta name="ICBM" content="30.0444, 31.2357" />
     <meta name="language" content="Arabic" />
+    <meta http-equiv="content-language" content="ar-EG" />
 
-    <!-- ✅ Open Graph (Facebook / WhatsApp / LinkedIn) -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 📱 Open Graph (Facebook / WhatsApp / LinkedIn)         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="تسوّق | منصة التسوق الإلكتروني" />
-    <meta property="og:description" content="اشترِ من آلاف المنتجات أو افتح متجرك الخاص واربح من بيع منتجاتك." />
-    <meta property="og:image" content="https://tasawwaq.vercel.app/og-image.png" />
+    <meta property="og:site_name" content="تسوّق" />
+    <meta property="og:title" content="تسوّق | منصة التسوق الإلكتروني الأولى في مصر" />
+    <meta property="og:description" content="اشترِ من آلاف المنتجات أو افتح متجرك الخاص واربح من بيع منتجاتك. توصيل لكل مصر مع ضمان الجودة." />
+    <meta property="og:image" content="https://tasawwaq.vercel.app/og-image.svg" />
+    <meta property="og:image:secure_url" content="https://tasawwaq.vercel.app/og-image.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="تسوّق - منصة التسوق الإلكتروني الأولى" />
     <meta property="og:url" content="https://tasawwaq.vercel.app" />
-    <meta property="og:site_name" content="تسوّق" />
     <meta property="og:locale" content="ar_EG" />
+    <meta property="og:locale:alternate" content="ar_AR" />
+    <meta property="og:locale:alternate" content="en_US" />
 
-    <!-- ✅ Twitter Card -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🐦 Twitter Card                                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="تسوّق | منصة التسوق الإلكتروني" />
-    <meta name="twitter:description" content="اشترِ أو بِع منتجاتك على تسوّق." />
-    <meta name="twitter:image" content="https://tasawwaq.vercel.app/og-image.png" />
+    <meta name="twitter:site" content="@tasawwaq" />
+    <meta name="twitter:creator" content="@tasawwaq" />
+    <meta name="twitter:title" content="تسوّق | منصة التسوق الإلكتروني الأولى" />
+    <meta name="twitter:description" content="اشترِ أو بِع منتجاتك على تسوّق - أكبر سوق إلكتروني في مصر." />
+    <meta name="twitter:image" content="https://tasawwaq.vercel.app/og-image.svg" />
+    <meta name="twitter:image:alt" content="تسوّق - منصة التسوق الإلكتروني" />
 
-    <!-- ✅ Tajawal Font (Arabic) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ⚡ Performance Optimizations                            -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
-    <!-- ✅ Structured Data (JSON-LD) - WebSite Schema -->
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🔤 Tajawal Font (Arabic)                                -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 📊 Structured Data - WebSite Schema                     -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -57,7 +121,7 @@
       "name": "تسوّق",
       "alternateName": "Tasawwaq",
       "url": "https://tasawwaq.vercel.app",
-      "description": "منصة التسوق الإلكتروني الأولى. اشترِ من آلاف المنتجات أو افتح متجرك الخاص.",
+      "description": "منصة التسوق الإلكتروني الأولى في مصر. اشترِ من آلاف المنتجات أو افتح متجرك الخاص.",
       "inLanguage": "ar-EG",
       "potentialAction": {
         "@type": "SearchAction",
@@ -70,7 +134,9 @@
     }
     </script>
 
-    <!-- ✅ Structured Data - Organization Schema -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🏢 Structured Data - Organization Schema                -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -78,29 +144,91 @@
       "name": "تسوّق",
       "alternateName": "Tasawwaq",
       "url": "https://tasawwaq.vercel.app",
-      "logo": "https://tasawwaq.vercel.app/favicon.svg",
-      "description": "منصة التسوق الإلكتروني الأولى في مصر",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://tasawwaq.vercel.app/logo.svg",
+        "width": 512,
+        "height": 512
+      },
+      "image": "https://tasawwaq.vercel.app/og-image.svg",
+      "description": "منصة تسوّق الإلكترونية - السوق الإلكتروني الأول في مصر للتسوق وفتح المتاجر",
+      "foundingDate": "2025",
       "address": {
         "@type": "PostalAddress",
         "addressCountry": "EG",
-        "addressLocality": "Cairo"
+        "addressLocality": "Cairo",
+        "addressRegion": "Cairo Governorate"
       },
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "Customer Service",
         "email": "info@tasawwaq.com",
+        "telephone": "+20-123-456-7890",
+        "areaServed": "EG",
         "availableLanguage": ["Arabic", "English"]
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "Egypt"
+      },
+      "sameAs": [
+        "https://facebook.com/tasawwaq",
+        "https://instagram.com/tasawwaq",
+        "https://twitter.com/tasawwaq"
+      ]
+    }
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🔍 Structured Data - WebPage Schema (Breadcrumb root)  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "تسوّق - الصفحة الرئيسية",
+      "url": "https://tasawwaq.vercel.app",
+      "description": "منصة التسوق الإلكتروني الأولى في مصر",
+      "inLanguage": "ar-EG",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "تسوّق",
+        "url": "https://tasawwaq.vercel.app"
       }
     }
     </script>
   </head>
+
   <body>
     <div id="root"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ⚠️  No JavaScript Fallback                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <noscript>
-      <p style="text-align: center; padding: 20px; font-family: Arial;">
-        ❌ يجب تفعيل JavaScript لتشغيل الموقع
-      </p>
+      <div style="
+        text-align: center;
+        padding: 40px 20px;
+        font-family: 'Tajawal', Arial, sans-serif;
+        max-width: 600px;
+        margin: 50px auto;
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        direction: rtl;
+      ">
+        <h1 style="color: #667eea; margin-bottom: 16px;">⚠️ JavaScript مطلوب</h1>
+        <p style="color: #4a5568; line-height: 1.6;">
+          عذراً، يجب تفعيل JavaScript لتشغيل موقع <strong>تسوّق</strong>.
+          <br />
+          من فضلك فعّل JavaScript في متصفحك وأعد تحميل الصفحة.
+        </p>
+      </div>
     </noscript>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 🚀 Main Script                                          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
