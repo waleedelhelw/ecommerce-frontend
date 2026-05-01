@@ -101,6 +101,8 @@
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
 
     <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -196,6 +198,23 @@
         "url": "https://tasawwaq.vercel.app"
       }
     }
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 📊 Google Analytics 4 (GA4)                             -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T4SXVXPRJ1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-T4SXVXPRJ1', {
+        page_title: document.title,
+        page_location: window.location.href,
+        send_page_view: true,
+        anonymize_ip: true,
+        cookie_flags: 'SameSite=None;Secure'
+      });
     </script>
   </head>
 
