@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" fill="none">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Icon Box -->
+  <rect x="5" y="10" width="60" height="60" rx="14" fill="url(#logoGrad)"/>
+
+  <!-- Shopping Bag inside icon -->
+  <path d="M20 32 L50 32 L48 58 Q47.5 61 45 61 L25 61 Q22.5 61 22 58 Z"
+        fill="white"/>
+
+  <!-- Bag handles -->
+  <path d="M27 32 L27 26 Q27 20 35 20 Q43 20 43 26 L43 32"
+        stroke="white"
+        stroke-width="2.5"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Letter "ت" inside bag -->
+  <circle cx="31" cy="42" r="1.8" fill="#667eea"/>
+  <circle cx="39" cy="42" r="1.8" fill="#667eea"/>
+  <path d="M27 49 Q35 53 43 49"
+        stroke="#667eea"
+        stroke-width="2.2"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Brand Name "تسوّق" -->
+  <text x="80" y="52"
+        font-family="Tajawal, Arial, sans-serif"
+        font-size="34"
+        font-weight="bold"
+        fill="url(#logoGrad)">تسوّق</text>
+</svg>
