@@ -6,11 +6,15 @@ import OrderItems from '../../components/order/OrderItems';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import ReturnStatusBadge from '../../components/return/ReturnStatusBadge';
 import orderService from '../../api/orderService';
+import returnService from '../../api/returnService';
 import { formatDate } from '../../utils/formatDate';
 import { formatPrice } from '../../utils/formatPrice';
 import { orderStatusMap } from '../../utils/orderStatusMap';
 import { PAYMENT_LABELS } from '../../utils/constants';
+import { checkOrderReturnable } from '../../utils/returnStatusMap';
+import { FiRefreshCw, FiEye } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const OrderDetailsPage = () => {
@@ -22,7 +26,12 @@ const OrderDetailsPage = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [showConfirmDeliveryDialog, setShowConfirmDeliveryDialog] = useState(false);
+  const [showConfirmDeliveryDialog, setShowConfirmDeliveryDialog] =
+    useState(false);
+
+  // 🆕 ✅ State للـ Return الموجود
+  const [activeReturn, setActiveReturn] = useState(null);
+  const [checkingReturn, setCheckingReturn] = useState(true);
 
   const fetchOrder = async () => {
     try {
@@ -37,9 +46,38 @@ const OrderDetailsPage = () => {
     }
   };
 
+  // 🆕 ✅ نشيك لو فيه return نشط لهذا الأوردر
+  const checkActiveReturn = async () => {
+    try {
+      setCheckingReturn(true);
+      const data = await returnService.getActiveReturnForOrder(parseInt(id));
+      setActiveReturn(data);
+    } catch (err) {
+      console.error('Failed to check active return:', err);
+    } finally {
+      setCheckingReturn(false);
+    }
+  };
+
   useEffect(() => {
     fetchOrder();
   }, [id]);
+
+  // 🆕 لما الأوردر يتحمل، نشيك على الـ returns
+  useEffect(() => {
+    if (order?.id) {
+      // نشيك بس لو الأوردر قابل للإرجاع (Delivered أو Completed)
+      if (
+        order.status === 'Delivered' ||
+        order.status === 'Completed' ||
+        order.status === 'Refunded'
+      ) {
+        checkActiveReturn();
+      } else {
+        setCheckingReturn(false);
+      }
+    }
+  }, [order]);
 
   const handleCancelOrder = async () => {
     try {
@@ -81,9 +119,23 @@ const OrderDetailsPage = () => {
   if (!order) return <ErrorMessage message="الطلب غير موجود" />;
 
   const status = orderStatusMap[order.status] || orderStatusMap.Pending;
-  const canCancel = order.status === 'Pending' || order.status === 'Processing';
-const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Delivered';
-  const needsPayment = order.status === 'PendingPayment' || order.status === 'PaymentFailed';
+  const canCancel =
+    order.status === 'Pending' || order.status === 'Processing';
+
+  // ✅ تعديل: زر التأكيد يظهر فقط لما الحالة Shipped (مش Delivered)
+  const canConfirmDelivery = order.status === 'Shipped';
+
+  // ✅ جديد: علامات الحالات بعد الاستلام
+  const isDelivered = order.status === 'Delivered';
+  const isCompleted = order.status === 'Completed';
+
+  const needsPayment =
+    order.status === 'PendingPayment' || order.status === 'PaymentFailed';
+
+  // ✅ التحقق من إمكانية الإرجاع
+  const returnableInfo = checkOrderReturnable(order);
+  // 🆕 يقدر يطلب إرجاع لو الأوردر قابل للإرجاع + مفيش return نشط
+  const canRequestReturn = returnableInfo.canReturn && !activeReturn;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -97,7 +149,9 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">📋 تفاصيل الطلب #{order.id}</h1>
-        <span className={`px-4 py-2 rounded-full text-sm font-medium ${status.color}`}>
+        <span
+          className={`px-4 py-2 rounded-full text-sm font-medium ${status.color}`}
+        >
           {status.icon} {status.label}
         </span>
       </div>
@@ -130,20 +184,23 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
           <span className="text-2xl">⏳</span>
           <div>
             <p className="font-bold text-blue-800">جاري مراجعة الإيصال</p>
-            <p className="text-sm text-blue-600">تم رفع الإيصال بنجاح وجاري المراجعة من الإدارة</p>
+            <p className="text-sm text-blue-600">
+              تم رفع الإيصال بنجاح وجاري المراجعة من الإدارة
+            </p>
           </div>
         </div>
       )}
 
+      {/* ✅ Banner: الطلب في الطريق - يظهر فقط في حالة Shipped */}
       {canConfirmDelivery && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">📦</span>
             <div>
-              <p className="font-bold text-green-800">
-                {order.status === 'Shipped' ? 'طلبك في الطريق إليك!' : 'تم توصيل طلبك'}
+              <p className="font-bold text-green-800">طلبك في الطريق إليك!</p>
+              <p className="text-sm text-green-600">
+                لو استلمت الطلب، أكد الاستلام عشان البائع ياخد فلوسه
               </p>
-              <p className="text-sm text-green-600">لو استلمت الطلب، أكد الاستلام عشان البائع ياخد فلوسه</p>
             </div>
           </div>
           <button
@@ -154,6 +211,102 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
           </button>
         </div>
       )}
+
+      {/* ✅ جديد: Banner بعد تأكيد الاستلام (Delivered) */}
+      {isDelivered && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center gap-3 flex-wrap">
+          <span className="text-3xl">✅</span>
+          <div className="flex-1">
+            <p className="font-bold text-blue-800">تم تأكيد استلام الطلب</p>
+            <p className="text-sm text-blue-600 mt-1">
+              شكراً لك! سيتم إكمال الطلب تلقائياً خلال 3 أيام وتحويل المبلغ للبائع.
+            </p>
+            <p className="text-xs text-blue-500 mt-2">
+              💡 خلال هذه الفترة، يمكنك طلب إرجاع المنتج إذا واجهت أي مشكلة.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ جديد: Banner لما الطلب يكتمل (Completed) */}
+      {isCompleted && (
+        <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 mb-6 flex items-center gap-3 flex-wrap">
+          <span className="text-3xl">🎉</span>
+          <div className="flex-1">
+            <p className="font-bold text-green-800">الطلب مكتمل بنجاح</p>
+            <p className="text-sm text-green-600 mt-1">
+              تم إكمال الطلب وإضافة المبلغ لرصيد البائع. شكراً لتسوقك معنا!
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 🆕 ✅ Banner: لو فيه Return نشط */}
+      {activeReturn && (
+        <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔄</span>
+            <div>
+              <p className="font-bold text-purple-900 flex items-center gap-2 flex-wrap">
+                لديك طلب إرجاع نشط لهذا الأوردر
+                <ReturnStatusBadge status={activeReturn.status} size="sm" />
+              </p>
+              <p className="text-sm text-purple-700">
+                رقم طلب الإرجاع:{' '}
+                <span className="font-mono font-bold">
+                  {activeReturn.returnNumber || `#${activeReturn.id}`}
+                </span>
+              </p>
+            </div>
+          </div>
+          <Link
+            to={`/returns/${activeReturn.id}`}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center gap-2"
+          >
+            <FiEye size={16} /> عرض طلب الإرجاع
+          </Link>
+        </div>
+      )}
+
+      {/* ✅ Banner: طلب إرجاع جديد (لو متاح ومفيش active) */}
+      {canRequestReturn && !checkingReturn && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔄</span>
+            <div>
+              <p className="font-bold text-orange-800">
+                هل تريد إرجاع منتج من هذا الطلب؟
+              </p>
+              <p className="text-sm text-orange-700">
+                متبقى <strong>{returnableInfo.daysLeft} يوم</strong> من فترة
+                الإرجاع المسموحة (14 يوم)
+              </p>
+            </div>
+          </div>
+          <Link
+            to={`/returns/new/${order.id}`}
+            className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors flex items-center gap-2"
+          >
+            <FiRefreshCw size={16} /> طلب إرجاع
+          </Link>
+        </div>
+      )}
+
+      {/* 🆕 ✅ تنبيه: لو مفيش active return لكن الفترة خلصت */}
+      {!returnableInfo.canReturn &&
+        !activeReturn &&
+        !checkingReturn &&
+        (order.status === 'Delivered' || order.status === 'Completed') && (
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+            <span className="text-2xl">⏰</span>
+            <div>
+              <p className="font-medium text-gray-800">
+                انتهت فترة الإرجاع لهذا الطلب
+              </p>
+              <p className="text-sm text-gray-600">{returnableInfo.reason}</p>
+            </div>
+          </div>
+        )}
 
       <div className="bg-white rounded-xl border p-6 mb-6">
         <h2 className="font-bold mb-4">مسار الطلب</h2>
@@ -170,9 +323,10 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">تاريخ الطلب:</span>
-              <span className="font-medium">{formatDate(order.createdAt || order.orderDate)}</span>
+              <span className="font-medium">
+                {formatDate(order.createdAt || order.orderDate)}
+              </span>
             </div>
-            {/* ✅ عرض طريقة الدفع بشكل صحيح */}
             <div className="flex justify-between">
               <span className="text-gray-500">طريقة الدفع:</span>
               <span className="font-medium">
@@ -180,7 +334,6 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
               </span>
             </div>
 
-            {/* معلومات البائع */}
             {(order.storeName || order.sellerName) && (
               <div className="flex justify-between">
                 <span className="text-gray-500">المتجر:</span>
@@ -195,23 +348,28 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
 
             <hr />
 
-            {/* ✅ تفاصيل المبالغ */}
             <div className="flex justify-between">
               <span className="text-gray-500">المجموع:</span>
-              <span className="font-medium">{formatPrice(order.totalPrice || order.totalAmount)}</span>
+              <span className="font-medium">
+                {formatPrice(order.totalPrice || order.totalAmount)}
+              </span>
             </div>
 
             {order.shippingCost > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-500">الشحن:</span>
-                <span className="font-medium">{formatPrice(order.shippingCost)}</span>
+                <span className="font-medium">
+                  {formatPrice(order.shippingCost)}
+                </span>
               </div>
             )}
 
             {order.codFee > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-500">رسوم الدفع عند الاستلام:</span>
-                <span className="font-medium text-orange-600">{formatPrice(order.codFee)}</span>
+                <span className="font-medium text-orange-600">
+                  {formatPrice(order.codFee)}
+                </span>
               </div>
             )}
 
@@ -228,8 +386,8 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
               <span className="text-blue-600">
                 {formatPrice(
                   (order.totalPrice || order.totalAmount || 0) +
-                  (order.shippingCost || 0) +
-                  (order.codFee || 0)
+                    (order.shippingCost || 0) +
+                    (order.codFee || 0)
                 )}
               </span>
             </div>
@@ -248,15 +406,18 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
           </div>
           {order.orderNotes && (
             <div className="mt-4 pt-4 border-t">
-              <h3 className="font-medium text-sm text-gray-500 mb-1">📝 ملاحظات:</h3>
+              <h3 className="font-medium text-sm text-gray-500 mb-1">
+                📝 ملاحظات:
+              </h3>
               <p className="text-sm">{order.orderNotes}</p>
             </div>
           )}
 
-          {/* ✅ عرض إيصال الدفع لو موجود */}
           {order.payment?.receiptImageUrl && (
             <div className="mt-4 pt-4 border-t">
-              <h3 className="font-medium text-sm text-gray-500 mb-2">🧾 إيصال الدفع:</h3>
+              <h3 className="font-medium text-sm text-gray-500 mb-2">
+                🧾 إيصال الدفع:
+              </h3>
               <a
                 href={order.payment.receiptImageUrl}
                 target="_blank"
@@ -270,14 +431,12 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
         </div>
       </div>
 
-      {/* ✅ استخدام order.items بدل order.orderItems */}
       <div className="mb-6">
         <OrderItems items={order.items || order.orderItems || []} />
       </div>
 
       {/* ✅ الأزرار */}
       <div className="flex flex-wrap gap-3">
-        {/* زرار تأكيد الاستلام */}
         {canConfirmDelivery && (
           <button
             onClick={() => setShowConfirmDeliveryDialog(true)}
@@ -289,7 +448,6 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
           </button>
         )}
 
-        {/* زرار إتمام الدفع */}
         {needsPayment && (
           <Link
             to={`/orders/${order.id}/payment`}
@@ -300,9 +458,11 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
           </Link>
         )}
 
-        {/* زرار إلغاء الطلب */}
         {canCancel && (
-          <button onClick={() => setShowCancelDialog(true)} className="btn-danger">
+          <button
+            onClick={() => setShowCancelDialog(true)}
+            className="btn-danger"
+          >
             ❌ إلغاء الطلب
           </button>
         )}
@@ -318,7 +478,7 @@ const canConfirmDelivery = order.status === 'Shipped' || order.status === 'Deliv
         onClose={() => setShowConfirmDeliveryDialog(false)}
         onConfirm={handleConfirmDelivery}
         title="تأكيد استلام الطلب"
-        message="هل استلمت الطلب فعلاً؟ بعد التأكيد هيتم تحويل المبلغ للبائع ومش هتقدر ترجع الطلب."
+        message="هل استلمت الطلب فعلاً؟ بعد التأكيد سيتم إكمال الطلب تلقائياً خلال 3 أيام."
         confirmText={confirmLoading ? 'جاري التأكيد...' : '✅ أيوه، استلمت الطلب'}
       />
 

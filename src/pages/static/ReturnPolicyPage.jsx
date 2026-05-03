@@ -3,7 +3,7 @@ import { FiRefreshCw, FiCheckCircle, FiXCircle, FiClock, FiPackage, FiDollarSign
 import SEO from '../../components/common/SEO';
 import Breadcrumb from '../../components/common/Breadcrumb';
 
-const ReturnsPage = () => {
+const ReturnsPolicyPage = () => {
   const eligibleItems = [
     'المنتجات في حالتها الأصلية وغير مستخدمة',
     'المنتجات بالتغليف الأصلي والملحقات',
@@ -225,4 +225,4 @@ const ReturnsPage = () => {
   );
 };
 
-export default ReturnsPage;
+export default ReturnsPolicyPage;

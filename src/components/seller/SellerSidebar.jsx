@@ -7,6 +7,8 @@ import {
   FiSettings,
   FiArrowRight,
   FiX,
+  FiRefreshCw,
+  FiTrendingUp,
 } from 'react-icons/fi';
 
 const SellerSidebar = ({ isOpen, onClose }) => {
@@ -16,6 +18,8 @@ const SellerSidebar = ({ isOpen, onClose }) => {
     { path: '/seller/dashboard', icon: <FiHome size={20} />, label: 'لوحة التحكم', exact: true },
     { path: '/seller/products', icon: <FiPackage size={20} />, label: 'منتجاتي' },
     { path: '/seller/orders', icon: <FiShoppingBag size={20} />, label: 'طلباتي' },
+    { path: '/seller/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع' },
+    { path: '/seller/finance', icon: <FiTrendingUp size={20} />, label: 'المركز المالي' }, // ✅ جديد
     { path: '/seller/payouts', icon: <FiDollarSign size={20} />, label: 'سحب الأرباح' },
     { path: '/seller/profile', icon: <FiSettings size={20} />, label: 'إعدادات المتجر' },
   ];

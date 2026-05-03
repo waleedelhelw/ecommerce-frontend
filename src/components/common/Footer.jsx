@@ -214,7 +214,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/returns" className="hover:text-purple-400 transition-colors">
+                <Link to="/return-policy" className="hover:text-purple-400 transition-colors">
                   سياسة الإرجاع
                 </Link>
               </li>

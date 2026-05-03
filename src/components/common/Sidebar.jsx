@@ -14,6 +14,7 @@ import {
   FiCreditCard,
   FiSettings,
   FiTruck,
+  FiRefreshCw, // 🆕
 } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -25,6 +26,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/admin/products', icon: <FiPackage size={20} />, label: 'المنتجات' },
     { path: '/admin/categories', icon: <FiGrid size={20} />, label: 'التصنيفات' },
     { path: '/admin/orders', icon: <FiShoppingBag size={20} />, label: 'الطلبات' },
+    { path: '/admin/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع', badge: true }, // 🆕
     { path: '/admin/payments', icon: <FiCreditCard size={20} />, label: 'مراجعة الإيصالات', badge: true },
     { path: '/admin/users', icon: <FiUsers size={20} />, label: 'المستخدمين' },
     { path: '/admin/reviews', icon: <FiStar size={20} />, label: 'التقييمات' },
