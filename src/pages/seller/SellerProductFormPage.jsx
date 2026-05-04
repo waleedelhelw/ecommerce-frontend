@@ -479,14 +479,14 @@ const SellerProductFormPage = () => {
                       </span>
                     )}
 
-                    <div className="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-1 left-1 flex gap-1">
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow"
+                        className="bg-red-500/80 text-white rounded-full p-1.5 hover:bg-red-600 shadow-md active:scale-95 transition-all"
                         title="حذف"
                       >
-                        <FiTrash2 size={12} />
+                        <FiTrash2 size={14} />
                       </button>
                     </div>
 

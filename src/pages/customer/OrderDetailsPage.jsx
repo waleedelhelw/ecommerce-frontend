@@ -3,12 +3,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import OrderTimeline from '../../components/order/OrderTimeline';
 import OrderItems from '../../components/order/OrderItems';
+import InstallmentTimeline from '../../components/order/InstallmentTimeline';
+import PayInstallmentModal from '../../components/order/PayInstallmentModal';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import ReturnStatusBadge from '../../components/return/ReturnStatusBadge';
 import orderService from '../../api/orderService';
 import returnService from '../../api/returnService';
+import installmentService from '../../api/installmentService';
 import { formatDate } from '../../utils/formatDate';
 import { formatPrice } from '../../utils/formatPrice';
 import { orderStatusMap } from '../../utils/orderStatusMap';
@@ -26,10 +29,15 @@ const OrderDetailsPage = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [showConfirmDeliveryDialog, setShowConfirmDeliveryDialog] =
-    useState(false);
+  const [showConfirmDeliveryDialog, setShowConfirmDeliveryDialog] = useState(false);
 
-  // 🆕 ✅ State للـ Return الموجود
+  // 🆕 ✅ State للأقساط
+  const [installments, setInstallments] = useState([]);
+  const [installmentsLoading, setInstallmentsLoading] = useState(false);
+  const [selectedInstallment, setSelectedInstallment] = useState(null);
+  const [showPayModal, setShowPayModal] = useState(false);
+
+  // State للـ Return الموجود
   const [activeReturn, setActiveReturn] = useState(null);
   const [checkingReturn, setCheckingReturn] = useState(true);
 
@@ -46,7 +54,21 @@ const OrderDetailsPage = () => {
     }
   };
 
-  // 🆕 ✅ نشيك لو فيه return نشط لهذا الأوردر
+  // 🆕 ✅ جلب الأقساط
+  const fetchInstallments = async () => {
+    try {
+      setInstallmentsLoading(true);
+      const data = await installmentService.getOrderInstallments(id);
+      setInstallments(data || []);
+    } catch (err) {
+      console.error('Failed to fetch installments:', err);
+      setInstallments([]);
+    } finally {
+      setInstallmentsLoading(false);
+    }
+  };
+
+  // نشيك لو فيه return نشط لهذا الأوردر
   const checkActiveReturn = async () => {
     try {
       setCheckingReturn(true);
@@ -63,10 +85,15 @@ const OrderDetailsPage = () => {
     fetchOrder();
   }, [id]);
 
-  // 🆕 لما الأوردر يتحمل، نشيك على الـ returns
+  // لما الأوردر يتحمل
   useEffect(() => {
     if (order?.id) {
-      // نشيك بس لو الأوردر قابل للإرجاع (Delivered أو Completed)
+      // 🆕 ✅ لو الطلب بالتقسيط → جلب الأقساط
+      if (order.isInstallment || order.installmentPlanId) {
+        fetchInstallments();
+      }
+
+      // نشيك على الـ returns
       if (
         order.status === 'Delivered' ||
         order.status === 'Completed' ||
@@ -108,7 +135,20 @@ const OrderDetailsPage = () => {
     }
   };
 
-  // ✅ Helper function لعرض طريقة الدفع
+  // 🆕 ✅ فتح Modal دفع الدفعة
+  const handlePayInstallment = (installment) => {
+    setSelectedInstallment(installment);
+    setShowPayModal(true);
+  };
+
+  // 🆕 ✅ بعد نجاح دفع الدفعة
+  const handlePaySuccess = () => {
+    toast.success('تم رفع إيصال الدفع بنجاح! جاري المراجعة 🧾');
+    fetchInstallments();
+    fetchOrder();
+  };
+
+  // Helper function لعرض طريقة الدفع
   const getPaymentMethodLabel = (method) => {
     if (!method) return 'غير محدد';
     return PAYMENT_LABELS[method] || method;
@@ -119,22 +159,17 @@ const OrderDetailsPage = () => {
   if (!order) return <ErrorMessage message="الطلب غير موجود" />;
 
   const status = orderStatusMap[order.status] || orderStatusMap.Pending;
-  const canCancel =
-    order.status === 'Pending' || order.status === 'Processing';
-
-  // ✅ تعديل: زر التأكيد يظهر فقط لما الحالة Shipped (مش Delivered)
+  const canCancel = order.status === 'Pending' || order.status === 'Processing';
   const canConfirmDelivery = order.status === 'Shipped';
-
-  // ✅ جديد: علامات الحالات بعد الاستلام
   const isDelivered = order.status === 'Delivered';
   const isCompleted = order.status === 'Completed';
+  const needsPayment = order.status === 'PendingPayment' || order.status === 'PaymentFailed';
 
-  const needsPayment =
-    order.status === 'PendingPayment' || order.status === 'PaymentFailed';
+  // 🆕 ✅ هل الطلب بالتقسيط؟
+  const isInstallmentOrder = order.isInstallment || order.installmentPlanId || installments.length > 0;
 
-  // ✅ التحقق من إمكانية الإرجاع
+  // التحقق من إمكانية الإرجاع
   const returnableInfo = checkOrderReturnable(order);
-  // 🆕 يقدر يطلب إرجاع لو الأوردر قابل للإرجاع + مفيش return نشط
   const canRequestReturn = returnableInfo.canReturn && !activeReturn;
 
   return (
@@ -148,16 +183,22 @@ const OrderDetailsPage = () => {
       />
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">📋 تفاصيل الطلب #{order.id}</h1>
-        <span
-          className={`px-4 py-2 rounded-full text-sm font-medium ${status.color}`}
-        >
+        <div>
+          <h1 className="text-2xl font-bold">📋 تفاصيل الطلب #{order.id}</h1>
+          {/* 🆕 ✅ Badge التقسيط */}
+          {isInstallmentOrder && (
+            <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+              📋 طلب بالتقسيط
+            </span>
+          )}
+        </div>
+        <span className={`px-4 py-2 rounded-full text-sm font-medium ${status.color}`}>
           {status.icon} {status.label}
         </span>
       </div>
 
       {/* ✅ تنبيهات مهمة حسب حالة الطلب */}
-      {needsPayment && (
+      {needsPayment && !isInstallmentOrder && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">💳</span>
@@ -179,6 +220,21 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
+      {/* 🆕 ✅ تنبيه التقسيط - الدفعة الأولى */}
+      {isInstallmentOrder && needsPayment && (
+        <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📋</span>
+            <div>
+              <p className="font-bold text-blue-800">طلب بالتقسيط - ادفع الدفعة الأولى</p>
+              <p className="text-sm text-blue-600">
+                لازم تدفع الدفعة الأولى عشان الطلب يتأكد ويبدأ التجهيز. شوف جدول الدفعات تحت 👇
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {order.status === 'WaitingConfirmation' && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center gap-3">
           <span className="text-2xl">⏳</span>
@@ -191,7 +247,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* ✅ Banner: الطلب في الطريق - يظهر فقط في حالة Shipped */}
+      {/* Banner: الطلب في الطريق */}
       {canConfirmDelivery && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -212,7 +268,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* ✅ جديد: Banner بعد تأكيد الاستلام (Delivered) */}
+      {/* Banner بعد تأكيد الاستلام */}
       {isDelivered && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center gap-3 flex-wrap">
           <span className="text-3xl">✅</span>
@@ -221,6 +277,12 @@ const OrderDetailsPage = () => {
             <p className="text-sm text-blue-600 mt-1">
               شكراً لك! سيتم إكمال الطلب تلقائياً خلال 3 أيام وتحويل المبلغ للبائع.
             </p>
+            {/* 🆕 ✅ تنبيه الأقساط المتبقية */}
+            {isInstallmentOrder && installments.some(i => i.status === 'Pending' || i.status === 'Overdue') && (
+              <p className="text-xs text-orange-600 mt-2 font-bold">
+                ⚠️ لسه عندك دفعات متبقية! تأكد من دفعها في مواعيدها.
+              </p>
+            )}
             <p className="text-xs text-blue-500 mt-2">
               💡 خلال هذه الفترة، يمكنك طلب إرجاع المنتج إذا واجهت أي مشكلة.
             </p>
@@ -228,7 +290,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* ✅ جديد: Banner لما الطلب يكتمل (Completed) */}
+      {/* Banner لما الطلب يكتمل */}
       {isCompleted && (
         <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 mb-6 flex items-center gap-3 flex-wrap">
           <span className="text-3xl">🎉</span>
@@ -241,7 +303,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* 🆕 ✅ Banner: لو فيه Return نشط */}
+      {/* Banner: لو فيه Return نشط */}
       {activeReturn && (
         <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -268,7 +330,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* ✅ Banner: طلب إرجاع جديد (لو متاح ومفيش active) */}
+      {/* Banner: طلب إرجاع جديد */}
       {canRequestReturn && !checkingReturn && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -292,7 +354,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* 🆕 ✅ تنبيه: لو مفيش active return لكن الفترة خلصت */}
+      {/* تنبيه: لو مفيش active return لكن الفترة خلصت */}
       {!returnableInfo.canReturn &&
         !activeReturn &&
         !checkingReturn &&
@@ -308,10 +370,33 @@ const OrderDetailsPage = () => {
           </div>
         )}
 
+      {/* مسار الطلب */}
       <div className="bg-white rounded-xl border p-6 mb-6">
         <h2 className="font-bold mb-4">مسار الطلب</h2>
         <OrderTimeline currentStatus={order.status} />
       </div>
+
+      {/* 🆕 ✅ جدول الأقساط */}
+      {isInstallmentOrder && (
+        <div className="mb-6">
+          {installmentsLoading ? (
+            <div className="bg-white rounded-xl border p-8 text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+              <p className="text-gray-500 mt-3">جاري تحميل الأقساط...</p>
+            </div>
+          ) : installments.length > 0 ? (
+            <InstallmentTimeline
+              installments={installments}
+              showPayButton={true}
+              onPayClick={handlePayInstallment}
+            />
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+              <p className="text-blue-700 text-sm">📋 طلب بالتقسيط - جاري تجهيز جدول الدفعات</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-xl border p-6">
@@ -333,6 +418,14 @@ const OrderDetailsPage = () => {
                 {getPaymentMethodLabel(order.paymentMethod)}
               </span>
             </div>
+
+            {/* 🆕 ✅ نوع الدفع */}
+            {isInstallmentOrder && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">نوع الدفع:</span>
+                <span className="font-medium text-blue-600">📋 تقسيط</span>
+              </div>
+            )}
 
             {(order.storeName || order.sellerName) && (
               <div className="flex justify-between">
@@ -391,6 +484,33 @@ const OrderDetailsPage = () => {
                 )}
               </span>
             </div>
+
+            {/* 🆕 ✅ المدفوع والمتبقي */}
+            {isInstallmentOrder && installments.length > 0 && (
+              <>
+                <hr />
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">✅ المدفوع:</span>
+                  <span className="font-bold text-green-600">
+                    {formatPrice(
+                      installments
+                        .filter(i => i.status === 'Paid')
+                        .reduce((sum, i) => sum + i.amount, 0)
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-orange-600">⏳ المتبقي:</span>
+                  <span className="font-bold text-orange-600">
+                    {formatPrice(
+                      installments
+                        .filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')
+                        .reduce((sum, i) => sum + i.amount, 0)
+                    )}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -435,7 +555,7 @@ const OrderDetailsPage = () => {
         <OrderItems items={order.items || order.orderItems || []} />
       </div>
 
-      {/* ✅ الأزرار */}
+      {/* الأزرار */}
       <div className="flex flex-wrap gap-3">
         {canConfirmDelivery && (
           <button
@@ -448,7 +568,7 @@ const OrderDetailsPage = () => {
           </button>
         )}
 
-        {needsPayment && (
+        {needsPayment && !isInstallmentOrder && (
           <Link
             to={`/orders/${order.id}/payment`}
             className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium
@@ -472,7 +592,18 @@ const OrderDetailsPage = () => {
         </button>
       </div>
 
-      {/* ✅ Dialog تأكيد الاستلام */}
+      {/* 🆕 ✅ Modal دفع الدفعة */}
+      <PayInstallmentModal
+        installment={selectedInstallment}
+        isOpen={showPayModal}
+        onClose={() => {
+          setShowPayModal(false);
+          setSelectedInstallment(null);
+        }}
+        onSuccess={handlePaySuccess}
+      />
+
+      {/* Dialog تأكيد الاستلام */}
       <ConfirmDialog
         isOpen={showConfirmDeliveryDialog}
         onClose={() => setShowConfirmDeliveryDialog(false)}

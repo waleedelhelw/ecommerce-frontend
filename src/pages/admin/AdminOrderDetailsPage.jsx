@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
 import { getOrderById, updateOrderStatus } from '../../api/admin/adminOrderService';
 import adminPaymentService from '../../api/admin/adminPaymentService';
+import adminInstallmentService from '../../api/admin/adminInstallmentService';
 import OrderStatusBadge from '../../components/admin/OrderStatusBadge';
 import OrderTimeline from '../../components/order/OrderTimeline';
+import InstallmentTimeline from '../../components/order/InstallmentTimeline';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { formatPrice } from '../../utils/formatPrice';
@@ -24,6 +26,13 @@ const AdminOrderDetailsPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
+  // 🆕 ✅ State للأقساط
+  const [installments, setInstallments] = useState([]);
+  const [installmentsLoading, setInstallmentsLoading] = useState(false);
+  const [showConfirmInstallmentModal, setShowConfirmInstallmentModal] = useState(false);
+  const [selectedInstallment, setSelectedInstallment] = useState(null);
+  const [confirmNote, setConfirmNote] = useState('');
+
   const fetchOrder = async () => {
     try {
       setLoading(true);
@@ -37,9 +46,30 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
+  // 🆕 ✅ جلب الأقساط
+  const fetchInstallments = async () => {
+    try {
+      setInstallmentsLoading(true);
+      const data = await adminInstallmentService.getOrderInstallments(id);
+      setInstallments(data || []);
+    } catch (err) {
+      console.error('Failed to fetch installments:', err);
+      setInstallments([]);
+    } finally {
+      setInstallmentsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchOrder();
   }, [id]);
+
+  // 🆕 ✅ جلب الأقساط لما الأوردر يتحمل
+  useEffect(() => {
+    if (order?.id && (order.isInstallment || order.installmentPlanId)) {
+      fetchInstallments();
+    }
+  }, [order]);
 
   // ✅ تأكيد الدفع
   const handleConfirmPayment = async () => {
@@ -76,7 +106,7 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
-  // ✅ تحديث حالة الطلب (للأدمن)
+  // ✅ تحديث حالة الطلب
   const handleStatusUpdate = async (newStatus) => {
     try {
       setActionLoading(true);
@@ -90,6 +120,34 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
+  // 🆕 ✅ تأكيد دفع دفعة قسط
+  const handleConfirmInstallment = async () => {
+    if (!selectedInstallment) return;
+    try {
+      setActionLoading(true);
+      await adminInstallmentService.confirmInstallment(selectedInstallment.id, {
+        note: confirmNote.trim() || null,
+      });
+      toast.success(`تم تأكيد الدفعة ${selectedInstallment.installmentNumber} بنجاح ✅`);
+      setShowConfirmInstallmentModal(false);
+      setSelectedInstallment(null);
+      setConfirmNote('');
+      fetchInstallments();
+      fetchOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل تأكيد الدفعة');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 🆕 ✅ فتح modal تأكيد الدفعة
+  const handleConfirmInstallmentClick = (installment) => {
+    setSelectedInstallment(installment);
+    setConfirmNote('');
+    setShowConfirmInstallmentModal(true);
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} onRetry={fetchOrder} />;
   if (!order) return null;
@@ -100,10 +158,13 @@ const AdminOrderDetailsPage = () => {
 
   const grandTotal = (order.totalPrice || 0) + (order.shippingCost || 0) + (order.codFee || 0);
 
-  // ✅ هل الإيصال محتاج مراجعة؟
+  // هل الإيصال محتاج مراجعة؟
   const needsPaymentReview = order.status === 'WaitingConfirmation' && order.payment?.receiptImageUrl;
 
-  // ✅ الحالات اللي الأدمن يقدر يغيرها
+  // 🆕 ✅ هل الطلب بالتقسيط؟
+  const isInstallmentOrder = order.isInstallment || order.installmentPlanId || installments.length > 0;
+
+  // الحالات اللي الأدمن يقدر يغيرها
   const getAvailableActions = () => {
     const actions = [];
     switch (order.status) {
@@ -137,7 +198,15 @@ const AdminOrderDetailsPage = () => {
           <FiArrowRight size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-800">طلب #{order.id}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-800">طلب #{order.id}</h1>
+            {/* 🆕 ✅ Badge التقسيط */}
+            {isInstallmentOrder && (
+              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                📋 تقسيط
+              </span>
+            )}
+          </div>
           <p className="text-gray-500 text-sm">{formatDate(order.createdAt || order.orderDate)}</p>
         </div>
         <OrderStatusBadge status={order.status} />
@@ -222,6 +291,28 @@ const AdminOrderDetailsPage = () => {
         </div>
       )}
 
+      {/* 🆕 ✅ قسم الأقساط للأدمن */}
+      {isInstallmentOrder && (
+        <div className="mb-6">
+          {installmentsLoading ? (
+            <div className="bg-white rounded-xl border p-8 text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+              <p className="text-gray-500 mt-3">جاري تحميل الأقساط...</p>
+            </div>
+          ) : installments.length > 0 ? (
+            <InstallmentTimeline
+              installments={installments}
+              showConfirmButton={true}
+              onConfirmClick={handleConfirmInstallmentClick}
+            />
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+              <p className="text-blue-700 text-sm">📋 طلب بالتقسيط - لا توجد دفعات حالياً</p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* العمود الرئيسي */}
         <div className="lg:col-span-2 space-y-6">
@@ -280,7 +371,7 @@ const AdminOrderDetailsPage = () => {
             </div>
           </div>
 
-          {/* ✅ بيانات الشحن (لو اتشحن) */}
+          {/* بيانات الشحن (لو اتشحن) */}
           {order.trackingNumber && (
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">📍 بيانات الشحن</h2>
@@ -326,7 +417,7 @@ const AdminOrderDetailsPage = () => {
 
         {/* العمود الجانبي */}
         <div className="space-y-6">
-          {/* ✅ ملخص الطلب - محدّث */}
+          {/* ملخص الطلب */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">💰 ملخص الطلب</h2>
             <div className="space-y-3 text-sm">
@@ -351,6 +442,36 @@ const AdminOrderDetailsPage = () => {
                 <span>الإجمالي</span>
                 <span className="text-blue-600">{formatPrice(order.grandTotal || grandTotal)}</span>
               </div>
+
+              {/* 🆕 ✅ المدفوع والمتبقي للتقسيط */}
+              {isInstallmentOrder && installments.length > 0 && (
+                <>
+                  <hr />
+                  <div className="flex justify-between">
+                    <span className="text-green-600 font-medium">✅ المدفوع</span>
+                    <span className="font-bold text-green-600">
+                      {formatPrice(
+                        installments.filter(i => i.status === 'Paid').reduce((sum, i) => sum + i.amount, 0)
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-orange-600 font-medium">⏳ المتبقي</span>
+                    <span className="font-bold text-orange-600">
+                      {formatPrice(
+                        installments.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled').reduce((sum, i) => sum + i.amount, 0)
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-red-600 font-medium">🚨 متأخرة</span>
+                    <span className="font-bold text-red-600">
+                      {installments.filter(i => i.status === 'Overdue').length} دفعات
+                    </span>
+                  </div>
+                </>
+              )}
+
               <hr />
               {order.commissionAmount > 0 && (
                 <div className="flex justify-between">
@@ -401,7 +522,7 @@ const AdminOrderDetailsPage = () => {
             </div>
           )}
 
-          {/* ✅ الدفع - محدّث */}
+          {/* الدفع */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">💳 الدفع</h2>
             <div className="space-y-2 text-sm">
@@ -411,6 +532,15 @@ const AdminOrderDetailsPage = () => {
                   {PAYMENT_LABELS[order.paymentMethod || order.payment?.paymentMethod] || '—'}
                 </span>
               </div>
+
+              {/* 🆕 ✅ نوع الدفع */}
+              {isInstallmentOrder && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">نوع الدفع</span>
+                  <span className="font-medium text-blue-600">📋 تقسيط</span>
+                </div>
+              )}
+
               {paymentStatus && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">الحالة</span>
@@ -456,7 +586,7 @@ const AdminOrderDetailsPage = () => {
         </div>
       </div>
 
-      {/* ✅ Modal رفض الإيصال */}
+      {/* Modal رفض الإيصال */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
@@ -493,7 +623,70 @@ const AdminOrderDetailsPage = () => {
         </div>
       )}
 
-      {/* ✅ Modal عرض الصورة */}
+      {/* 🆕 ✅ Modal تأكيد دفعة قسط */}
+      {showConfirmInstallmentModal && selectedInstallment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">
+              ✅ تأكيد الدفعة {selectedInstallment.installmentNumber}
+            </h3>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">المبلغ:</span>
+                <span className="font-bold text-blue-700">{formatPrice(selectedInstallment.amount)}</span>
+              </div>
+              {selectedInstallment.paymentProofUrl && (
+                <div className="mt-2">
+                  <a
+                    href={selectedInstallment.paymentProofUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline"
+                  >
+                    📎 عرض إيصال الدفع
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ملاحظات (اختياري)
+              </label>
+              <textarea
+                value={confirmNote}
+                onChange={(e) => setConfirmNote(e.target.value)}
+                placeholder="أي ملاحظات..."
+                rows={2}
+                className="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleConfirmInstallment}
+                disabled={actionLoading}
+                className="flex-1 bg-green-600 text-white py-2.5 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
+              >
+                {actionLoading ? 'جاري التأكيد...' : '✅ تأكيد الدفعة'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmInstallmentModal(false);
+                  setSelectedInstallment(null);
+                  setConfirmNote('');
+                }}
+                className="flex-1 bg-gray-200 text-gray-700 py-2.5 rounded-lg hover:bg-gray-300 font-medium"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal عرض الصورة */}
       {previewImage && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"

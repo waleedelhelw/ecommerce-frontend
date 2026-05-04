@@ -28,7 +28,7 @@ export const ORDER_STATUS = {
   REFUNDED: 'Refunded',
 };
 
-// ============ ✅ Return Status - 🆕 جديد ============
+// ============ ✅ Return Status ============
 export const RETURN_STATUS = {
   PENDING: 'Pending',
   APPROVED: 'Approved',
@@ -40,7 +40,7 @@ export const RETURN_STATUS = {
   ESCALATED: 'Escalated',
 };
 
-// ============ ✅ Return Reasons - 🆕 جديد ============
+// ============ ✅ Return Reasons ============
 export const RETURN_REASONS = {
   DEFECTIVE: 'Defective',
   WRONG_ITEM: 'WrongItem',
@@ -51,11 +51,28 @@ export const RETURN_REASONS = {
   OTHER: 'Other',
 };
 
-// ============ ✅ Shipping Cost Paid By - 🆕 جديد ============
+// ============ ✅ Shipping Cost Paid By ============
 export const SHIPPING_COST_PAID_BY = {
   CUSTOMER: 'Customer',
   SELLER: 'Seller',
   PLATFORM: 'Platform',
+};
+
+// ============ ✅ Installment Status - 🆕 جديد ============
+export const INSTALLMENT_STATUS = {
+  PENDING: 'Pending',
+  PAID: 'Paid',
+  WAITING_CONFIRMATION: 'WaitingConfirmation',
+  OVERDUE: 'Overdue',
+  CANCELLED: 'Cancelled',
+};
+
+export const INSTALLMENT_STATUS_LABELS = {
+  Pending: { label: '⏳ في انتظار الدفع', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' },
+  WaitingConfirmation: { label: '🧾 مراجعة الإيصال', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+  Paid: { label: '✅ مدفوعة', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+  Overdue: { label: '🚨 متأخرة', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+  Cancelled: { label: '❌ ملغية', color: 'text-gray-600', bg: 'bg-gray-50 border-gray-200' },
 };
 
 // ============ Payout Status ============
@@ -92,10 +109,10 @@ export const SORT_OPTIONS = [
 export const PAYMENT_METHODS = [
   { value: 'CashOnDelivery', label: '💵 الدفع عند الاستلام', icon: '💵', hasFee: true },
   { value: 'VodafoneCash', label: '📱 فودافون كاش', icon: '📱', settingKey: 'PlatformWalletVodafone' },
-  { value: 'EtisalatCash', label: '📱 إتصالات كاش', icon: '📱', settingKey: 'PlatformWalletEtisalat' },
-  { value: 'OrangeCash', label: '📱 أورانج كاش', icon: '📱', settingKey: 'PlatformWalletOrange' },
-  { value: 'InstaPay', label: '🏦 إنستاباي', icon: '🏦', settingKey: 'PlatformInstaPay' },
-  { value: 'BankTransfer', label: '🏦 تحويل بنكي', icon: '🏦', settingKey: 'PlatformBankAccount' },
+  //{ value: 'EtisalatCash', label: '📱 إتصالات كاش', icon: '📱', settingKey: 'PlatformWalletEtisalat' },
+  //{ value: 'OrangeCash', label: '📱 أورانج كاش', icon: '📱', settingKey: 'PlatformWalletOrange' },
+  //{ value: 'InstaPay', label: '🏦 إنستاباي', icon: '🏦', settingKey: 'PlatformInstaPay' },
+  //{ value: 'BankTransfer', label: '🏦 تحويل بنكي', icon: '🏦', settingKey: 'PlatformBankAccount' },
 ];
 
 // ✅ لعرض اسم طريقة الدفع في صفحة التفاصيل
@@ -118,7 +135,7 @@ export const PAYMENT_STATUS = {
   REFUNDED: 'Refunded',
 };
 
-// ============ ✅ Return Window (بالأيام) - 🆕 جديد ============
+// ============ ✅ Return Window (بالأيام) ============
 export const RETURN_WINDOW_DAYS = 14;
 export const RETURN_SHIPPING_DEADLINE_DAYS = 3;
 
@@ -145,7 +162,7 @@ export const ROUTES = {
   RETURNS: '/returns',
   RETURN_DETAILS: '/returns/:id',
   CREATE_RETURN: '/returns/new/:orderId',
-  RETURN_POLICY: '/return-policy', // Static
+  RETURN_POLICY: '/return-policy',
 
   // Seller
   SELLER_DASHBOARD: '/seller/dashboard',
@@ -158,11 +175,11 @@ export const ROUTES = {
   SELLER_SUSPENDED: '/seller/suspended',
   SELLER_REJECTED: '/seller/rejected',
 
-  // 🆕 ✅ Seller Returns
+  // ✅ Seller Returns
   SELLER_RETURNS: '/seller/returns',
   SELLER_RETURN_DETAILS: '/seller/returns/:id',
 
-  // SuperAdmin
+  // SuperAdmin / Admin
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_SELLERS: '/admin/sellers',
   ADMIN_PRODUCTS: '/admin/products',
@@ -176,9 +193,12 @@ export const ROUTES = {
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_SHIPPING: '/admin/shipping',
 
-  // 🆕 ✅ Admin Returns (هنحتاجهم فى Phase 5B)
+  // ✅ Admin Returns
   ADMIN_RETURNS: '/admin/returns',
   ADMIN_RETURN_DETAILS: '/admin/returns/:id',
+
+  // 🆕 ✅ Admin Installments
+  ADMIN_INSTALLMENTS: '/admin/installments',
 
   // Errors
   UNAUTHORIZED: '/unauthorized',

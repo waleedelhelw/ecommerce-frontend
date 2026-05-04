@@ -31,6 +31,8 @@ import ProfilePage from './pages/customer/ProfilePage';
 import SellersPage from './pages/customer/SellersPage';
 import SellerStorePage from './pages/customer/SellerStorePage';
 import PaymentPage from './pages/customer/PaymentPage';
+import InstallmentPaymentPage from './pages/customer/InstallmentPaymentPage';
+
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -71,6 +73,9 @@ import AdminShippingOptionsPage from './pages/admin/AdminShippingOptionsPage';
 import AdminReturnsPage from './pages/admin/AdminReturnsPage';
 import AdminReturnDetailsPage from './pages/admin/AdminReturnDetailsPage';
 
+// 🆕 ✅ Admin Installments
+import AdminInstallmentPlansPage from './pages/admin/AdminInstallmentPlansPage';
+
 // Error Pages
 import NotFoundPage from './pages/errors/NotFoundPage';
 import UnauthorizedPage from './pages/errors/UnauthorizedPage';
@@ -93,7 +98,7 @@ import CreateReturnPage from './pages/customer/CreateReturnPage';
 import SellerReturnsPage from './pages/seller/SellerReturnsPage';
 import SellerReturnDetailsPage from './pages/seller/SellerReturnDetailsPage';
 
-// ✅ Root Wrapper - يحط ScrollToTop في كل الصفحات
+// ✅ Root Wrapper
 const RootLayout = () => (
   <>
     <ScrollToTop />
@@ -103,7 +108,7 @@ const RootLayout = () => (
 
 const router = createBrowserRouter([
   {
-    element: <RootLayout />, // ✅ كل الـ routes هتمر من هنا الأول
+    element: <RootLayout />,
     children: [
       // ══════════════════════════════════════════
       // صفحات المصادقة (Auth)
@@ -204,6 +209,15 @@ const router = createBrowserRouter([
             element: (
               <CustomerRoute>
                 <PaymentPage />
+              </CustomerRoute>
+            ),
+          },
+
+          {
+            path: '/orders/:id/installments',
+            element: (
+              <CustomerRoute>
+                <InstallmentPaymentPage />
               </CustomerRoute>
             ),
           },
@@ -340,16 +354,14 @@ const router = createBrowserRouter([
               </SellerRoute>
             ),
           },
-
           {
-            path: 'finance',
+                        path: 'finance',
             element: (
               <SellerRoute>
                 <SellerFinancePage />
               </SellerRoute>
             ),
           },
-
           {
             path: 'payouts',
             element: (
@@ -392,6 +404,10 @@ const router = createBrowserRouter([
           { path: 'orders/:id', element: <AdminOrderDetailsPage /> },
           { path: 'returns', element: <AdminReturnsPage /> },
           { path: 'returns/:id', element: <AdminReturnDetailsPage /> },
+
+          // 🆕 ✅ Installments
+          { path: 'installments', element: <AdminInstallmentPlansPage /> },
+
           { path: 'users', element: <AdminUsersPage /> },
           { path: 'reviews', element: <AdminReviewsPage /> },
           { path: 'payouts', element: <AdminPayoutsPage /> },

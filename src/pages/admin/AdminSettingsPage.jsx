@@ -18,7 +18,9 @@ const AdminSettingsPage = () => {
       const list = Array.isArray(data) ? data : data?.items || [];
       setSettings(list);
       const values = {};
-      list.forEach((s) => { values[s.key] = s.value; });
+      list.forEach((s) => {
+        values[s.key] = s.value;
+      });
       setEditValues(values);
     } catch (err) {
       setError('فشل تحميل الإعدادات');
@@ -27,14 +29,16 @@ const AdminSettingsPage = () => {
     }
   };
 
-  useEffect(() => { fetchSettings(); }, []);
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
   const handleSave = async () => {
     try {
       setSaving(true);
       const updates = settings.map((s) => ({
         key: s.key,
-        value: editValues[s.key] || s.value,
+        value: editValues[s.key] ?? s.value, // ✅ تم التعديل - كان || وده كان بيتجاهل الصفر
       }));
       await adminSettingsService.updateSettings(updates);
       toast.success('تم حفظ الإعدادات ✅');
@@ -95,7 +99,7 @@ const AdminSettingsPage = () => {
                   </div>
                   <input
                     type="text"
-                    value={editValues[setting.key] || ''}
+                    value={editValues[setting.key] ?? ''} // ✅ تم التعديل - كان || وده كان بيتجاهل الصفر
                     onChange={(e) =>
                       setEditValues({ ...editValues, [setting.key]: e.target.value })
                     }
