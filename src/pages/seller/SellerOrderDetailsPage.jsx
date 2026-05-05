@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowRight } from 'react-icons/fi';
+import { FiArrowRight, FiPhone, FiCopy } from 'react-icons/fi';
 import {
   getOrderById,
   startProcessing,
@@ -19,9 +19,11 @@ import toast from 'react-hot-toast';
 const SellerOrderDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [actionLoading, setActionLoading] = useState(false);
 
   // ✅ بيانات الشحن
@@ -41,6 +43,7 @@ const SellerOrderDetailsPage = () => {
     try {
       setLoading(true);
       setError(null);
+
       const data = await getOrderById(id);
       setOrder(data);
     } catch (err) {
@@ -50,11 +53,25 @@ const SellerOrderDetailsPage = () => {
     }
   };
 
+  // ✅ نسخ رقم العميل
+  const handleCopyPhone = async () => {
+    if (!order?.customerPhoneNumber) return;
+
+    try {
+      await navigator.clipboard.writeText(order.customerPhoneNumber);
+      toast.success('تم نسخ رقم العميل');
+    } catch {
+      toast.error('فشل نسخ الرقم');
+    }
+  };
+
   // ✅ بدء التجهيز
   const handleStartProcessing = async () => {
     try {
       setActionLoading(true);
+
       await startProcessing(id);
+
       toast.success('تم بدء تجهيز الطلب ✅');
       fetchOrder();
     } catch (err) {
@@ -68,7 +85,9 @@ const SellerOrderDetailsPage = () => {
   const handleReadyToShip = async () => {
     try {
       setActionLoading(true);
+
       await readyToShip(id);
+
       toast.success('الطلب جاهز للشحن 📦');
       fetchOrder();
     } catch (err) {
@@ -81,14 +100,28 @@ const SellerOrderDetailsPage = () => {
   // ✅ شحن الطلب
   const handleShipOrder = async () => {
     const errors = {};
-    if (!shipData.shippingCompany.trim()) errors.shippingCompany = 'اسم شركة الشحن مطلوب';
-    if (!shipData.trackingNumber.trim()) errors.trackingNumber = 'رقم التتبع مطلوب';
+
+    if (!shipData.shippingCompany.trim()) {
+      errors.shippingCompany = 'اسم شركة الشحن مطلوب';
+    }
+
+    if (!shipData.trackingNumber.trim()) {
+      errors.trackingNumber = 'رقم التتبع مطلوب';
+    }
+
     setShipErrors(errors);
+
     if (Object.keys(errors).length > 0) return;
 
     try {
       setActionLoading(true);
-      await shipOrder(id, shipData);
+
+      await shipOrder(id, {
+        shippingCompany: shipData.shippingCompany.trim(),
+        trackingNumber: shipData.trackingNumber.trim(),
+        trackingUrl: shipData.trackingUrl.trim() || null,
+      });
+
       toast.success('تم شحن الطلب بنجاح 🚚');
       setShowShipForm(false);
       fetchOrder();
@@ -104,27 +137,67 @@ const SellerOrderDetailsPage = () => {
     return PAYMENT_LABELS?.[method] || method;
   };
 
+  const renderCustomerPhone = () => {
+    if (!order?.customerPhoneNumber) {
+      return <span className="text-gray-400">غير متوفر</span>;
+    }
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          href={`tel:${order.customerPhoneNumber}`}
+          dir="ltr"
+          className="inline-flex items-center gap-1 font-bold text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          <FiPhone size={15} />
+          {order.customerPhoneNumber}
+        </a>
+
+        <button
+          type="button"
+          onClick={handleCopyPhone}
+          className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
+        >
+          <FiCopy size={13} />
+          نسخ
+        </button>
+      </div>
+    );
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} onRetry={fetchOrder} />;
   if (!order) return null;
 
   const status = getStatusInfo(orderStatusMap, order.status);
+
   const paymentStatus = order.payment
     ? getStatusInfo(paymentStatusMap, order.payment.status)
     : null;
-  const grandTotal = (order.totalPrice || 0) + (order.shippingCost || 0) + (order.codFee || 0);
+
+  const grandTotal =
+    order.grandTotal ||
+    (order.totalPrice || 0) +
+      (order.shippingCost || 0) +
+      (order.codFee || 0) +
+      (order.installmentFee || 0);
 
   return (
     <div>
       {/* العنوان */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/seller/orders')} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button
+          onClick={() => navigate('/seller/orders')}
+          className="p-2 hover:bg-gray-100 rounded-lg"
+        >
           <FiArrowRight size={20} />
         </button>
+
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-800">طلب #{order.id}</h1>
           <p className="text-gray-500 text-sm">{formatDate(order.createdAt)}</p>
         </div>
+
         <span className={`px-4 py-2 rounded-full text-sm font-medium ${status.color}`}>
           {status.icon} {status.label}
         </span>
@@ -133,7 +206,7 @@ const SellerOrderDetailsPage = () => {
       {/* ✅ أزرار الإجراءات حسب الحالة */}
       {order.status === 'PaymentConfirmed' && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <span className="text-2xl">✅</span>
               <div>
@@ -141,6 +214,7 @@ const SellerOrderDetailsPage = () => {
                 <p className="text-sm text-green-700">العميل دفع وتم تأكيد الدفع من الإدارة</p>
               </div>
             </div>
+
             <button
               onClick={handleStartProcessing}
               disabled={actionLoading}
@@ -154,7 +228,7 @@ const SellerOrderDetailsPage = () => {
 
       {order.status === 'Processing' && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <span className="text-2xl">🔄</span>
               <div>
@@ -162,6 +236,7 @@ const SellerOrderDetailsPage = () => {
                 <p className="text-sm text-blue-700">لما تخلص تجهيز الطلب، اضغط جاهز للشحن</p>
               </div>
             </div>
+
             <button
               onClick={handleReadyToShip}
               disabled={actionLoading}
@@ -175,7 +250,7 @@ const SellerOrderDetailsPage = () => {
 
       {order.status === 'ReadyToShip' && !showShipForm && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <span className="text-2xl">📦</span>
               <div>
@@ -183,6 +258,7 @@ const SellerOrderDetailsPage = () => {
                 <p className="text-sm text-indigo-700">أدخل بيانات الشحن ورقم التتبع</p>
               </div>
             </div>
+
             <button
               onClick={() => setShowShipForm(true)}
               className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium"
@@ -197,11 +273,28 @@ const SellerOrderDetailsPage = () => {
       {showShipForm && (
         <div className="bg-white rounded-xl border-2 border-purple-300 p-6 mb-6">
           <h3 className="text-lg font-bold mb-4">🚚 بيانات الشحن</h3>
+
+          {/* ✅ جديد - رقم العميل داخل فورم الشحن */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+            <p className="font-bold text-blue-800 mb-2">📞 رقم تواصل العميل للمندوب</p>
+
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm text-blue-700">
+                {renderCustomerPhone()}
+              </div>
+
+              <p className="text-xs text-blue-600">
+                استخدم الرقم ده مع شركة الشحن أو مندوب التوصيل.
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 شركة الشحن *
               </label>
+
               <input
                 type="text"
                 value={shipData.shippingCompany}
@@ -211,6 +304,7 @@ const SellerOrderDetailsPage = () => {
                   shipErrors.shippingCompany ? 'border-red-500' : ''
                 }`}
               />
+
               {shipErrors.shippingCompany && (
                 <p className="mt-1 text-xs text-red-500">{shipErrors.shippingCompany}</p>
               )}
@@ -220,6 +314,7 @@ const SellerOrderDetailsPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 رقم التتبع *
               </label>
+
               <input
                 type="text"
                 value={shipData.trackingNumber}
@@ -229,6 +324,7 @@ const SellerOrderDetailsPage = () => {
                   shipErrors.trackingNumber ? 'border-red-500' : ''
                 }`}
               />
+
               {shipErrors.trackingNumber && (
                 <p className="mt-1 text-xs text-red-500">{shipErrors.trackingNumber}</p>
               )}
@@ -238,6 +334,7 @@ const SellerOrderDetailsPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 رابط التتبع (اختياري)
               </label>
+
               <input
                 type="url"
                 value={shipData.trackingUrl}
@@ -255,6 +352,7 @@ const SellerOrderDetailsPage = () => {
               >
                 {actionLoading ? 'جاري الشحن...' : '🚚 تأكيد الشحن'}
               </button>
+
               <button
                 onClick={() => {
                   setShowShipForm(false);
@@ -273,6 +371,7 @@ const SellerOrderDetailsPage = () => {
       {order.timeline && order.timeline.length > 0 && (
         <div className="bg-white rounded-xl border p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">📍 مسار الطلب</h2>
+
           <OrderTimeline
             currentStatus={order.status}
             timeline={order.timeline}
@@ -287,21 +386,32 @@ const SellerOrderDetailsPage = () => {
           {/* عناصر الطلب */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">عناصر الطلب</h2>
+
             <div className="space-y-3">
               {(order.items || order.orderItems || []).map((item, index) => (
-                <div key={item.id || index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                <div
+                  key={item.id || index}
+                  className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
+                >
                   <img
                     src={item.productImageUrl || item.imageUrl || '/placeholder-product.png'}
                     alt={item.productName || item.name}
                     className="w-14 h-14 rounded-lg object-cover"
-                    onError={(e) => { e.target.src = '/placeholder-product.png'; }}
+                    onError={(e) => {
+                      e.target.src = '/placeholder-product.png';
+                    }}
                   />
+
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800">{item.productName || item.name}</p>
+                    <p className="font-medium text-gray-800">
+                      {item.productName || item.name}
+                    </p>
+
                     <p className="text-sm text-gray-500">
                       {formatPrice(item.unitPrice || item.price)} × {item.quantity}
                     </p>
                   </div>
+
                   <p className="font-medium text-gray-800">
                     {formatPrice((item.unitPrice || item.price) * item.quantity)}
                   </p>
@@ -310,16 +420,29 @@ const SellerOrderDetailsPage = () => {
             </div>
           </div>
 
-          {/* العنوان */}
+          {/* عنوان الشحن */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">عنوان الشحن</h2>
-            <div className="text-gray-600 space-y-1">
-              <p>{order.shippingAddress}</p>
-              <p>
-                {order.shippingCity}
-                {order.shippingCity && order.shippingCountry && '، '}
-                {order.shippingCountry}
-              </p>
+
+            <div className="text-gray-600 space-y-3">
+              <div>
+                <p>{order.shippingAddress}</p>
+
+                <p>
+                  {order.shippingCity}
+                  {order.shippingCity && order.shippingCountry && '، '}
+                  {order.shippingCountry}
+                </p>
+              </div>
+
+              {/* ✅ جديد - رقم التواصل ضمن عنوان الشحن */}
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  📞 رقم تواصل العميل مع المندوب
+                </p>
+                {renderCustomerPhone()}
+              </div>
+
               {order.orderNotes && (
                 <p className="mt-3 text-sm bg-yellow-50 p-3 rounded-lg">
                   📝 ملاحظات: {order.orderNotes}
@@ -328,25 +451,44 @@ const SellerOrderDetailsPage = () => {
             </div>
           </div>
 
-          {/* ✅ بيانات الشحن (لو اتشحن) */}
+          {/* ✅ بيانات الشحن لو اتشحن */}
           {order.trackingNumber && (
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">📍 بيانات الشحن</h2>
+
               <div className="space-y-3 text-sm">
                 {order.shippingCompany && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-gray-500">شركة الشحن</span>
                     <span className="font-medium">{order.shippingCompany}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
+
+                <div className="flex justify-between gap-4">
                   <span className="text-gray-500">رقم التتبع</span>
-                  <span className="font-mono font-bold text-purple-600">{order.trackingNumber}</span>
+                  <span className="font-mono font-bold text-purple-600">
+                    {order.trackingNumber}
+                  </span>
                 </div>
+
                 {order.shippedAt && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-gray-500">تاريخ الشحن</span>
                     <span className="font-medium">{formatDate(order.shippedAt)}</span>
+                  </div>
+                )}
+
+                {order.trackingUrl && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-500">رابط التتبع</span>
+                    <a
+                      href={order.trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      فتح الرابط
+                    </a>
                   </div>
                 )}
               </div>
@@ -356,31 +498,67 @@ const SellerOrderDetailsPage = () => {
 
         {/* العمود الجانبي */}
         <div className="space-y-6">
-          {/* ✅ ملخص مالي - محدّث */}
+          {/* ✅ ملخص مالي */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">الملخص المالي</h2>
+
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">إجمالي المنتجات</span>
                 <span className="font-medium">{formatPrice(order.totalPrice)}</span>
               </div>
+
+              {order.shippingCost > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">الشحن</span>
+                  <span className="font-medium">{formatPrice(order.shippingCost)}</span>
+                </div>
+              )}
+
+              {order.codFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">رسوم الدفع عند الاستلام</span>
+                  <span className="font-medium text-orange-600">{formatPrice(order.codFee)}</span>
+                </div>
+              )}
+
+              {order.installmentFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">رسوم التقسيط</span>
+                  <span className="font-medium text-orange-600">
+                    {formatPrice(order.installmentFee)}
+                  </span>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span className="text-gray-500">عمولة الموقع</span>
                 <span className="text-red-600">- {formatPrice(order.commissionAmount)}</span>
               </div>
+
               <hr />
+
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-700">إجمالي الطلب</span>
+                <span className="font-bold text-blue-600">{formatPrice(grandTotal)}</span>
+              </div>
+
               <div className="flex justify-between">
                 <span className="font-medium text-gray-700">نصيبك</span>
-                <span className="font-bold text-green-600 text-lg">{formatPrice(order.sellerAmount)}</span>
+                <span className="font-bold text-green-600 text-lg">
+                  {formatPrice(order.sellerAmount)}
+                </span>
               </div>
 
               <hr />
+
               <div className="flex justify-between">
                 <span className="text-gray-500">طريقة الدفع</span>
                 <span className="font-medium">
                   {getPaymentMethodLabel(order.paymentMethod || order.payment?.paymentMethod)}
                 </span>
               </div>
+
               {paymentStatus && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">حالة الدفع</span>
@@ -395,28 +573,57 @@ const SellerOrderDetailsPage = () => {
           {/* بيانات العميل */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">العميل</h2>
-            <div className="text-sm text-gray-600 space-y-2">
-              <p>👤 {order.userName || order.customerName}</p>
-              <p>📧 {order.userEmail || order.customerEmail}</p>
+
+            <div className="text-sm text-gray-600 space-y-3">
+              <p>👤 {order.userName || order.customerName || 'غير معروف'}</p>
+
+              <p>📧 {order.userEmail || order.customerEmail || 'غير متوفر'}</p>
+
+              {/* ✅ جديد - رقم التواصل */}
+              <div>
+                <p className="mb-1">📞 رقم التواصل:</p>
+                {renderCustomerPhone()}
+              </div>
             </div>
           </div>
 
+          {/* ✅ ملاحظة مهمة للبائع */}
+          {order.customerPhoneNumber && ['Processing', 'ReadyToShip'].includes(order.status) && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <p className="font-bold text-blue-800 mb-2">تنبيه الشحن</p>
+              <p className="text-sm text-blue-700">
+                رقم العميل المطلوب إرساله للمندوب:
+              </p>
+
+              <div className="mt-2">
+                {renderCustomerPhone()}
+              </div>
+            </div>
+          )}
+
           {/* ✅ ملاحظة الأرباح */}
           {['Delivered', 'Completed'].includes(order.status) && (
-            <div className={`rounded-xl border p-4 ${
-              order.status === 'Completed'
-                ? 'bg-green-50 border-green-200'
-                : 'bg-blue-50 border-blue-200'
-            }`}>
+            <div
+              className={`rounded-xl border p-4 ${
+                order.status === 'Completed'
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-blue-50 border-blue-200'
+              }`}
+            >
               {order.status === 'Completed' ? (
                 <div className="text-center">
                   <span className="text-3xl">💰</span>
+
                   <p className="font-bold text-green-800 mt-2">تم إضافة أرباحك!</p>
-                  <p className="text-2xl font-bold text-green-600 mt-1">{formatPrice(order.sellerAmount)}</p>
+
+                  <p className="text-2xl font-bold text-green-600 mt-1">
+                    {formatPrice(order.sellerAmount)}
+                  </p>
                 </div>
               ) : (
                 <div>
                   <p className="font-medium text-blue-800">⏳ في فترة الانتظار</p>
+
                   <p className="text-sm text-blue-700 mt-1">
                     سيتم إضافة أرباحك ({formatPrice(order.sellerAmount)}) بعد 3 أيام من التسليم
                   </p>

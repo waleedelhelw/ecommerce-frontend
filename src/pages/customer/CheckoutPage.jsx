@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cartItems, cartTotal, fetchCart } = useCart();
+
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -22,7 +23,7 @@ const CheckoutPage = () => {
   const [codFee, setCodFee] = useState(0);
   const [selectedShippingCost, setSelectedShippingCost] = useState(0);
 
-  // 🆕 ✅ التقسيط
+  // 🆕 ✅ التقسيط - سيبه ملغي حالياً
   const [useInstallment, setUseInstallment] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
 
@@ -30,6 +31,10 @@ const CheckoutPage = () => {
     shippingAddress: '',
     shippingCity: '',
     shippingCountry: 'مصر',
+
+    // ✅ جديد - رقم تواصل العميل مع مندوب الشحن
+    customerPhoneNumber: '',
+
     paymentMethod: 'CashOnDelivery',
     orderNotes: '',
     shippingOptionId: null,
@@ -45,7 +50,7 @@ const CheckoutPage = () => {
 
         try {
           const settings = await settingsService.getPaymentInfo();
-          const codSetting = settings?.find?.(s => s.key === 'CODExtraFee');
+          const codSetting = settings?.find?.((s) => s.key === 'CODExtraFee');
           if (codSetting) setCodFee(parseFloat(codSetting.value) || 0);
         } catch {
           setCodFee(20);
@@ -54,20 +59,30 @@ const CheckoutPage = () => {
         console.error('فشل تحميل البيانات:', err);
       }
     };
+
     fetchData();
   }, []);
 
   // ✅ تحديث تكلفة الشحن عند تغيير الخيار
   const handleShippingChange = (optionId) => {
     setFormData((prev) => ({ ...prev, shippingOptionId: optionId }));
+
     const option = shippingOptions.find((o) => o.id === optionId);
     setSelectedShippingCost(option ? option.price : 0);
+
+    if (errors.shippingOption) {
+      setErrors((prev) => ({ ...prev, shippingOption: '' }));
+    }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handlePaymentChange = (method) => {
@@ -83,6 +98,7 @@ const CheckoutPage = () => {
   // 🆕 ✅ التبديل بين الدفع الكامل والتقسيط
   const handleInstallmentToggle = (enabled) => {
     setUseInstallment(enabled);
+
     if (!enabled) {
       setSelectedPlanId(null);
     }
@@ -93,11 +109,33 @@ const CheckoutPage = () => {
     setSelectedPlanId(planId);
   };
 
+  const validatePhoneNumber = (phone) => {
+    // نفس فكرة Regex في الباك تقريباً
+    // يسمح بـ أرقام + مسافات + شرطة + أقواس + علامة +
+    const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+    return phoneRegex.test(phone.trim());
+  };
+
   const validate = () => {
     const newErrors = {};
-    if (!formData.shippingAddress.trim()) newErrors.shippingAddress = 'العنوان مطلوب';
-    if (!formData.shippingCity.trim()) newErrors.shippingCity = 'المدينة مطلوبة';
-    if (!formData.shippingOptionId) newErrors.shippingOption = 'اختر طريقة الشحن';
+
+    if (!formData.shippingAddress.trim()) {
+      newErrors.shippingAddress = 'العنوان مطلوب';
+    }
+
+    if (!formData.shippingCity.trim()) {
+      newErrors.shippingCity = 'المدينة مطلوبة';
+    }
+
+    if (!formData.customerPhoneNumber.trim()) {
+      newErrors.customerPhoneNumber = 'رقم التواصل مطلوب';
+    } else if (!validatePhoneNumber(formData.customerPhoneNumber)) {
+      newErrors.customerPhoneNumber = 'رقم التواصل غير صحيح';
+    }
+
+    if (!formData.shippingOptionId) {
+      newErrors.shippingOption = 'اختر طريقة الشحن';
+    }
 
     // 🆕 ✅ لو اختار تقسيط لازم يختار خطة
     if (useInstallment && !selectedPlanId) {
@@ -112,14 +150,14 @@ const CheckoutPage = () => {
   const currentCodFee = formData.paymentMethod === 'CashOnDelivery' ? codFee : 0;
   const grandTotal = cartTotal + selectedShippingCost + currentCodFee;
 
-  // 🆕 ✅ هل التقسيط متاح؟ (مش متاح مع COD)
-  //const isInstallmentAvailable = formData.paymentMethod !== 'CashOnDelivery';
-    // 🆕 ✅ هل التقسيط متاح؟ (معطل مؤقتاً)
+  // 🆕 ✅ التقسيط متعطل مؤقتاً
   const isInstallmentAvailable = false;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!validate()) return;
+
     if (cartItems.length === 0) {
       toast.error('السلة فارغة');
       return;
@@ -128,22 +166,31 @@ const CheckoutPage = () => {
     try {
       setLoading(true);
 
-      // 🆕 ✅ إضافة installmentPlanId للـ payload
+      // ✅ payload إنشاء الطلب
       const orderPayload = {
-        ...formData,
+        shippingAddress: formData.shippingAddress.trim(),
+        shippingCity: formData.shippingCity.trim(),
+        shippingCountry: formData.shippingCountry.trim(),
+
+        // ✅ جديد - هيتبعت للباك
+        customerPhoneNumber: formData.customerPhoneNumber.trim(),
+
+        paymentMethod: formData.paymentMethod,
+        orderNotes: formData.orderNotes?.trim() || null,
+        shippingOptionId: formData.shippingOptionId,
         installmentPlanId: useInstallment ? selectedPlanId : null,
       };
 
       const data = await orderService.createOrder(orderPayload);
+
       await fetchCart();
 
       const orderId = data.id || data.orderId;
 
-            // 🆕 ✅ لو تقسيط → وجّه لصفحة دفع الأقساط
+      // 🆕 ✅ لو تقسيط → وجّه لصفحة دفع الأقساط
       if (useInstallment && selectedPlanId) {
         toast.success('تم إنشاء الطلب بالتقسيط! ادفع الدفعة الأولى لتأكيد الطلب 📋');
         navigate(`/orders/${orderId}/installments`);
-      
       } else if (formData.paymentMethod !== 'CashOnDelivery') {
         toast.success('تم إنشاء الطلب! يرجى إتمام الدفع 💳');
         navigate(`/orders/${orderId}/payment`);
@@ -177,11 +224,13 @@ const CheckoutPage = () => {
             {/* 📍 عنوان الشحن */}
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-bold mb-4">📍 عنوان الشحن</h2>
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    العنوان *
+                    العنوان <span className="text-red-500">*</span>
                   </label>
+
                   <input
                     type="text"
                     name="shippingAddress"
@@ -190,16 +239,18 @@ const CheckoutPage = () => {
                     placeholder="الشارع، رقم العمارة، الشقة"
                     className={`input-field ${errors.shippingAddress ? 'input-error' : ''}`}
                   />
+
                   {errors.shippingAddress && (
                     <p className="mt-1 text-sm text-red-500">{errors.shippingAddress}</p>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      المدينة *
+                      المدينة <span className="text-red-500">*</span>
                     </label>
+
                     <input
                       type="text"
                       name="shippingCity"
@@ -208,12 +259,17 @@ const CheckoutPage = () => {
                       placeholder="القاهرة"
                       className={`input-field ${errors.shippingCity ? 'input-error' : ''}`}
                     />
+
                     {errors.shippingCity && (
                       <p className="mt-1 text-sm text-red-500">{errors.shippingCity}</p>
                     )}
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">الدولة</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      الدولة
+                    </label>
+
                     <input
                       type="text"
                       name="shippingCountry"
@@ -223,15 +279,44 @@ const CheckoutPage = () => {
                     />
                   </div>
                 </div>
+
+                {/* ✅ جديد - رقم التواصل */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    رقم التواصل مع مندوب الشحن <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    type="tel"
+                    name="customerPhoneNumber"
+                    value={formData.customerPhoneNumber}
+                    onChange={handleChange}
+                    placeholder="مثال: 01012345678"
+                    dir="ltr"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className={`input-field text-left ${errors.customerPhoneNumber ? 'input-error' : ''}`}
+                  />
+
+                  {errors.customerPhoneNumber ? (
+                    <p className="mt-1 text-sm text-red-500">{errors.customerPhoneNumber}</p>
+                  ) : (
+                    <p className="mt-1 text-xs text-gray-500">
+                      الرقم ده هيظهر للبائع عشان يقدر يرسله لشركة الشحن أو يتواصل معاك المندوب.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* 🚚 طريقة الشحن */}
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-bold mb-4">🚚 طريقة الشحن</h2>
+
               {errors.shippingOption && (
                 <p className="mb-3 text-sm text-red-500">{errors.shippingOption}</p>
               )}
+
               <ShippingOptionSelector
                 selected={formData.shippingOptionId}
                 onChange={handleShippingChange}
@@ -241,6 +326,7 @@ const CheckoutPage = () => {
             {/* 💳 طريقة الدفع */}
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-bold mb-4">💳 طريقة الدفع</h2>
+
               <PaymentMethodSelector
                 selected={formData.paymentMethod}
                 onChange={handlePaymentChange}
@@ -248,11 +334,12 @@ const CheckoutPage = () => {
               />
             </div>
 
-            {/* 🆕 ✅ التقسيط */}
+            {/* 🆕 ✅ التقسيط - متعطل حالياً */}
             {isInstallmentAvailable && (
               <div className="bg-white rounded-xl border p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold">📋 التقسيط</h2>
+
                   <button
                     type="button"
                     onClick={() => handleInstallmentToggle(!useInstallment)}
@@ -279,6 +366,7 @@ const CheckoutPage = () => {
                     {errors.installmentPlan && (
                       <p className="mb-3 text-sm text-red-500">{errors.installmentPlan}</p>
                     )}
+
                     <InstallmentPlanSelector
                       selected={selectedPlanId}
                       onChange={handleInstallmentPlanChange}
@@ -294,6 +382,7 @@ const CheckoutPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 📝 ملاحظات (اختياري)
               </label>
+
               <textarea
                 name="orderNotes"
                 value={formData.orderNotes}
@@ -313,9 +402,7 @@ const CheckoutPage = () => {
               {loading ? (
                 'جاري إنشاء الطلب...'
               ) : (
-                <>
-                  ✅ تأكيد الطلب - {formatPrice(grandTotal)}
-                </>
+                <>✅ تأكيد الطلب - {formatPrice(grandTotal)}</>
               )}
             </button>
           </form>
@@ -371,6 +458,11 @@ const CheckoutPage = () => {
                 💡 بعد تأكيد الطلب هتنتقل لصفحة الدفع لرفع إيصال التحويل
               </div>
             )}
+
+            {/* ✅ جديد - تذكير برقم التواصل */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-600">
+              📞 تأكد من إدخال رقم تواصل صحيح عشان مندوب الشحن يقدر يتواصل معاك.
+            </div>
           </div>
         </div>
       </div>

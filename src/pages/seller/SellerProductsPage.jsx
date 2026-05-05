@@ -9,7 +9,6 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { formatPrice } from '../../utils/formatPrice';
 import toast from 'react-hot-toast';
 
-// ✅ Helper: استخراج الـ array
 const extractArray = (data) => {
   if (!data) return [];
   if (Array.isArray(data)) return data;
@@ -28,14 +27,18 @@ const SellerProductsPage = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // ✅ جديد - فلتر الحالة
+  const [activeFilter, setActiveFilter] = useState('all');
+
   useEffect(() => {
     fetchProducts();
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, activeFilter]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError(null);
+
       const data = await getMyProducts({
         pageNumber: currentPage,
         pageSize: 10,
@@ -43,7 +46,15 @@ const SellerProductsPage = () => {
       });
 
       const items = extractArray(data);
-      setProducts(items);
+
+      // ✅ فلترة محلية حسب الحالة
+      const filtered = activeFilter === 'all'
+        ? items
+        : activeFilter === 'active'
+          ? items.filter((p) => p.isActive)
+          : items.filter((p) => !p.isActive);
+
+      setProducts(filtered);
       setTotalPages(data?.totalPages || 1);
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل المنتجات');
@@ -52,28 +63,37 @@ const SellerProductsPage = () => {
     }
   };
 
-  // ✅ حذف المنتج
   const handleDelete = async () => {
     if (!deleteId) return;
+
     try {
       setDeleteLoading(true);
       await deleteProduct(deleteId);
       toast.success('تم حذف المنتج بنجاح');
       setDeleteId(null);
 
-      // ✅ لو آخر منتج في الصفحة
       if (products.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
       } else {
         fetchProducts();
       }
     } catch (err) {
-      console.error('Delete error:', err.response?.data);
       toast.error(err.response?.data?.message || 'حدث خطأ في حذف المنتج');
     } finally {
       setDeleteLoading(false);
     }
   };
+
+  // ✅ إحصائيات سريعة
+  const allItems = products;
+  const activeCount = allItems.filter((p) => p.isActive).length;
+  const inactiveCount = allItems.filter((p) => !p.isActive).length;
+
+  const activeFilters = [
+    { value: 'all', label: 'الكل' },
+    { value: 'active', label: `نشط (${activeCount})` },
+    { value: 'inactive', label: `غير نشط (${inactiveCount})` },
+  ];
 
   return (
     <div>
@@ -83,6 +103,7 @@ const SellerProductsPage = () => {
           <h1 className="text-2xl font-bold text-gray-800">منتجاتي</h1>
           <p className="text-gray-500 mt-1">إدارة منتجات متجرك</p>
         </div>
+
         <Link
           to="/seller/products/new"
           className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors font-medium"
@@ -92,10 +113,14 @@ const SellerProductsPage = () => {
         </Link>
       </div>
 
-      {/* البحث */}
-      <div className="bg-white rounded-xl border p-4 mb-4">
+      {/* البحث + فلتر الحالة */}
+      <div className="bg-white rounded-xl border p-4 mb-4 space-y-3">
+        {/* البحث */}
         <div className="relative">
-          <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <FiSearch
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
           <input
             type="text"
             placeholder="ابحث في منتجاتك..."
@@ -107,6 +132,26 @@ const SellerProductsPage = () => {
             className="w-full pr-10 pl-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
           />
         </div>
+
+        {/* ✅ جديد - فلاتر الحالة */}
+        <div className="flex flex-wrap gap-2">
+          {activeFilters.map((filter) => (
+            <button
+              key={filter.value}
+              onClick={() => {
+                setActiveFilter(filter.value);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                activeFilter === filter.value
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* الجدول */}
@@ -117,7 +162,13 @@ const SellerProductsPage = () => {
       ) : products.length === 0 ? (
         <div className="bg-white rounded-xl border p-12 text-center">
           <FiPackage size={48} className="mx-auto mb-4 text-gray-300" />
-          <h3 className="text-lg font-medium text-gray-600 mb-2">لا توجد منتجات</h3>
+          <h3 className="text-lg font-medium text-gray-600 mb-2">
+            {activeFilter === 'inactive'
+              ? 'لا توجد منتجات غير نشطة'
+              : activeFilter === 'active'
+              ? 'لا توجد منتجات نشطة'
+              : 'لا توجد منتجات'}
+          </h3>
           <p className="text-gray-400 mb-4">ابدأ بإضافة أول منتج لمتجرك</p>
           <Link
             to="/seller/products/new"
@@ -140,33 +191,71 @@ const SellerProductsPage = () => {
                   <th className="text-center px-4 py-3 font-medium text-gray-600">إجراءات</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr
+                    key={product.id}
+                    className={`hover:bg-gray-50 ${!product.isActive ? 'bg-gray-50/50' : ''}`}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={product.imageUrl || '/placeholder-product.png'}
-                          alt={product.name}
-                          className="w-10 h-10 rounded-lg object-cover"
-                        />
+                        <div className="relative">
+                          <img
+                            src={product.imageUrl || '/placeholder-product.png'}
+                            alt={product.name}
+                            className={`w-10 h-10 rounded-lg object-cover ${
+                              !product.isActive ? 'opacity-50' : ''
+                            }`}
+                            onError={(e) => {
+                              e.target.src = '/placeholder-product.png';
+                            }}
+                          />
+                          {/* ✅ مؤشر غير نشط على الصورة */}
+                          {!product.isActive && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-900/30 rounded-lg">
+                              <span className="text-white text-xs">🚫</span>
+                            </div>
+                          )}
+                        </div>
+
                         <div>
-                          <p className="font-medium text-gray-800 line-clamp-1">{product.name}</p>
+                          <p className={`font-medium line-clamp-1 ${
+                            !product.isActive ? 'text-gray-400' : 'text-gray-800'
+                          }`}>
+                            {product.name}
+                          </p>
                           <p className="text-xs text-gray-400">{product.categoryName}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{formatPrice(product.price)}</td>
+
+                    <td className="px-4 py-3 text-gray-700">
+                      {formatPrice(product.price)}
+                    </td>
+
                     <td className="px-4 py-3">
-                      <span className={`text-sm ${product.stockQuantity <= 5 ? 'text-red-600 font-medium' : 'text-gray-700'}`}>
-                        {product.stockQuantity}
+                      <span className={`text-sm ${
+                        product.stockQuantity === 0
+                          ? 'text-red-600 font-medium'
+                          : product.stockQuantity <= 5
+                          ? 'text-orange-500 font-medium'
+                          : 'text-gray-700'
+                      }`}>
+                        {product.stockQuantity === 0 ? 'نفذ' : product.stockQuantity}
                       </span>
                     </td>
+
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full ${product.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {product.isActive ? 'نشط' : 'غير نشط'}
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        product.isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {product.isActive ? '✅ نشط' : '🚫 غير نشط'}
                       </span>
                     </td>
+
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <Link
@@ -176,6 +265,7 @@ const SellerProductsPage = () => {
                         >
                           <FiEdit2 size={16} />
                         </Link>
+
                         <button
                           onClick={() => setDeleteId(product.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
@@ -203,7 +293,6 @@ const SellerProductsPage = () => {
         </div>
       )}
 
-      {/* ✅ Confirm Delete - متوافق مع الـ ConfirmDialog component */}
       <ConfirmDialog
         isOpen={!!deleteId}
         onClose={() => !deleteLoading && setDeleteId(null)}

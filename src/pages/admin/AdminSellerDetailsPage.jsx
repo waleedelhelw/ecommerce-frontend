@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiCheck, FiX, FiSlash } from 'react-icons/fi';
-import { getSellerById, approveSeller, rejectSeller, suspendSeller, updateCommissionRate } from '../../api/admin/adminSellerService';
+import {
+  getSellerById,
+  approveSeller,
+  rejectSeller,
+  suspendSeller,
+  updateCommissionRate,
+} from '../../api/admin/adminSellerService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { formatPrice } from '../../utils/formatPrice';
@@ -20,10 +26,13 @@ const PAYOUT_METHOD_LABELS = {
 const AdminSellerDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // ✅ إصلاح - نستخدم string عشان يدعم "0" صح
   const [newCommission, setNewCommission] = useState('');
   const [commissionLoading, setCommissionLoading] = useState(false);
 
@@ -34,9 +43,14 @@ const AdminSellerDetailsPage = () => {
   const fetchSeller = async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const data = await getSellerById(id);
       setSeller(data);
-      setNewCommission(data.commissionRate || 10);
+
+      // ✅ إصلاح المشكلة الرئيسية
+      // ?? بدل || عشان 0 تعتبر قيمة صحيحة مش falsy
+      setNewCommission(String(data.commissionRate ?? 10));
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل بيانات البائع');
     } finally {
@@ -48,7 +62,7 @@ const AdminSellerDetailsPage = () => {
     try {
       setActionLoading(true);
       await approveSeller(id);
-      toast.success('تم قبول البائع');
+      toast.success('تم قبول البائع ✅');
       fetchSeller();
     } catch (err) {
       toast.error(err.response?.data?.message || 'فشل قبول البائع');
@@ -71,14 +85,24 @@ const AdminSellerDetailsPage = () => {
   };
 
   const handleUpdateCommission = async () => {
-    if (newCommission === '' || newCommission === null || newCommission < 0 || newCommission > 100) {
-      toast.error('يرجى إدخال نسبة صحيحة (0-100)');
+    // ✅ إصلاح الـ validation
+    // newCommission هنا string، فنحوّله لـ number أول
+    const value = parseFloat(newCommission);
+
+    if (newCommission === '' || isNaN(value)) {
+      toast.error('يرجى إدخال نسبة عمولة');
       return;
     }
+
+    if (value < 0 || value > 100) {
+      toast.error('نسبة العمولة يجب أن تكون بين 0 و 100');
+      return;
+    }
+
     try {
       setCommissionLoading(true);
-      await updateCommissionRate(id, parseFloat(newCommission));
-      toast.success('تم تحديث نسبة العمولة');
+      await updateCommissionRate(id, value);
+      toast.success(`تم تحديث نسبة العمولة إلى ${value}% ✅`);
       fetchSeller();
     } catch (err) {
       toast.error(err.response?.data?.message || 'فشل تحديث العمولة');
@@ -93,19 +117,26 @@ const AdminSellerDetailsPage = () => {
 
   const status = getStatusInfo(sellerStatusMap, seller.status);
 
-  // ✅ هل البائع عنده بيانات سحب؟
-  const hasPayoutInfo = seller.preferredPayoutMethod
-    || seller.bankName
-    || seller.walletNumber
-    || seller.instaPayAccount;
+  const hasPayoutInfo =
+    seller.preferredPayoutMethod ||
+    seller.bankName ||
+    seller.walletNumber ||
+    seller.instaPayAccount;
+
+  // ✅ إصلاح العرض - ?? بدل ||
+  const displayCommission = seller.commissionRate ?? 10;
 
   return (
     <div>
       {/* العنوان */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/admin/sellers')} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button
+          onClick={() => navigate('/admin/sellers')}
+          className="p-2 hover:bg-gray-100 rounded-lg"
+        >
           <FiArrowRight size={20} />
         </button>
+
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-800">{seller.storeName}</h1>
           <p className="text-gray-500 text-sm">
@@ -113,6 +144,7 @@ const AdminSellerDetailsPage = () => {
             <span className="text-gray-400 mr-2">— ID: {seller.userId || id}</span>
           </p>
         </div>
+
         <span className={`text-sm px-3 py-1.5 rounded-full ${status.color}`}>
           {status.icon} {status.label}
         </span>
@@ -124,6 +156,7 @@ const AdminSellerDetailsPage = () => {
           {/* بيانات المتجر */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">بيانات المتجر</h2>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-gray-500">اسم المتجر</p>
@@ -176,22 +209,22 @@ const AdminSellerDetailsPage = () => {
             </div>
           </div>
 
-          {/* ✅ بيانات السحب */}
+          {/* بيانات السحب */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">💳 بيانات السحب</h2>
 
             {hasPayoutInfo ? (
               <div className="space-y-4">
-                {/* طريقة السحب المفضلة */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-xs text-gray-500 mb-1">طريقة السحب المفضلة</p>
                   <p className="font-bold text-blue-700 text-lg">
-                    {PAYOUT_METHOD_LABELS[seller.preferredPayoutMethod] || seller.preferredPayoutMethod || '—'}
+                    {PAYOUT_METHOD_LABELS[seller.preferredPayoutMethod] ||
+                      seller.preferredPayoutMethod ||
+                      '—'}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  {/* بيانات بنكية */}
                   {(seller.bankName || seller.bankAccountNumber) && (
                     <>
                       <div>
@@ -200,7 +233,9 @@ const AdminSellerDetailsPage = () => {
                       </div>
                       <div>
                         <p className="text-gray-500">رقم الحساب</p>
-                        <p className="font-medium font-mono tracking-wider">{seller.bankAccountNumber || '—'}</p>
+                        <p className="font-medium font-mono tracking-wider">
+                          {seller.bankAccountNumber || '—'}
+                        </p>
                       </div>
                       <div className="sm:col-span-2">
                         <p className="text-gray-500">اسم صاحب الحساب</p>
@@ -209,12 +244,13 @@ const AdminSellerDetailsPage = () => {
                     </>
                   )}
 
-                  {/* بيانات المحفظة */}
                   {seller.walletNumber && (
                     <>
                       <div>
                         <p className="text-gray-500">📱 رقم المحفظة</p>
-                        <p className="font-medium font-mono tracking-wider">{seller.walletNumber}</p>
+                        <p className="font-medium font-mono tracking-wider">
+                          {seller.walletNumber}
+                        </p>
                       </div>
                       <div>
                         <p className="text-gray-500">مزود الخدمة</p>
@@ -223,7 +259,6 @@ const AdminSellerDetailsPage = () => {
                     </>
                   )}
 
-                  {/* InstaPay */}
                   {seller.instaPayAccount && (
                     <div className="sm:col-span-2">
                       <p className="text-gray-500">🏦 حساب إنستاباي</p>
@@ -243,6 +278,7 @@ const AdminSellerDetailsPage = () => {
           {/* الإحصائيات */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">الإحصائيات</h2>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-blue-50 rounded-lg p-4 text-center">
                 <p className="text-xs text-gray-500 mb-1">المنتجات</p>
@@ -250,15 +286,21 @@ const AdminSellerDetailsPage = () => {
               </div>
               <div className="bg-green-50 rounded-lg p-4 text-center">
                 <p className="text-xs text-gray-500 mb-1">المبيعات</p>
-                <p className="text-xl font-bold text-green-600">{formatPrice(seller.totalSales || 0)}</p>
+                <p className="text-xl font-bold text-green-600">
+                  {formatPrice(seller.totalSales || 0)}
+                </p>
               </div>
               <div className="bg-yellow-50 rounded-lg p-4 text-center">
                 <p className="text-xs text-gray-500 mb-1">الإيرادات</p>
-                <p className="text-xl font-bold text-yellow-600">{formatPrice(seller.totalRevenue || 0)}</p>
+                <p className="text-xl font-bold text-yellow-600">
+                  {formatPrice(seller.totalRevenue || 0)}
+                </p>
               </div>
               <div className="bg-purple-50 rounded-lg p-4 text-center">
                 <p className="text-xs text-gray-500 mb-1">الرصيد</p>
-                <p className="text-xl font-bold text-purple-600">{formatPrice(seller.balance || 0)}</p>
+                <p className="text-xl font-bold text-purple-600">
+                  {formatPrice(seller.balance || 0)}
+                </p>
               </div>
             </div>
           </div>
@@ -269,6 +311,7 @@ const AdminSellerDetailsPage = () => {
           {/* إجراءات */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">إجراءات</h2>
+
             <div className="space-y-3">
               {seller.status === 'Pending' && (
                 <>
@@ -280,6 +323,7 @@ const AdminSellerDetailsPage = () => {
                     <FiCheck size={18} />
                     {actionLoading ? 'جاري...' : 'قبول البائع'}
                   </button>
+
                   <button
                     onClick={() => navigate('/admin/sellers')}
                     className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 rounded-lg hover:bg-red-700 font-medium"
@@ -314,12 +358,18 @@ const AdminSellerDetailsPage = () => {
             </div>
           </div>
 
-          {/* تعديل العمولة */}
+          {/* ✅ تعديل العمولة - متعدل */}
           <div className="bg-white rounded-xl border p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">نسبة العمولة</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">نسبة العمولة</h2>
+
+            {/* ✅ إصلاح العرض - ?? بدل || */}
             <p className="text-sm text-gray-500 mb-3">
-              النسبة الحالية: <span className="font-bold text-gray-800">{seller.commissionRate || 10}%</span>
+              النسبة الحالية:{' '}
+              <span className="font-bold text-gray-800">
+                {displayCommission}%
+              </span>
             </p>
+
             <div className="flex gap-2">
               <input
                 type="number"
@@ -329,7 +379,9 @@ const AdminSellerDetailsPage = () => {
                 min="0"
                 max="100"
                 step="0.5"
+                placeholder="0 - 100"
               />
+
               <button
                 onClick={handleUpdateCommission}
                 disabled={commissionLoading}
@@ -338,14 +390,17 @@ const AdminSellerDetailsPage = () => {
                 {commissionLoading ? '...' : 'تحديث'}
               </button>
             </div>
+
+            {/* ✅ جديد - تلميح */}
+            <p className="text-xs text-gray-400 mt-2">
+              يمكن إدخال 0 لإلغاء العمولة على هذا البائع
+            </p>
           </div>
 
           {/* التقييم */}
           <div className="bg-white rounded-xl border p-6 text-center">
             <p className="text-sm text-gray-500 mb-1">التقييم</p>
-            <p className="text-2xl font-bold text-yellow-500">
-              ⭐ {seller.rating || 0}
-            </p>
+            <p className="text-2xl font-bold text-yellow-500">⭐ {seller.rating || 0}</p>
             <p className="text-xs text-gray-400">{seller.totalRatings || 0} تقييم</p>
           </div>
         </div>
