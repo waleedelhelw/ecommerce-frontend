@@ -136,8 +136,8 @@ export const PAYMENT_STATUS = {
 };
 
 // ============ ✅ Return Window (بالأيام) ============
-export const RETURN_WINDOW_DAYS = 14;
-export const RETURN_SHIPPING_DEADLINE_DAYS = 3;
+export const RETURN_WINDOW_DAYS = 3;
+export const RETURN_SHIPPING_DEADLINE_DAYS = 5;
 
 // ============ Routes ============
 export const ROUTES = {

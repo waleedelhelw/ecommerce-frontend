@@ -39,7 +39,7 @@ const ReturnsPolicyPage = () => {
     <>
       <SEO
         title="سياسة الإرجاع والاستبدال"
-        description="سياسة الإرجاع على تسوّق - 14 يوم لإرجاع المنتجات. تعرّف على شروط الإرجاع وطرق استرداد المبلغ."
+        description="سياسة الإرجاع على تسوّق - 3 ايام لإرجاع المنتجات. تعرّف على شروط الإرجاع وطرق استرداد المبلغ."
         keywords="سياسة الإرجاع, إرجاع المنتجات, استبدال, استرداد المبلغ, حق الإرجاع, تسوق"
         url="/returns"
         structuredData={breadcrumbSchema}
@@ -55,7 +55,7 @@ const ReturnsPolicyPage = () => {
           </div>
           <h1 className="text-4xl font-bold mb-3">سياسة الإرجاع والاستبدال</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            راحتك أولويتنا - لديك 14 يوم لإرجاع المنتج لو ما عجبكش
+            راحتك أولويتنا - لديك 3 ايام لإرجاع المنتج لو ما عجبكش
           </p>
         </section>
 
@@ -65,7 +65,7 @@ const ReturnsPolicyPage = () => {
             <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <FiClock className="text-blue-600" size={28} aria-hidden="true" />
             </div>
-            <h2 className="text-xl font-bold mb-2">14 يوم</h2>
+            <h2 className="text-xl font-bold mb-2">3 ايام</h2>
             <p className="text-sm text-gray-600">من تاريخ الاستلام لإرجاع المنتج</p>
           </article>
 
