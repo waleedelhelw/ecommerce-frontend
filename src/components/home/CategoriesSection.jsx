@@ -4,16 +4,16 @@ import categoryService from '../../api/categoryService';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 const colors = [
-  'from-blue-500 to-blue-600',
-  'from-purple-500 to-purple-600',
-  'from-pink-500 to-pink-600',
-  'from-green-500 to-green-600',
-  'from-orange-500 to-orange-600',
-  'from-teal-500 to-teal-600',
-  'from-red-500 to-red-600',
-  'from-indigo-500 to-indigo-600',
-  'from-yellow-500 to-yellow-600',
-  'from-cyan-500 to-cyan-600',
+  { bg: 'from-blue-500 to-blue-700', light: 'bg-blue-400/30' },
+  { bg: 'from-purple-500 to-purple-700', light: 'bg-purple-400/30' },
+  { bg: 'from-pink-500 to-pink-700', light: 'bg-pink-400/30' },
+  { bg: 'from-green-500 to-green-700', light: 'bg-green-400/30' },
+  { bg: 'from-orange-500 to-orange-700', light: 'bg-orange-400/30' },
+  { bg: 'from-teal-500 to-teal-700', light: 'bg-teal-400/30' },
+  { bg: 'from-red-500 to-red-700', light: 'bg-red-400/30' },
+  { bg: 'from-indigo-500 to-indigo-700', light: 'bg-indigo-400/30' },
+  { bg: 'from-yellow-500 to-yellow-700', light: 'bg-yellow-400/30' },
+  { bg: 'from-cyan-500 to-cyan-700', light: 'bg-cyan-400/30' },
 ];
 
 const CategoriesSection = () => {
@@ -49,31 +49,64 @@ const CategoriesSection = () => {
   if (categories.length === 0) return null;
 
   return (
-    <section className="py-12" aria-labelledby="categories-section-title">
+    <section className="py-14" aria-labelledby="categories-section-title">
       <div className="max-w-7xl mx-auto px-4">
-        <h2
-          id="categories-section-title"
-          className="text-2xl font-bold text-center mb-8"
-        >
-          تسوق حسب التصنيف
-        </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {categories.map((category, index) => (
-            <Link
-              key={category.id}
-              to={`/categories/${category.id}/products`}
-              className={`bg-gradient-to-br ${colors[index % colors.length]} 
-                         rounded-xl p-5 flex items-center justify-center text-center
-                         hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
-              aria-label={`تصفح منتجات ${category.name}`}
-            >
-              {/* ✅ تغيير span لـ h3 (أفضل للـ SEO) */}
-              <h3 className="text-white font-bold text-sm leading-tight">
-                {category.name}
-              </h3>
-            </Link>
-          ))}
+        {/* ── العنوان ── */}
+        <div className="text-center mb-10">
+          <h2
+            id="categories-section-title"
+            className="text-3xl font-extrabold text-gray-800 mb-2"
+          >
+            تسوق حسب التصنيف
+          </h2>
+          <p className="text-gray-500 text-sm">اختر التصنيف المناسب وابدأ التسوق</p>
+          <div className="mt-3 mx-auto w-16 h-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
+        </div>
+
+        {/* ── الكروت ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {categories.map((category, index) => {
+            const color = colors[index % colors.length];
+            const firstLetter = category.name?.charAt(0) || '؟';
+
+            return (
+              <Link
+                key={category.id}
+                to={`/categories/${category.id}/products`}
+                aria-label={`تصفح منتجات ${category.name}`}
+                className={`
+                  relative overflow-hidden
+                  bg-gradient-to-br ${color.bg}
+                  rounded-2xl p-5
+                  flex flex-col items-center justify-center gap-3
+                  text-center shadow-md
+                  hover:shadow-xl hover:-translate-y-1.5
+                  transition-all duration-300 group
+                `}
+              >
+                {/* دائرة الحرف */}
+                <div className={`
+                  w-14 h-14 rounded-full ${color.light}
+                  flex items-center justify-center
+                  group-hover:scale-110 transition-transform duration-300
+                `}>
+                  <span className="text-white text-2xl font-extrabold">
+                    {firstLetter}
+                  </span>
+                </div>
+
+                {/* اسم التصنيف */}
+                <h3 className="text-white font-bold text-sm leading-tight">
+                  {category.name}
+                </h3>
+
+                {/* زخرفة خلفية */}
+                <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-full bg-white/10 pointer-events-none" />
+                <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-white/10 pointer-events-none" />
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>
