@@ -6,19 +6,17 @@ import {
   Cell,
   Tooltip,
 } from 'recharts';
-import { FiCalendar, FiTrendingUp } from 'react-icons/fi';
+import { FiCalendar, FiTrendingUp, FiRefreshCw } from 'react-icons/fi';
 import { getEarningsBreakdown } from '../../../api/seller/sellerFinanceService';
 import { formatPrice } from '../../../utils/formatPrice';
 
-// ألوان الـ Pie
 const COLORS = {
-  sales: '#16a34a',       // أخضر - مبيعات
-  commissions: '#f97316', // برتقالي - عمولات
-  refunds: '#ef4444',     // أحمر - استرجاعات
-  payouts: '#3b82f6',     // أزرق - سحوبات
+  sales: '#16a34a',
+  commissions: '#f97316',
+  refunds: '#ef4444',
+  payouts: '#3b82f6',
 };
 
-// خيارات الفترات السريعة
 const periodOptions = [
   { label: 'آخر 7 أيام', days: 7 },
   { label: 'آخر 30 يوم', days: 30 },
@@ -31,102 +29,102 @@ const EarningsBreakdownChart = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState(periodOptions[1]); // افتراضي: آخر 30 يوم
+  const [selectedPeriod, setSelectedPeriod] = useState(periodOptions[1]);
 
-  // ============ حساب الفترة ============
   const calculateDateRange = (period) => {
     const today = new Date();
-    let fromDate = null;
-    let toDate = null;
 
     if (period.type === 'all') {
       return { fromDate: null, toDate: null };
     }
 
     if (period.type === 'year') {
-      fromDate = new Date(today.getFullYear(), 0, 1);
-      toDate = today;
-    } else if (period.days) {
-      fromDate = new Date();
-      fromDate.setDate(today.getDate() - period.days);
-      toDate = today;
+      return {
+        fromDate: new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0],
+        toDate: today.toISOString().split('T')[0],
+      };
     }
 
+    const fromDate = new Date();
+    fromDate.setDate(today.getDate() - period.days);
+
     return {
-      fromDate: fromDate ? fromDate.toISOString().split('T')[0] : null,
-      toDate: toDate ? toDate.toISOString().split('T')[0] : null,
+      fromDate: fromDate.toISOString().split('T')[0],
+      toDate: today.toISOString().split('T')[0],
     };
   };
 
-  // ============ تحميل البيانات ============
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const { fromDate, toDate } = calculateDateRange(selectedPeriod);
-        const result = await getEarningsBreakdown(fromDate, toDate);
-        setData(result);
-      } catch (err) {
-        setError(err.response?.data?.message || 'حدث خطأ في تحميل البيانات');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
+      const { fromDate, toDate } = calculateDateRange(selectedPeriod);
+      const result = await getEarningsBreakdown(fromDate, toDate);
+      setData(result);
+    } catch (err) {
+      setError(err.response?.data?.message || 'حدث خطأ في تحميل البيانات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, [selectedPeriod]);
 
-  // ============ تحويل البيانات لشكل Pie ============
   const buildChartData = () => {
     if (!data) return [];
 
-    const items = [
+    return [
       {
         name: 'المبيعات',
         value: data.totalSales || 0,
         color: COLORS.sales,
         count: data.salesCount || 0,
+        showCount: true,
       },
       {
         name: 'العمولات',
         value: Math.abs(data.totalCommissions || 0),
         color: COLORS.commissions,
         count: null,
+        showCount: false,
       },
       {
         name: 'الاسترجاعات',
         value: Math.abs(data.totalRefunds || 0),
         color: COLORS.refunds,
         count: data.refundsCount || 0,
+        showCount: true,
       },
       {
         name: 'السحوبات',
         value: Math.abs(data.totalPayouts || 0),
         color: COLORS.payouts,
         count: data.payoutsCount || 0,
+        showCount: true,
       },
-    ];
-
-    // فلترة العناصر بقيمة 0
-    return items.filter((item) => item.value > 0);
+    ].filter((item) => item.value > 0);
   };
 
   const chartData = buildChartData();
   const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
   const hasData = chartData.length > 0;
 
-  // ============ Custom Tooltip ============
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
-      const percentage = totalValue > 0 ? ((item.value / totalValue) * 100).toFixed(1) : 0;
+      const percentage = totalValue > 0
+        ? ((item.value / totalValue) * 100).toFixed(1)
+        : 0;
+
       return (
         <div className="bg-white border rounded-lg shadow-lg p-3 text-xs">
           <p className="font-semibold text-gray-800 mb-1">{item.name}</p>
           <p className="text-gray-600">المبلغ: {formatPrice(item.value)}</p>
           <p className="text-gray-600">النسبة: {percentage}%</p>
-          {item.count !== null && (
+          {item.showCount && item.count !== null && (
             <p className="text-gray-600">العدد: {item.count}</p>
           )}
         </div>
@@ -135,7 +133,6 @@ const EarningsBreakdownChart = () => {
     return null;
   };
 
-  // ============ Custom Label داخل الـ Pie ============
   const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.05) return null;
 
@@ -149,7 +146,7 @@ const EarningsBreakdownChart = () => {
         x={x}
         y={y}
         fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
+        textAnchor="middle"
         dominantBaseline="central"
         fontSize={12}
         fontWeight="bold"
@@ -164,22 +161,36 @@ const EarningsBreakdownChart = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <div>
-          <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-gray-800">
             🥧 توزيع الأرباح
           </h3>
-          {data && (
-            <p className="text-xs text-gray-400 mt-1">
+          {data && !loading && (
+            <p className="text-xs text-gray-400 mt-0.5">
               {selectedPeriod.label}
+              {data.totalSales > 0 && (
+                <span className="mr-2 text-green-600 font-medium">
+                  • صافي: {formatPrice(data.netEarnings || 0)}
+                </span>
+              )}
             </p>
           )}
         </div>
 
-        {/* Period Selector */}
         <div className="flex items-center gap-2">
+          {/* ✅ زرار Refresh */}
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+            title="تحديث البيانات"
+          >
+            <FiRefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+
           <FiCalendar className="text-gray-400" size={16} />
           <select
             value={periodOptions.findIndex((p) => p.label === selectedPeriod.label)}
-            onChange={(e) => setSelectedPeriod(periodOptions[e.target.value])}
+            onChange={(e) => setSelectedPeriod(periodOptions[Number(e.target.value)])}
             className="px-3 py-1.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500"
           >
             {periodOptions.map((option, idx) => (
@@ -191,7 +202,7 @@ const EarningsBreakdownChart = () => {
         </div>
       </div>
 
-      {/* صافي الأرباح + الإحصائيات */}
+      {/* إحصائيات سريعة */}
       {data && !loading && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
           <div className="bg-gradient-to-l from-green-500 to-green-600 rounded-lg p-3 text-white">
@@ -201,18 +212,21 @@ const EarningsBreakdownChart = () => {
               {formatPrice(data.netEarnings || 0)}
             </p>
           </div>
+
           <div className="bg-blue-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 mb-1">عدد المبيعات</p>
             <p className="text-base font-bold text-blue-600">
               {data.salesCount || 0}
             </p>
           </div>
+
           <div className="bg-red-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 mb-1">عدد الاسترجاعات</p>
             <p className="text-base font-bold text-red-600">
               {data.refundsCount || 0}
             </p>
           </div>
+
           <div className="bg-purple-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 mb-1">عدد السحوبات</p>
             <p className="text-base font-bold text-purple-600">
@@ -222,21 +236,27 @@ const EarningsBreakdownChart = () => {
         </div>
       )}
 
-      {/* Content */}
+      {/* المحتوى */}
       {loading ? (
         <div className="h-72 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
         </div>
       ) : error ? (
-        <div className="h-72 flex items-center justify-center text-red-500 text-sm">
-          {error}
+        <div className="h-72 flex flex-col items-center justify-center text-red-500 text-sm gap-3">
+          <span>{error}</span>
+          <button
+            onClick={loadData}
+            className="text-xs text-blue-600 underline"
+          >
+            إعادة المحاولة
+          </button>
         </div>
       ) : !hasData ? (
         <div className="h-72 flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-lg">
           <span className="text-4xl mb-2">📊</span>
           <p className="text-sm">لا توجد بيانات في هذه الفترة</p>
           <p className="text-xs mt-1 text-gray-300">
-            جرب فترة زمنية أكبر أو ابدأ البيع
+            جرب فترة زمنية أكبر أو اختر "كل الفترة"
           </p>
         </div>
       ) : (
@@ -252,7 +272,6 @@ const EarningsBreakdownChart = () => {
                   labelLine={false}
                   label={renderLabel}
                   outerRadius={100}
-                  fill="#8884d8"
                   dataKey="value"
                 >
                   {chartData.map((entry, index) => (
@@ -264,11 +283,13 @@ const EarningsBreakdownChart = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Legend مع التفاصيل */}
+          {/* Legend */}
           <div className="flex flex-col justify-center space-y-2">
             {chartData.map((item, idx) => {
-              const percentage =
-                totalValue > 0 ? ((item.value / totalValue) * 100).toFixed(1) : 0;
+              const percentage = totalValue > 0
+                ? ((item.value / totalValue) * 100).toFixed(1)
+                : 0;
+
               return (
                 <div
                   key={idx}
@@ -276,20 +297,21 @@ const EarningsBreakdownChart = () => {
                 >
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-4 h-4 rounded"
+                      className="w-4 h-4 rounded flex-shrink-0"
                       style={{ backgroundColor: item.color }}
-                    ></div>
+                    />
                     <div>
                       <p className="text-sm font-medium text-gray-700">
                         {item.name}
                       </p>
-                      {item.count !== null && (
+                      {item.showCount && item.count !== null && (
                         <p className="text-xs text-gray-400">
                           {item.count} عملية
                         </p>
                       )}
                     </div>
                   </div>
+
                   <div className="text-left">
                     <p className="text-sm font-bold text-gray-800">
                       {formatPrice(item.value)}
@@ -301,7 +323,7 @@ const EarningsBreakdownChart = () => {
             })}
 
             {/* الإجمالي */}
-            <div className="flex items-center justify-between p-3 bg-gradient-to-l from-green-50 to-green-100 rounded-lg border border-green-200">
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
               <span className="text-sm font-semibold text-green-700">
                 إجمالي الحركات
               </span>
