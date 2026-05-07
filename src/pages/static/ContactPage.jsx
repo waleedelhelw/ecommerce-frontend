@@ -68,7 +68,7 @@ const ContactPage = () => {
 
   const contactInfo = [
     { icon: FiMail, label: 'البريد الإلكتروني', value: 'info@tasawwaq.com', link: 'mailto:info@tasawwaq.com' },
-    { icon: FiPhone, label: 'رقم الهاتف', value: '+20 123 456 7890', link: 'tel:+201234567890' },
+    { icon: FiPhone, label: 'رقم الهاتف', value: '+201096842033', link: 'tel:+201234567890' },
     { icon: FiMapPin, label: 'العنوان', value: 'القاهرة، مصر', link: null },
     { icon: FiClock, label: 'ساعات العمل', value: 'يومياً 9 ص - 9 م', link: null },
   ];

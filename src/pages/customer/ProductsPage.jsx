@@ -11,6 +11,89 @@ import ErrorMessage from '../../components/common/ErrorMessage';
 import productService from '../../api/productService';
 import { PAGINATION } from '../../utils/constants';
 
+const FALLBACK_SEARCH_PAGE_LIMIT = 8;
+
+const normalizeArabicSearchText = (value = '') =>
+  String(value)
+    .toLowerCase()
+    .replace(/[ًٌٍَُِّْ]/g, '')
+    .replace(/ـ/g, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const isSubsequence = (query, text) => {
+  if (query.length < 3) return false;
+
+  let queryIndex = 0;
+  for (const char of text) {
+    if (char === query[queryIndex]) queryIndex += 1;
+    if (queryIndex === query.length) return true;
+  }
+
+  return false;
+};
+
+const getProductSearchText = (product) =>
+  [
+    product.name,
+    product.description,
+    product.categoryName,
+    product.storeName,
+    product.sellerName,
+    product.brand,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+const matchesFlexibleSearch = (product, term) => {
+  const normalizedTerm = normalizeArabicSearchText(term);
+  if (!normalizedTerm) return true;
+
+  const searchableText = normalizeArabicSearchText(getProductSearchText(product));
+  const compactTerm = normalizedTerm.replace(/\s/g, '');
+  const compactText = searchableText.replace(/\s/g, '');
+
+  if (searchableText.includes(normalizedTerm) || compactText.includes(compactTerm)) {
+    return true;
+  }
+
+  return normalizedTerm
+    .split(' ')
+    .filter((word) => word.length >= 2)
+    .some((word) => {
+      const compactWord = word.replace(/\s/g, '');
+      return (
+        searchableText.includes(word) ||
+        compactText.includes(compactWord) ||
+        isSubsequence(compactWord, compactText)
+      );
+    });
+};
+
+const sortProducts = (products, sortBy) => {
+  const sortedProducts = [...products];
+
+  if (sortBy === 'price') {
+    return sortedProducts.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+  }
+
+  if (sortBy === 'rating') {
+    return sortedProducts.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+  }
+
+  if (sortBy === 'name') {
+    return sortedProducts.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ar'));
+  }
+
+  return sortedProducts;
+};
+
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -31,21 +114,68 @@ const ProductsPage = () => {
     pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   });
 
+  const buildParams = (sourceFilters) => {
+    const params = {};
+    Object.entries(sourceFilters).forEach(([key, value]) => {
+      if (value !== null && value !== '' && value !== undefined) {
+        params[key] = value;
+      }
+    });
+
+    return params;
+  };
+
+  const fetchFlexibleSearchResults = async (baseParams, seedProducts = []) => {
+    const fallbackParams = {
+      ...baseParams,
+      pageNumber: 1,
+      pageSize: PAGINATION.MAX_PAGE_SIZE,
+    };
+    delete fallbackParams.searchTerm;
+
+    const firstPage = await productService.getProducts(fallbackParams);
+    const firstItems = firstPage.items || firstPage.products || firstPage || [];
+    const fallbackTotalPages = Math.min(firstPage.totalPages || 1, FALLBACK_SEARCH_PAGE_LIMIT);
+    const allItems = [...seedProducts, ...firstItems];
+
+    for (let pageNumber = 2; pageNumber <= fallbackTotalPages; pageNumber += 1) {
+      const pageData = await productService.getProducts({
+        ...fallbackParams,
+        pageNumber,
+      });
+      allItems.push(...(pageData.items || pageData.products || pageData || []));
+    }
+
+    const uniqueProducts = Array.from(
+      new Map(allItems.map((product) => [product.id || product.productId, product])).values()
+    );
+    const matchedProducts = sortProducts(
+      uniqueProducts.filter((product) => matchesFlexibleSearch(product, filters.searchTerm)),
+      filters.sortBy
+    );
+
+    const startIndex = (filters.pageNumber - 1) * filters.pageSize;
+    setProducts(matchedProducts.slice(startIndex, startIndex + filters.pageSize));
+    setTotalPages(Math.max(1, Math.ceil(matchedProducts.length / filters.pageSize)));
+    setTotalItems(matchedProducts.length);
+  };
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = {};
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== null && value !== '' && value !== undefined) {
-          params[key] = value;
-        }
-      });
+      const params = buildParams(filters);
 
       const data = await productService.getProducts(params);
+      const fetchedProducts = data.items || data.products || data || [];
 
-      setProducts(data.items || data.products || data || []);
+      if (filters.searchTerm) {
+        await fetchFlexibleSearchResults(params, fetchedProducts);
+        return;
+      }
+
+      setProducts(fetchedProducts);
       setTotalPages(data.totalPages || 1);
       setTotalItems(data.totalCount || data.totalItems || 0);
     } catch (err) {

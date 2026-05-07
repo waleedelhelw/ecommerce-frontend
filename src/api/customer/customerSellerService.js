@@ -14,8 +14,18 @@ export const getSellerById = async (sellerId) => {
   return response.data.data;
 };
 
+export const getSellerBySlug = async (slug) => {
+  const response = await API.get(`${BASE}/by-slug/${slug}`);
+  return response.data.data;
+};
+
 // ============ منتجات بائع ============
 export const getSellerProducts = async (sellerId, params) => {
   const response = await API.get(`${BASE}/${sellerId}/products`, { params });
+  return response.data.data;
+};
+
+export const getSellerProductsBySlug = async (slug, params) => {
+  const response = await API.get(`${BASE}/by-slug/${slug}/products`, { params });
   return response.data.data;
 };

@@ -5,6 +5,9 @@ import SEO from '../../components/common/SEO';
 import { login as loginApi, googleLogin as googleLoginApi } from '../../api/authService';
 import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import ValidationSummary from '../../components/common/ValidationSummary';
+import { showValidationFeedback } from '../../utils/formValidation';
+import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -40,7 +43,10 @@ const LoginPage = () => {
   // ── Email Login ──
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error(showValidationFeedback('اكتب البريد الإلكتروني وكلمة المرور'));
+      return;
+    }
     setLoading(true);
     setApiError('');
     try {
@@ -147,6 +153,7 @@ const LoginPage = () => {
 
           {/* ── الفورم ── */}
           <form onSubmit={handleSubmit} noValidate>
+            <ValidationSummary errors={errors} className="mb-4" />
 
             {/* البريد الإلكتروني */}
             <div className="mb-4">
@@ -170,6 +177,7 @@ const LoginPage = () => {
                     setApiError('');
                   }}
                   placeholder="example@gmail.com"
+                  aria-invalid={Boolean(errors.email)}
                   className={`input-field pr-9 ${errors.email ? 'input-error' : ''}`}
                 />
               </div>
@@ -208,6 +216,7 @@ const LoginPage = () => {
                     setApiError('');
                   }}
                   placeholder="••••••••"
+                  aria-invalid={Boolean(errors.password)}
                   className={`input-field pr-9 ${errors.password ? 'input-error' : ''}`}
                 />
                 <button

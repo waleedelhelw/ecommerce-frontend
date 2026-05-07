@@ -1,17 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { FiStar, FiPackage, FiCalendar } from 'react-icons/fi';
+import { FiStar, FiPackage, FiCalendar, FiPhone } from 'react-icons/fi';
 import SEO from '../../components/common/SEO';
-import { getSellerById, getSellerProducts } from '../../api/customer/customerSellerService';
+import {
+  getSellerById,
+  getSellerBySlug,
+  getSellerProducts,
+  getSellerProductsBySlug,
+} from '../../api/customer/customerSellerService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import ProductGrid from '../../components/product/ProductGrid';
 import Pagination from '../../components/common/Pagination';
 import { formatDate } from '../../utils/formatDate';
+import ShareStoreButton from '../../components/seller/ShareStoreButton';
 
 const SellerStorePage = () => {
   const { sellerId } = useParams();
+  const isSlugRoute = Number.isNaN(Number(sellerId));
   const [seller, setSeller] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,36 +27,31 @@ const SellerStorePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchSeller();
-  }, [sellerId]);
-
-  useEffect(() => {
-    if (seller) {
-      fetchProducts();
-    }
-  }, [seller, currentPage]);
-
-  const fetchSeller = async () => {
+  const fetchSeller = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getSellerById(sellerId);
+      const data = isSlugRoute
+        ? await getSellerBySlug(sellerId)
+        : await getSellerById(sellerId);
       setSeller(data);
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل بيانات المتجر');
     } finally {
       setLoading(false);
     }
-  };
+  }, [sellerId, isSlugRoute]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setProductsLoading(true);
-      const data = await getSellerProducts(sellerId, {
+      const params = {
         pageNumber: currentPage,
         pageSize: 12,
-      });
+      };
+      const data = isSlugRoute
+        ? await getSellerProductsBySlug(sellerId, params)
+        : await getSellerProducts(sellerId, params);
       setProducts(data?.items || data || []);
       setTotalPages(data?.totalPages || 1);
     } catch (err) {
@@ -57,7 +59,17 @@ const SellerStorePage = () => {
     } finally {
       setProductsLoading(false);
     }
-  };
+  }, [sellerId, isSlugRoute, currentPage]);
+
+  useEffect(() => {
+    fetchSeller();
+  }, [fetchSeller]);
+
+  useEffect(() => {
+    if (seller) {
+      fetchProducts();
+    }
+  }, [seller, fetchProducts]);
 
   if (loading) return <LoadingSpinner />;
   if (error) return (
@@ -86,14 +98,25 @@ const SellerStorePage = () => {
     'منتجات',
   ].filter(Boolean).join(', ');
 
+  const sellerPhone =
+    seller.businessPhone ||
+    seller.phone ||
+    seller.sellerPhone ||
+    seller.contactPhone ||
+    seller.mobile ||
+    seller.phoneNumber;
+
+  const publicStorePath = `/sellers/${seller.storeSlug || sellerId}`;
+
   // ✅ Store Schema
   const storeSchema = {
     '@context': 'https://schema.org',
     '@type': 'Store',
     name: seller.storeName,
     description: seller.storeDescription || `متجر ${seller.storeName} على تسوّق`,
-    url: `https://tasawwaq.vercel.app/sellers/${sellerId}`,
+    url: `https://tasawwaq.vercel.app${publicStorePath}`,
     ...(seller.logoUrl && { image: seller.logoUrl, logo: seller.logoUrl }),
+    ...(sellerPhone && { telephone: sellerPhone }),
     ...(seller.rating > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
@@ -126,7 +149,7 @@ const SellerStorePage = () => {
         '@type': 'ListItem',
         position: 3,
         name: seller.storeName,
-        item: `https://tasawwaq.vercel.app/sellers/${sellerId}`,
+        item: `https://tasawwaq.vercel.app${publicStorePath}`,
       },
     ],
   };
@@ -144,7 +167,7 @@ const SellerStorePage = () => {
         description={seoDescription}
         keywords={seoKeywords}
         image={seller.logoUrl || seller.bannerUrl || '/og-image.svg'}
-        url={`/sellers/${sellerId}`}
+        url={publicStorePath}
         type="website"
         structuredData={combinedSchema}
       />
@@ -184,8 +207,18 @@ const SellerStorePage = () => {
               </div>
 
               {/* البيانات */}
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-800">{seller.storeName}</h1>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <h1 className="text-2xl font-bold text-gray-800 break-words">{seller.storeName}</h1>
+                  <ShareStoreButton
+                    sellerId={seller.userId || sellerId}
+                    storeSlug={seller.storeSlug}
+                    storeName={seller.storeName}
+                    storeDescription={seller.storeDescription}
+                    className="px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 text-sm"
+                    label="شارك المتجر"
+                  />
+                </div>
 
                 {seller.storeDescription && (
                   <p className="text-gray-500 mt-1">{seller.storeDescription}</p>
@@ -207,6 +240,15 @@ const SellerStorePage = () => {
                       <FiCalendar size={14} />
                       انضم {formatDate(seller.joinedAt)}
                     </span>
+                  )}
+                  {sellerPhone && (
+                    <a
+                      href={`tel:${sellerPhone}`}
+                      className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
+                    >
+                      <FiPhone size={14} />
+                      {sellerPhone}
+                    </a>
                   )}
                 </div>
               </div>

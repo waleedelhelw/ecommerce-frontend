@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '../../components/common/Breadcrumb';
+import ValidationSummary from '../../components/common/ValidationSummary';
 import authService from '../../api/authService';
 import toast from 'react-hot-toast';
+import { showValidationFeedback } from '../../utils/formValidation';
 
 const ChangePasswordPage = () => {
   const [formData, setFormData] = useState({
@@ -33,7 +35,10 @@ const ChangePasswordPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error(showValidationFeedback('راجع بيانات كلمة المرور'));
+      return;
+    }
     try {
       setLoading(true);
       // ✅ بنبعت الـ 3 fields كاملين
@@ -63,7 +68,9 @@ const ChangePasswordPage = () => {
 
       <h1 className="text-2xl font-bold mb-6">🔑 تغيير كلمة المرور</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border p-6 max-w-lg">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl border p-6 max-w-lg" noValidate>
+        <ValidationSummary errors={errors} className="mb-4" />
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             كلمة المرور الحالية *
@@ -73,6 +80,7 @@ const ChangePasswordPage = () => {
             name="currentPassword"
             value={formData.currentPassword}
             onChange={handleChange}
+            aria-invalid={Boolean(errors.currentPassword)}
             className={`input-field ${errors.currentPassword ? 'input-error' : ''}`}
           />
           {errors.currentPassword && (
@@ -89,6 +97,7 @@ const ChangePasswordPage = () => {
             name="newPassword"
             value={formData.newPassword}
             onChange={handleChange}
+            aria-invalid={Boolean(errors.newPassword)}
             className={`input-field ${errors.newPassword ? 'input-error' : ''}`}
           />
           {errors.newPassword && (
@@ -105,6 +114,7 @@ const ChangePasswordPage = () => {
             name="confirmNewPassword"
             value={formData.confirmNewPassword}
             onChange={handleChange}
+            aria-invalid={Boolean(errors.confirmNewPassword)}
             className={`input-field ${errors.confirmNewPassword ? 'input-error' : ''}`}
           />
           {errors.confirmNewPassword && (

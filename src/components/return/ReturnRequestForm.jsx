@@ -4,9 +4,11 @@ import { FiAlertCircle, FiInfo } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Button from '../common/Button';
 import Input from '../common/Input';
+import ValidationSummary from '../common/ValidationSummary';
 import ReturnImagesUploader from './ReturnImagesUploader';
 import { returnReasonMap } from '../../utils/returnStatusMap';
 import { formatPrice } from '../../utils/formatPrice';
+import { showValidationFeedback } from '../../utils/formValidation';
 import returnService from '../../api/returnService';
 
 const ReturnRequestForm = ({ order }) => {
@@ -38,6 +40,7 @@ const ReturnRequestForm = ({ order }) => {
       }
       return newState;
     });
+    if (errors.items) setErrors((prev) => ({ ...prev, items: '' }));
   };
 
   // تغيير الكمية
@@ -82,7 +85,7 @@ const ReturnRequestForm = ({ order }) => {
     e.preventDefault();
 
     if (!validate()) {
-      toast.error('يرجى ملء جميع الحقول المطلوبة');
+      toast.error(showValidationFeedback('كمّل بيانات طلب الإرجاع المطلوبة'));
       return;
     }
 
@@ -114,7 +117,9 @@ const ReturnRequestForm = ({ order }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      <ValidationSummary errors={errors} />
+
       {/* Order Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
         <FiInfo className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
@@ -226,7 +231,10 @@ const ReturnRequestForm = ({ order }) => {
                   name="reason"
                   value={key}
                   checked={reason === key}
-                  onChange={(e) => setReason(e.target.value)}
+                  onChange={(e) => {
+                    setReason(e.target.value);
+                    if (errors.reason) setErrors((prev) => ({ ...prev, reason: '' }));
+                  }}
                   className="mt-1"
                 />
                 <div className="flex-1">
@@ -256,7 +264,10 @@ const ReturnRequestForm = ({ order }) => {
           label="وصف تفصيلى للمشكلة *"
           type="textarea"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            if (errors.description) setErrors((prev) => ({ ...prev, description: '' }));
+          }}
           placeholder="اشرح تفاصيل المشكلة بشكل واضح (مثلاً: المنتج وصل بتاريخ كذا، اكتشفت إن فيه عيب فى ...)"
           error={errors.description}
         />
@@ -269,7 +280,10 @@ const ReturnRequestForm = ({ order }) => {
       <div className="bg-white border rounded-xl p-5">
         <ReturnImagesUploader
           images={images}
-          onChange={setImages}
+          onChange={(nextImages) => {
+            setImages(nextImages);
+            if (errors.images) setErrors((prev) => ({ ...prev, images: '' }));
+          }}
           error={errors.images}
         />
       </div>

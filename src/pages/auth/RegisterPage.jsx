@@ -5,6 +5,9 @@ import SEO from '../../components/common/SEO';
 import { register as registerApi, googleLogin as googleLoginApi } from '../../api/authService';
 import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import ValidationSummary from '../../components/common/ValidationSummary';
+import { showValidationFeedback } from '../../utils/formValidation';
+import toast from 'react-hot-toast';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -42,7 +45,10 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error(showValidationFeedback('كمّل بيانات إنشاء الحساب الأول'));
+      return;
+    }
 
     setLoading(true);
     setApiError('');
@@ -147,7 +153,9 @@ const RegisterPage = () => {
           <div className="flex-1 h-px bg-gray-200"></div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
+          <ValidationSummary errors={errors} className="mb-4" />
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل *</label>
             <input
@@ -156,6 +164,7 @@ const RegisterPage = () => {
               value={formData.name}
               onChange={handleChange}
               placeholder="أحمد محمد"
+              aria-invalid={Boolean(errors.name)}
               className={`input-field ${errors.name ? 'input-error' : ''}`}
             />
             {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
@@ -169,6 +178,7 @@ const RegisterPage = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="example@gmail.com"
+              aria-invalid={Boolean(errors.email)}
               className={`input-field ${errors.email ? 'input-error' : ''}`}
             />
             {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
@@ -194,6 +204,7 @@ const RegisterPage = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="••••••••"
+              aria-invalid={Boolean(errors.password)}
               className={`input-field ${errors.password ? 'input-error' : ''}`}
             />
             {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
@@ -207,6 +218,7 @@ const RegisterPage = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="••••••••"
+              aria-invalid={Boolean(errors.confirmPassword)}
               className={`input-field ${errors.confirmPassword ? 'input-error' : ''}`}
             />
             {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}

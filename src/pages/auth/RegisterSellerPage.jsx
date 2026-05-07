@@ -3,11 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../../components/common/SEO';
 import { registerSeller } from '../../api/authService';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import ValidationSummary from '../../components/common/ValidationSummary';
+import { showValidationFeedback } from '../../utils/formValidation';
+import toast from 'react-hot-toast';
 
 const RegisterSellerPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const [form, setForm] = useState({
     name: '',
@@ -24,20 +28,38 @@ const RegisterSellerPage = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
     setError(null);
+  };
+
+  const validate = () => {
+    const newErrors = {};
+
+    if (!form.name.trim()) newErrors.name = 'الاسم الكامل مطلوب';
+    if (!form.email.trim()) newErrors.email = 'البريد الإلكتروني مطلوب';
+    if (!form.phone.trim()) newErrors.phone = 'رقم الهاتف مطلوب';
+    if (!form.password) {
+      newErrors.password = 'كلمة المرور مطلوبة';
+    } else if (form.password.length < 6) {
+      newErrors.password = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+    }
+    if (!form.confirmPassword) {
+      newErrors.confirmPassword = 'تأكيد كلمة المرور مطلوب';
+    } else if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = 'كلمة المرور غير متطابقة';
+    }
+    if (!form.storeName.trim()) newErrors.storeName = 'اسم المتجر مطلوب';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (form.password !== form.confirmPassword) {
-      setError('كلمة المرور غير متطابقة');
-      return;
-    }
-
-    if (form.password.length < 6) {
-      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+    if (!validate()) {
+      toast.error(showValidationFeedback('كمّل بيانات البائع المطلوبة الأول'));
       return;
     }
 
@@ -118,7 +140,9 @@ const RegisterSellerPage = () => {
 
           {error && <ErrorMessage message={error} />}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <ValidationSummary errors={errors} />
+
             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
               <h2 className="text-sm font-semibold text-gray-700">البيانات الشخصية</h2>
 
@@ -129,10 +153,11 @@ const RegisterSellerPage = () => {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(errors.name)}
+                  className={`w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 ${errors.name ? 'input-error' : ''}`}
                   placeholder="الاسم الكامل"
-                  required
                 />
+                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
 
               <div>
@@ -142,10 +167,11 @@ const RegisterSellerPage = () => {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(errors.email)}
+                  className={`w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 ${errors.email ? 'input-error' : ''}`}
                   placeholder="example@gmail.com"
-                  required
                 />
+                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
               </div>
 
               <div>
@@ -155,10 +181,11 @@ const RegisterSellerPage = () => {
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(errors.phone)}
+                  className={`w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 ${errors.phone ? 'input-error' : ''}`}
                   placeholder="01012345678"
-                  required
                 />
+                {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
               </div>
 
               <div>
@@ -168,10 +195,11 @@ const RegisterSellerPage = () => {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(errors.password)}
+                  className={`w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 ${errors.password ? 'input-error' : ''}`}
                   placeholder="كلمة المرور (6 أحرف على الأقل)"
-                  required
                 />
+                {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
               </div>
 
               <div>
@@ -181,10 +209,11 @@ const RegisterSellerPage = () => {
                   name="confirmPassword"
                   value={form.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(errors.confirmPassword)}
+                  className={`w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 ${errors.confirmPassword ? 'input-error' : ''}`}
                   placeholder="تأكيد كلمة المرور"
-                  required
                 />
+                {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
               </div>
             </div>
 
@@ -198,10 +227,11 @@ const RegisterSellerPage = () => {
                   name="storeName"
                   value={form.storeName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(errors.storeName)}
+                  className={`w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 ${errors.storeName ? 'input-error' : ''}`}
                   placeholder="اسم متجرك"
-                  required
                 />
+                {errors.storeName && <p className="mt-1 text-sm text-red-500">{errors.storeName}</p>}
               </div>
 
               <div>

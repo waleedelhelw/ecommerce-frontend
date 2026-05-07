@@ -4,11 +4,13 @@ import Breadcrumb from '../../components/common/Breadcrumb';
 import ShippingOptionSelector from '../../components/checkout/ShippingOptionSelector';
 import PaymentMethodSelector from '../../components/checkout/PaymentMethodSelector';
 import InstallmentPlanSelector from '../../components/checkout/InstallmentPlanSelector';
+import ValidationSummary from '../../components/common/ValidationSummary';
 import useCart from '../../hooks/useCart';
 import orderService from '../../api/orderService';
 import shippingService from '../../api/shippingService';
 import settingsService from '../../api/settingsService';
 import { formatPrice } from '../../utils/formatPrice';
+import { showValidationFeedback } from '../../utils/formValidation';
 import toast from 'react-hot-toast';
 
 const CheckoutPage = () => {
@@ -118,6 +120,11 @@ const CheckoutPage = () => {
     if (!enabled) setSelectedPlanId(null);
   };
 
+  const handleInstallmentPlanChange = (planId) => {
+    setSelectedPlanId(planId);
+    if (errors.installmentPlan) setErrors((prev) => ({ ...prev, installmentPlan: '' }));
+  };
+
   // ── Validation ──
 
   const validatePhoneNumber = (phone) => {
@@ -155,7 +162,10 @@ const CheckoutPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error(showValidationFeedback('كمّل بيانات الشحن المطلوبة الأول'));
+      return;
+    }
 
     if (cartItems.length === 0) {
       toast.error('السلة فارغة');
@@ -239,7 +249,8 @@ const CheckoutPage = () => {
 
         {/* ── الفورم ── */}
         <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            <ValidationSummary errors={errors} className="mb-2" />
 
             {/* 📍 عنوان الشحن */}
             <div className="bg-white rounded-xl border p-6">
@@ -258,6 +269,7 @@ const CheckoutPage = () => {
                     value={formData.shippingAddress}
                     onChange={handleChange}
                     placeholder="الشارع، رقم العمارة، الشقة"
+                    aria-invalid={Boolean(errors.shippingAddress)}
                     className={`input-field ${errors.shippingAddress ? 'input-error' : ''}`}
                   />
                   {errors.shippingAddress && (
@@ -317,6 +329,7 @@ const CheckoutPage = () => {
                     dir="ltr"
                     inputMode="tel"
                     autoComplete="tel"
+                    aria-invalid={Boolean(errors.customerPhoneNumber)}
                     className={`input-field text-left ${
                       errors.customerPhoneNumber ? 'input-error' : ''
                     }`}
@@ -375,7 +388,7 @@ const CheckoutPage = () => {
                     )}
                     <InstallmentPlanSelector
                       selected={selectedPlanId}
-                      onChange={setSelectedPlanId}
+                      onChange={handleInstallmentPlanChange}
                       orderTotal={grandTotal}
                     />
                   </>
@@ -388,12 +401,15 @@ const CheckoutPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 📝 ملاحظات (اختياري)
               </label>
+              <p className="text-xs text-gray-500 mb-2 leading-5">
+                لو المنتج له لون أو مقاس أو أي تفاصيل اختيار، اكتب هنا اللون/المقاس المطلوب أو أي ملاحظة تساعد البائع يجهز طلبك صح.
+              </p>
               <textarea
                 name="orderNotes"
                 value={formData.orderNotes}
                 onChange={handleChange}
-                placeholder="أي ملاحظات إضافية..."
-                rows={3}
+                placeholder="مثال: عايز اللون الأسود مقاس L، أو التغليف يكون هدية..."
+                rows={4}
                 className="input-field"
               />
             </div>

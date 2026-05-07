@@ -37,12 +37,16 @@ const FeaturedProducts = () => {
 
   return (
     <div
-      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+      className="flex gap-3 overflow-x-auto pb-3 -mx-3 px-3 snap-x snap-mandatory sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-6 sm:overflow-visible"
       role="list"
       aria-label="قائمة المنتجات المميزة"
     >
       {products.map((product) => (
-        <div key={product.id} role="listitem">
+        <div
+          key={product.id}
+          role="listitem"
+          className="w-[72vw] max-w-[260px] min-w-[210px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:min-w-0"
+        >
           <ProductCard product={product} />
         </div>
       ))}

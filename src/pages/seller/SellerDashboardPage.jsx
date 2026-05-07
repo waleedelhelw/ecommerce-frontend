@@ -5,16 +5,21 @@ import {
   FiShoppingBag,
   FiDollarSign,
   FiStar,
-  FiTrendingUp,
   FiClock,
+  FiExternalLink,
 } from 'react-icons/fi';
 import { getSellerDashboard } from '../../api/seller/sellerDashboardService';
+import { getSellerProfile } from '../../api/seller/sellerProfileService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { formatPrice } from '../../utils/formatPrice';
+import useAuth from '../../hooks/useAuth';
+import ShareStoreButton from '../../components/seller/ShareStoreButton';
 
 const SellerDashboardPage = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [sellerProfile, setSellerProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,8 +30,12 @@ const SellerDashboardPage = () => {
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const data = await getSellerDashboard();
-      setStats(data);
+      const [dashboardData, profileData] = await Promise.all([
+        getSellerDashboard(),
+        getSellerProfile().catch(() => null),
+      ]);
+      setStats(dashboardData);
+      setSellerProfile(profileData);
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل البيانات');
     } finally {
@@ -36,6 +45,11 @@ const SellerDashboardPage = () => {
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} onRetry={fetchDashboard} />;
+
+  const sellerId = sellerProfile?.userId || stats?.userId || stats?.sellerId || user?.userId;
+  const storeName = sellerProfile?.storeName || stats?.storeName || user?.storeName || 'متجري';
+  const storeDescription = sellerProfile?.storeDescription || stats?.storeDescription || '';
+  const storeSlug = sellerProfile?.storeSlug || stats?.storeSlug || user?.storeSlug;
 
   const statCards = [
     /*
@@ -106,9 +120,28 @@ const SellerDashboardPage = () => {
   return (
     <div>
       {/* العنوان */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">لوحة التحكم</h1>
-        <p className="text-gray-500 mt-1">مرحباً بك في لوحة تحكم متجرك</p>
+      <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">لوحة التحكم</h1>
+          <p className="text-gray-500 mt-1">مرحباً بك في لوحة تحكم متجرك</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link
+            to={`/sellers/${storeSlug || sellerId}`}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border bg-white text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+          >
+            <FiExternalLink size={16} aria-hidden="true" />
+            عرض المتجر
+          </Link>
+          <ShareStoreButton
+            sellerId={sellerId}
+            storeSlug={storeSlug}
+            storeName={storeName}
+            storeDescription={storeDescription}
+            className="px-4 py-2.5 bg-green-600 text-white hover:bg-green-700 text-sm"
+          />
+        </div>
       </div>
 
       {/* كروت الإحصائيات */}

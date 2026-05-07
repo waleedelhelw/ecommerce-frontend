@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import ValidationSummary from '../../components/common/ValidationSummary';
 import profileService from '../../api/profileService';
 import useAuth from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { FiUser, FiMail, FiPhone, FiEdit, FiLock, FiMapPin } from 'react-icons/fi';
+import { showValidationFeedback } from '../../utils/formValidation';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -66,7 +68,10 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error(showValidationFeedback('راجع بيانات الملف الشخصي'));
+      return;
+    }
     try {
       setSaving(true);
       await profileService.updateProfile(formData);
@@ -130,11 +135,13 @@ const ProfilePage = () => {
             </div>
 
             {isEditing ? (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} noValidate>
+                <ValidationSummary errors={errors} className="mb-4" />
+
                 {/* الاسم */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل *</label>
-                  <input type="text" name="name" value={formData.name} onChange={handleChange} className={`input-field ${errors.name ? 'input-error' : ''}`} />
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} aria-invalid={Boolean(errors.name)} className={`input-field ${errors.name ? 'input-error' : ''}`} />
                   {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
 
