@@ -354,7 +354,7 @@ const OrderDetailsPage = () => {
             <div>
               <p className="font-bold text-orange-800">هل تريد إرجاع منتج من هذا الطلب؟</p>
               <p className="text-sm text-orange-700">
-                متبقى <strong>{returnableInfo.daysLeft} يوم</strong> من فترة الإرجاع (14 يوم)
+                متبقى <strong>{returnableInfo.daysLeft} يوم</strong> من فترة الإرجاع (3 يوم)
               </p>
             </div>
           </div>
