@@ -38,26 +38,33 @@ const NewArrivalsSection = () => {
 
   return (
     <section
-      className="py-12"
+      className="py-8 sm:py-10 md:py-12"
       aria-labelledby="new-arrivals-section-title"
     >
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <h2
-            id="new-arrivals-section-title"
-            className="text-2xl font-bold"
-          >
-            <span aria-hidden="true">🆕</span> وصل حديثاً
-          </h2>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between gap-3 mb-5 sm:mb-8">
+          <div>
+            <h2
+              id="new-arrivals-section-title"
+              className="text-xl sm:text-2xl font-bold text-gray-900"
+            >
+              <span aria-hidden="true">🆕</span> وصل حديثاً
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              أحدث المنتجات المضافة على المنصة
+            </p>
+          </div>
+
           <Link
             to="/products"
-            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            className="shrink-0 text-blue-600 hover:text-blue-700 font-medium text-sm"
             aria-label="عرض كل المنتجات الجديدة"
           >
             عرض الكل ←
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {products.slice(0, 4).map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

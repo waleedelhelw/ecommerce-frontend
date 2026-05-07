@@ -1,7 +1,7 @@
 import { formatDate } from '../../utils/formatDate';
 
 // ✅ خطوات التدفق العادي (محفظة / بنك)
-const ONLINE_STEPS = [
+const ONLINE_NORMAL_STEPS = [
   { key: 'PendingPayment', label: 'في انتظار الدفع', icon: '⏳' },
   { key: 'WaitingConfirmation', label: 'مراجعة الإيصال', icon: '🧾' },
   { key: 'PaymentConfirmed', label: 'تم تأكيد الدفع', icon: '✅' },
@@ -12,8 +12,20 @@ const ONLINE_STEPS = [
   { key: 'Completed', label: 'مكتمل', icon: '🎉' },
 ];
 
-// ✅ خطوات الدفع عند الاستلام (COD)
-const COD_STEPS = [
+// ✅ خطوات التدفق البديل بعد الشحن
+const ONLINE_RETURNED_STEPS = [
+  { key: 'PendingPayment', label: 'في انتظار الدفع', icon: '⏳' },
+  { key: 'WaitingConfirmation', label: 'مراجعة الإيصال', icon: '🧾' },
+  { key: 'PaymentConfirmed', label: 'تم تأكيد الدفع', icon: '✅' },
+  { key: 'Processing', label: 'قيد التجهيز', icon: '🔄' },
+  { key: 'ReadyToShip', label: 'جاهز للشحن', icon: '📦' },
+  { key: 'Shipped', label: 'تم الشحن', icon: '🚚' },
+  { key: 'DeliveryFailed', label: 'فشل التسليم', icon: '⚠️' },
+  { key: 'ReturnedToSeller', label: 'رجعت للبائع', icon: '↩️' },
+];
+
+// ✅ خطوات الدفع عند الاستلام (COD) - المسار الطبيعي
+const COD_NORMAL_STEPS = [
   { key: 'Processing', label: 'قيد التجهيز', icon: '🔄' },
   { key: 'ReadyToShip', label: 'جاهز للشحن', icon: '📦' },
   { key: 'Shipped', label: 'تم الشحن', icon: '🚚' },
@@ -21,22 +33,36 @@ const COD_STEPS = [
   { key: 'Completed', label: 'مكتمل', icon: '🎉' },
 ];
 
+// ✅ خطوات الدفع عند الاستلام (COD) - المسار البديل
+const COD_RETURNED_STEPS = [
+  { key: 'Processing', label: 'قيد التجهيز', icon: '🔄' },
+  { key: 'ReadyToShip', label: 'جاهز للشحن', icon: '📦' },
+  { key: 'Shipped', label: 'تم الشحن', icon: '🚚' },
+  { key: 'DeliveryFailed', label: 'فشل التسليم', icon: '⚠️' },
+  { key: 'ReturnedToSeller', label: 'رجعت للبائع', icon: '↩️' },
+];
+
 const OrderTimeline = ({ currentStatus, timeline = [], paymentMethod }) => {
   const isCOD = paymentMethod === 'CashOnDelivery';
   const isCancelled = currentStatus === 'Cancelled';
   const isRefunded = currentStatus === 'Refunded';
   const isFailed = currentStatus === 'PaymentFailed';
+  const isReturnedFlow = ['DeliveryFailed', 'ReturnedToSeller'].includes(currentStatus);
 
-  const steps = isCOD ? COD_STEPS : ONLINE_STEPS;
+  const steps = isCOD
+    ? isReturnedFlow
+      ? COD_RETURNED_STEPS
+      : COD_NORMAL_STEPS
+    : isReturnedFlow
+    ? ONLINE_RETURNED_STEPS
+    : ONLINE_NORMAL_STEPS;
 
-  // إيجاد الخطوة الحالية
   const currentStepIndex = steps.findIndex((s) => s.key === currentStatus);
 
-  // ✅ لو في Timeline مفصّل من الباك إند → اعرضه
   if (timeline && timeline.length > 0) {
     return (
       <div className="space-y-0">
-        {/* الخطوات العلوية (Progress Bar) */}
+        {/* الخطوات العلوية */}
         <div className="flex items-center justify-between mb-8 overflow-x-auto pb-2">
           {steps.map((step, index) => {
             const isActive = index <= currentStepIndex && !isCancelled && !isRefunded && !isFailed;
@@ -64,10 +90,13 @@ const OrderTimeline = ({ currentStatus, timeline = [], paymentMethod }) => {
                     {step.label}
                   </p>
                 </div>
+
                 {index < steps.length - 1 && (
                   <div
                     className={`flex-1 h-1 mx-2 rounded ${
-                      index < currentStepIndex && !isCancelled ? 'bg-green-400' : 'bg-gray-200'
+                      index < currentStepIndex && !isCancelled && !isRefunded && !isFailed
+                        ? 'bg-green-400'
+                        : 'bg-gray-200'
                     }`}
                   />
                 )}
@@ -76,18 +105,40 @@ const OrderTimeline = ({ currentStatus, timeline = [], paymentMethod }) => {
           })}
         </div>
 
-        {/* ✅ حالة ملغي / مسترجع / فشل دفع */}
+        {/* حالات خاصة */}
         {(isCancelled || isRefunded || isFailed) && (
-          <div className={`p-4 rounded-xl mb-4 ${
-            isCancelled || isFailed ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'
-          }`}>
+          <div
+            className={`p-4 rounded-xl mb-4 ${
+              isCancelled || isFailed
+                ? 'bg-red-50 border border-red-200'
+                : 'bg-amber-50 border border-amber-200'
+            }`}
+          >
             <p className={`font-bold ${isCancelled || isFailed ? 'text-red-700' : 'text-amber-700'}`}>
               {isCancelled ? '❌ تم إلغاء الطلب' : isFailed ? '❌ فشل الدفع' : '🔄 تم استرجاع الطلب'}
             </p>
           </div>
         )}
 
-        {/* Timeline المفصّل */}
+        {currentStatus === 'DeliveryFailed' && (
+          <div className="p-4 rounded-xl mb-4 bg-orange-50 border border-orange-200">
+            <p className="font-bold text-orange-700">⚠️ تعذر تسليم الشحنة</p>
+            <p className="text-sm text-orange-600 mt-1">
+              لم يتم تسليم الطلب للعميل، ويتم الآن متابعة حالة الشحنة.
+            </p>
+          </div>
+        )}
+
+        {currentStatus === 'ReturnedToSeller' && (
+          <div className="p-4 rounded-xl mb-4 bg-gray-50 border border-gray-300">
+            <p className="font-bold text-gray-800">↩️ تم إرجاع الشحنة إلى البائع</p>
+            <p className="text-sm text-gray-600 mt-1">
+              الشحنة رجعت فعليًا إلى البائع بعد فشل التسليم.
+            </p>
+          </div>
+        )}
+
+        {/* Timeline المفصل */}
         <div className="border-r-2 border-gray-200 mr-4 space-y-4">
           {timeline.map((entry, index) => (
             <div key={entry.id || index} className="relative pr-8">
@@ -98,10 +149,15 @@ const OrderTimeline = ({ currentStatus, timeline = [], paymentMethod }) => {
                   <span className="text-xs text-gray-400">{formatDate(entry.createdAt)}</span>
                   {entry.updatedByRole && (
                     <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-                      {entry.updatedByRole === 'System' ? '🤖 النظام' :
-                       entry.updatedByRole === 'Admin' ? '👨‍💼 الإدارة' :
-                       entry.updatedByRole === 'Seller' ? '🏪 البائع' :
-                       entry.updatedByRole === 'Customer' ? '👤 العميل' : entry.updatedByRole}
+                      {entry.updatedByRole === 'System'
+                        ? '🤖 النظام'
+                        : entry.updatedByRole === 'Admin'
+                        ? '👨‍💼 الإدارة'
+                        : entry.updatedByRole === 'Seller'
+                        ? '🏪 البائع'
+                        : entry.updatedByRole === 'Customer'
+                        ? '👤 العميل'
+                        : entry.updatedByRole}
                     </span>
                   )}
                 </div>
@@ -116,11 +172,10 @@ const OrderTimeline = ({ currentStatus, timeline = [], paymentMethod }) => {
     );
   }
 
-  // ✅ Fallback - لو مفيش Timeline مفصّل (Progress Bar بس)
   return (
     <div className="flex items-center justify-between overflow-x-auto pb-2">
       {steps.map((step, index) => {
-        const isActive = index <= currentStepIndex && !isCancelled && !isRefunded;
+        const isActive = index <= currentStepIndex && !isCancelled && !isRefunded && !isFailed;
         const isCurrent = step.key === currentStatus;
 
         return (
@@ -148,7 +203,9 @@ const OrderTimeline = ({ currentStatus, timeline = [], paymentMethod }) => {
             {index < steps.length - 1 && (
               <div
                 className={`flex-1 h-1 mx-2 rounded ${
-                  index < currentStepIndex && !isCancelled ? 'bg-green-400' : 'bg-gray-200'
+                  index < currentStepIndex && !isCancelled && !isRefunded && !isFailed
+                    ? 'bg-green-400'
+                    : 'bg-gray-200'
                 }`}
               />
             )}

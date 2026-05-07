@@ -7,7 +7,6 @@ import TopSellersSection from '../../components/home/TopSellersSection';
 import WhyUsSection from '../../components/home/WhyUsSection';
 
 const HomePage = () => {
-  // ✅ WebSite Schema مع SearchAction
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -26,7 +25,6 @@ const HomePage = () => {
     },
   };
 
-  // ✅ Organization Schema (مهم للـ SEO)
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -48,7 +46,6 @@ const HomePage = () => {
     },
   };
 
-  // ✅ دمج الـ Schemas
   const combinedSchema = {
     '@context': 'https://schema.org',
     '@graph': [websiteSchema, organizationSchema],
@@ -64,7 +61,7 @@ const HomePage = () => {
         structuredData={combinedSchema}
       />
 
-      <div>
+      <div className="overflow-x-hidden">
         <HeroSection />
         <CategoriesSection />
         <FeaturedSection />

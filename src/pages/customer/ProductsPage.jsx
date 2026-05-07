@@ -60,6 +60,20 @@ const ProductsPage = () => {
     fetchProducts();
   }, [filters]);
 
+  useEffect(() => {
+    const params = {};
+    if (filters.searchTerm) params.search = filters.searchTerm;
+    if (filters.categoryId) params.categoryId = filters.categoryId;
+    if (filters.sellerId) params.sellerId = filters.sellerId;
+    if (filters.minPrice) params.minPrice = filters.minPrice;
+    if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+    if (filters.minRating) params.minRating = filters.minRating;
+    if (filters.sortBy && filters.sortBy !== 'newest') params.sortBy = filters.sortBy;
+    if (filters.pageNumber && filters.pageNumber !== 1) params.page = filters.pageNumber;
+
+    setSearchParams(params);
+  }, [filters, setSearchParams]);
+
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value, pageNumber: 1 }));
   };
@@ -91,16 +105,12 @@ const ProductsPage = () => {
     });
   };
 
-  // ✅ SEO Dynamic Title & Description
-  const seoTitle = filters.searchTerm
-    ? `نتائج البحث عن "${filters.searchTerm}"`
-    : 'كل المنتجات';
+  const seoTitle = filters.searchTerm ? `نتائج البحث عن "${filters.searchTerm}"` : 'كل المنتجات';
 
   const seoDescription = filters.searchTerm
     ? `نتائج البحث عن "${filters.searchTerm}" في تسوّق. اكتشف ${totalItems} منتج بأفضل الأسعار.`
     : `اكتشف آلاف المنتجات على تسوّق. تصفّح ${totalItems > 0 ? totalItems : 'آلاف'} منتج من بائعين موثوقين بأفضل الأسعار وتوصيل لكل مصر.`;
 
-  // ✅ Breadcrumb Schema
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -122,7 +132,7 @@ const ProductsPage = () => {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6">
         <SEO title="خطأ في تحميل المنتجات" noindex={true} />
         <ErrorMessage message={error} onRetry={fetchProducts} />
       </div>
@@ -139,21 +149,23 @@ const ProductsPage = () => {
         structuredData={breadcrumbSchema}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6">
         <Breadcrumb items={[{ label: 'المنتجات' }]} />
 
-        <h1 className="text-2xl font-bold mb-6">📦 المنتجات</h1>
+        <div className="mb-5">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">📦 المنتجات</h1>
+          <p className="text-sm text-gray-500 mt-1">تصفّح المنتجات بسهولة واختر الأنسب لك</p>
+        </div>
 
         {/* Search */}
-        <div className="mb-6">
+        <div className="mb-4">
           <SearchBar onSearch={handleSearch} placeholder="ابحث عن منتج..." />
         </div>
 
-        {/* Layout */}
-        <div className="flex flex-col lg:flex-row gap-8">
-
+        {/* Mobile-first layout */}
+        <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
           {/* Filter Sidebar - Desktop */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
+          <aside className="hidden lg:block w-72 flex-shrink-0">
             <div className="sticky top-20">
               <ProductFilter
                 filters={filters}
@@ -165,9 +177,8 @@ const ProductsPage = () => {
 
           {/* Products Section */}
           <main className="flex-1 min-w-0">
-
             {/* Mobile Filter */}
-            <div className="lg:hidden mb-4">
+            <div className="lg:hidden mb-3">
               <ProductFilter
                 filters={filters}
                 onFilterChange={handleFilterChange}
@@ -176,7 +187,7 @@ const ProductsPage = () => {
             </div>
 
             {/* Sort + Count */}
-            <div className="mb-6">
+            <div className="mb-4">
               <ProductSort
                 value={filters.sortBy}
                 onChange={handleSortChange}
@@ -189,7 +200,7 @@ const ProductsPage = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-8">
+              <div className="mt-6 sm:mt-8">
                 <Pagination
                   currentPage={filters.pageNumber}
                   totalPages={totalPages}

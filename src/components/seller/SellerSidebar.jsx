@@ -9,6 +9,7 @@ import {
   FiX,
   FiRefreshCw,
   FiTrendingUp,
+  FiTruck,
 } from 'react-icons/fi';
 
 const SellerSidebar = ({ isOpen, onClose }) => {
@@ -19,7 +20,9 @@ const SellerSidebar = ({ isOpen, onClose }) => {
     { path: '/seller/products', icon: <FiPackage size={20} />, label: 'منتجاتي' },
     { path: '/seller/orders', icon: <FiShoppingBag size={20} />, label: 'طلباتي' },
     { path: '/seller/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع' },
-    { path: '/seller/finance', icon: <FiTrendingUp size={20} />, label: 'المركز المالي' }, // ✅ جديد
+    { path: '/seller/finance', icon: <FiTrendingUp size={20} />, label: 'المركز المالي' },
+    // ✅ جديد — مناطق الشحن
+    { path: '/seller/shipping-zones', icon: <FiTruck size={20} />, label: 'مناطق الشحن' },
     { path: '/seller/payouts', icon: <FiDollarSign size={20} />, label: 'سحب الأرباح' },
     { path: '/seller/profile', icon: <FiSettings size={20} />, label: 'إعدادات المتجر' },
   ];

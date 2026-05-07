@@ -33,7 +33,6 @@ import SellerStorePage from './pages/customer/SellerStorePage';
 import PaymentPage from './pages/customer/PaymentPage';
 import InstallmentPaymentPage from './pages/customer/InstallmentPaymentPage';
 
-
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -53,6 +52,8 @@ import SellerPendingPage from './pages/seller/SellerPendingPage';
 import SellerSuspendedPage from './pages/seller/SellerSuspendedPage';
 import SellerRejectedPage from './pages/seller/SellerRejectedPage';
 import SellerFinancePage from './pages/seller/SellerFinancePage';
+// ✅ جديد — مناطق الشحن
+import SellerShippingZonesPage from './pages/seller/SellerShippingZonesPage';
 
 // Admin Pages
 import DashboardPage from './pages/admin/DashboardPage';
@@ -72,8 +73,6 @@ import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import AdminShippingOptionsPage from './pages/admin/AdminShippingOptionsPage';
 import AdminReturnsPage from './pages/admin/AdminReturnsPage';
 import AdminReturnDetailsPage from './pages/admin/AdminReturnDetailsPage';
-
-// 🆕 ✅ Admin Installments
 import AdminInstallmentPlansPage from './pages/admin/AdminInstallmentPlansPage';
 
 // Error Pages
@@ -212,7 +211,6 @@ const router = createBrowserRouter([
               </CustomerRoute>
             ),
           },
-
           {
             path: '/orders/:id/installments',
             element: (
@@ -355,10 +353,19 @@ const router = createBrowserRouter([
             ),
           },
           {
-                        path: 'finance',
+            path: 'finance',
             element: (
               <SellerRoute>
                 <SellerFinancePage />
+              </SellerRoute>
+            ),
+          },
+          // ✅ جديد — مناطق الشحن
+          {
+            path: 'shipping-zones',
+            element: (
+              <SellerRoute>
+                <SellerShippingZonesPage />
               </SellerRoute>
             ),
           },

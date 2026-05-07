@@ -25,7 +25,11 @@ const CategoryProductsPage = () => {
       setError(null);
       const [catData, prodData] = await Promise.all([
         categoryService.getCategory(id).catch(() => ({ name: 'تصنيف' })),
-        productService.getProducts({ categoryId: id, pageNumber: currentPage, pageSize: ITEMS_PER_PAGE }),
+        productService.getProducts({
+          categoryId: id,
+          pageNumber: currentPage,
+          pageSize: ITEMS_PER_PAGE,
+        }),
       ]);
       setCategory(catData);
       setProducts(prodData.items || prodData.products || prodData || []);
@@ -38,18 +42,23 @@ const CategoryProductsPage = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, [id, currentPage]);
+  useEffect(() => {
+    fetchData();
+  }, [id, currentPage]);
 
-  if (error) return (
-    <>
-      <SEO title="خطأ في تحميل التصنيف" noindex={true} />
-      <ErrorMessage message={error} onRetry={fetchData} />
-    </>
-  );
+  if (error) {
+    return (
+      <>
+        <SEO title="خطأ في تحميل التصنيف" noindex={true} />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6">
+          <ErrorMessage message={error} onRetry={fetchData} />
+        </div>
+      </>
+    );
+  }
 
   const categoryName = category?.name || 'تصنيف';
 
-  // ✅ Breadcrumb Schema
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -85,7 +94,7 @@ const CategoryProductsPage = () => {
         structuredData={breadcrumbSchema}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6">
         <Breadcrumb
           items={[
             { label: 'التصنيفات', link: '/categories' },
@@ -93,18 +102,27 @@ const CategoryProductsPage = () => {
           ]}
         />
 
-        <h1 className="text-2xl font-bold mb-8">🏷️ {categoryName}</h1>
+        <div className="mb-5">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">🏷️ {categoryName}</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {totalCount > 0 ? `${totalCount} منتج متاح` : 'تصفّح منتجات هذا التصنيف'}
+          </p>
+        </div>
 
         <ProductGrid products={products} loading={loading} />
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => {
-            setCurrentPage(page);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
+        {totalPages > 1 && (
+          <div className="mt-6 sm:mt-8">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </div>
+        )}
       </div>
     </>
   );

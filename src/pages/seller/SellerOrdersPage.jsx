@@ -51,6 +51,8 @@ const SellerOrdersPage = () => {
     { value: 'Processing', label: 'قيد التجهيز' },
     { value: 'ReadyToShip', label: 'جاهز للشحن' },
     { value: 'Shipped', label: 'تم الشحن' },
+    { value: 'DeliveryFailed', label: 'فشل التسليم' },
+    { value: 'ReturnedToSeller', label: 'رجعت للبائع' },
     { value: 'Delivered', label: 'تم التسليم' },
     { value: 'Completed', label: 'مكتمل' },
     { value: 'Cancelled', label: 'ملغي' },
@@ -80,7 +82,6 @@ const SellerOrdersPage = () => {
         <p className="text-gray-500 mt-1">إدارة الطلبات الواردة لمتجرك</p>
       </div>
 
-      {/* فلاتر الحالة */}
       <div className="bg-white rounded-xl border p-4 mb-4">
         <div className="flex flex-wrap gap-2">
           {statusFilters.map((filter) => (
@@ -102,7 +103,6 @@ const SellerOrdersPage = () => {
         </div>
       </div>
 
-      {/* الجدول */}
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
@@ -117,33 +117,14 @@ const SellerOrdersPage = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    رقم الطلب
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    العميل
-                  </th>
-
-                  {/* ✅ جديد */}
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    رقم التواصل
-                  </th>
-
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    الإجمالي
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    نصيبك
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    الحالة
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    التاريخ
-                  </th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">
-                    عرض
-                  </th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">رقم الطلب</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">العميل</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">رقم التواصل</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">الإجمالي</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">نصيبك</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">الحالة</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">التاريخ</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">عرض</th>
                 </tr>
               </thead>
 
@@ -153,29 +134,22 @@ const SellerOrdersPage = () => {
 
                   return (
                     <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">
-                        #{order.id}
-                      </td>
+                      <td className="px-4 py-3 font-medium">#{order.id}</td>
 
                       <td className="px-4 py-3 text-gray-700">
                         <div>
                           <p className="font-medium">{order.userName || 'غير معروف'}</p>
                           {order.userEmail && (
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {order.userEmail}
-                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">{order.userEmail}</p>
                           )}
                         </div>
                       </td>
 
-                      {/* ✅ جديد */}
                       <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
                         {renderCustomerPhone(order.customerPhoneNumber)}
                       </td>
 
-                      <td className="px-4 py-3 text-gray-700">
-                        {formatPrice(order.totalPrice)}
-                      </td>
+                      <td className="px-4 py-3 text-gray-700">{formatPrice(order.totalPrice)}</td>
 
                       <td className="px-4 py-3 text-green-600 font-medium">
                         {formatPrice(order.sellerAmount)}

@@ -1,9 +1,11 @@
 import { formatPrice } from '../../../utils/formatPrice';
 
 const StatItem = ({ label, value, valueColor = 'text-gray-800', highlight = false }) => (
-  <div className={`flex items-center justify-between py-3 border-b last:border-b-0 ${
-    highlight ? 'bg-green-50 px-2 rounded-lg' : ''
-  }`}>
+  <div
+    className={`flex items-center justify-between py-3 border-b last:border-b-0 ${
+      highlight ? 'bg-green-50 px-2 rounded-lg' : ''
+    }`}
+  >
     <span className="text-sm text-gray-500">{label}</span>
     <span className={`font-semibold ${valueColor}`}>{value}</span>
   </div>
@@ -18,7 +20,6 @@ const FinanceStatsCards = ({ summary }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-
       {/* إجماليات تاريخية */}
       <div className="bg-white rounded-xl border p-5">
         <h3 className="text-base font-semibold text-gray-800 mb-3">
@@ -60,6 +61,7 @@ const FinanceStatsCards = ({ summary }) => {
       </div>
 
       {/* إحصائيات الشهر الحالي */}
+      {/*
       <div className="bg-white rounded-xl border p-5">
         <h3 className="text-base font-semibold text-gray-800 mb-3">
           📅 الشهر الحالي
@@ -76,7 +78,6 @@ const FinanceStatsCards = ({ summary }) => {
             valueColor="text-blue-600"
           />
 
-          {/* ✅ صافي أرباح الشهر */}
           <div className={`mt-3 p-3 rounded-lg ${
             isPositiveMonth ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
           }`}>
@@ -105,6 +106,7 @@ const FinanceStatsCards = ({ summary }) => {
           </div>
         </div>
       </div>
+      */}
     </div>
   );
 };

@@ -49,23 +49,22 @@ const CategoriesSection = () => {
   if (categories.length === 0) return null;
 
   return (
-    <section className="py-14" aria-labelledby="categories-section-title">
-      <div className="max-w-7xl mx-auto px-4">
-
-        {/* ── العنوان ── */}
-        <div className="text-center mb-10">
+    <section className="py-8 sm:py-10 md:py-14" aria-labelledby="categories-section-title">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="text-center mb-6 sm:mb-10">
           <h2
             id="categories-section-title"
-            className="text-3xl font-extrabold text-gray-800 mb-2"
+            className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-2"
           >
             تسوق حسب التصنيف
           </h2>
-          <p className="text-gray-500 text-sm">اختر التصنيف المناسب وابدأ التسوق</p>
+          <p className="text-gray-500 text-xs sm:text-sm">
+            اختر التصنيف المناسب وابدأ التسوق
+          </p>
           <div className="mt-3 mx-auto w-16 h-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
         </div>
 
-        {/* ── الكروت ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {categories.map((category, index) => {
             const color = colors[index % colors.length];
             const firstLetter = category.name?.charAt(0) || '؟';
@@ -78,30 +77,30 @@ const CategoriesSection = () => {
                 className={`
                   relative overflow-hidden
                   bg-gradient-to-br ${color.bg}
-                  rounded-2xl p-5
+                  rounded-2xl p-4 sm:p-5
+                  min-h-[120px] sm:min-h-[140px]
                   flex flex-col items-center justify-center gap-3
-                  text-center shadow-md
-                  hover:shadow-xl hover:-translate-y-1.5
+                  text-center shadow-sm
+                  hover:shadow-lg hover:-translate-y-1
                   transition-all duration-300 group
                 `}
               >
-                {/* دائرة الحرف */}
-                <div className={`
-                  w-14 h-14 rounded-full ${color.light}
-                  flex items-center justify-center
-                  group-hover:scale-110 transition-transform duration-300
-                `}>
-                  <span className="text-white text-2xl font-extrabold">
+                <div
+                  className={`
+                    w-12 h-12 sm:w-14 sm:h-14 rounded-full ${color.light}
+                    flex items-center justify-center
+                    group-hover:scale-110 transition-transform duration-300
+                  `}
+                >
+                  <span className="text-white text-xl sm:text-2xl font-extrabold">
                     {firstLetter}
                   </span>
                 </div>
 
-                {/* اسم التصنيف */}
-                <h3 className="text-white font-bold text-sm leading-tight">
+                <h3 className="text-white font-bold text-sm leading-tight line-clamp-2">
                   {category.name}
                 </h3>
 
-                {/* زخرفة خلفية */}
                 <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-full bg-white/10 pointer-events-none" />
                 <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-white/10 pointer-events-none" />
               </Link>

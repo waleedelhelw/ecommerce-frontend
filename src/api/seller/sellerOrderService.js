@@ -38,6 +38,18 @@ export const shipOrder = async (orderId, data) => {
   return response.data.data;
 };
 
+// ✅ 🆕 تسجيل فشل التسليم
+export const markDeliveryFailed = async (orderId, data) => {
+  const response = await API.put(`${BASE}/${orderId}/delivery-failed`, data);
+  return response.data.data;
+};
+
+// ✅ 🆕 تسجيل رجوع الشحنة للبائع
+export const markReturnedToSeller = async (orderId, data) => {
+  const response = await API.put(`${BASE}/${orderId}/returned-to-seller`, data);
+  return response.data.data;
+};
+
 const sellerOrderService = {
   getMyOrders,
   getOrders: getMyOrders,
@@ -46,6 +58,8 @@ const sellerOrderService = {
   startProcessing,
   readyToShip,
   shipOrder,
+  markDeliveryFailed,
+  markReturnedToSeller,
 };
 
 export default sellerOrderService;

@@ -46,17 +46,13 @@ const AdminOrdersPage = () => {
     {
       header: 'العميل',
       render: (row) => (
-        <span className="font-medium">
-          {row.customerName || row.userName || 'غير معروف'}
-        </span>
+        <span className="font-medium">{row.customerName || row.userName || 'غير معروف'}</span>
       ),
     },
     {
       header: 'المتجر',
       render: (row) => (
-        <span className="text-sm text-gray-500">
-          {row.storeName || row.sellerName || '—'}
-        </span>
+        <span className="text-sm text-gray-500">{row.storeName || row.sellerName || '—'}</span>
       ),
     },
     {
@@ -97,19 +93,30 @@ const AdminOrdersPage = () => {
     <div>
       <h1 className="text-2xl font-bold mb-6">📋 إدارة الطلبات</h1>
 
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex items-center gap-3 flex-wrap">
         <label className="text-sm font-medium text-gray-600">تصفية حسب الحالة:</label>
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
           className="input-field w-auto"
         >
           <option value="">الكل</option>
           <option value="Pending">قيد الانتظار</option>
+          <option value="PendingPayment">في انتظار الدفع</option>
+          <option value="WaitingConfirmation">بانتظار مراجعة الدفع</option>
+          <option value="PaymentConfirmed">الدفع مؤكد</option>
           <option value="Processing">قيد المعالجة</option>
+          <option value="ReadyToShip">جاهز للشحن</option>
           <option value="Shipped">تم الشحن</option>
+          <option value="DeliveryFailed">فشل التسليم</option>
+          <option value="ReturnedToSeller">رجعت للبائع</option>
           <option value="Delivered">تم التسليم</option>
+          <option value="Completed">مكتمل</option>
           <option value="Cancelled">ملغى</option>
+          <option value="Refunded">تم الاسترجاع</option>
         </select>
       </div>
 

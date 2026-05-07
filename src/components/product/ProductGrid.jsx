@@ -5,13 +5,14 @@ import { Link } from 'react-router-dom';
 const ProductGrid = ({ products, loading }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-xl border overflow-hidden animate-pulse">
-            <div className="h-48 bg-gray-200" />
-            <div className="p-4 space-y-3">
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="bg-white rounded-2xl border overflow-hidden animate-pulse">
+            <div className="h-40 sm:h-48 md:h-52 bg-gray-200" />
+            <div className="p-3 sm:p-4 space-y-3">
               <div className="h-3 bg-gray-200 rounded w-1/2" />
+              <div className="h-4 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-gray-200 rounded w-2/3" />
               <div className="h-5 bg-gray-200 rounded w-1/3" />
             </div>
           </div>
@@ -36,7 +37,7 @@ const ProductGrid = ({ products, loading }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

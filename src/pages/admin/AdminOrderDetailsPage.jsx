@@ -26,7 +26,6 @@ const AdminOrderDetailsPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
-  // 🆕 ✅ State للأقساط
   const [installments, setInstallments] = useState([]);
   const [installmentsLoading, setInstallmentsLoading] = useState(false);
   const [showConfirmInstallmentModal, setShowConfirmInstallmentModal] = useState(false);
@@ -46,7 +45,6 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
-  // 🆕 ✅ جلب الأقساط
   const fetchInstallments = async () => {
     try {
       setInstallmentsLoading(true);
@@ -64,14 +62,12 @@ const AdminOrderDetailsPage = () => {
     fetchOrder();
   }, [id]);
 
-  // 🆕 ✅ جلب الأقساط لما الأوردر يتحمل
   useEffect(() => {
     if (order?.id && (order.isInstallment || order.installmentPlanId)) {
       fetchInstallments();
     }
   }, [order]);
 
-  // ✅ تأكيد الدفع
   const handleConfirmPayment = async () => {
     if (!order?.payment?.id) return;
     try {
@@ -86,7 +82,6 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
-  // ✅ رفض الدفع
   const handleRejectPayment = async () => {
     if (!rejectReason.trim()) {
       toast.error('يرجى كتابة سبب الرفض');
@@ -106,7 +101,6 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
-  // ✅ تحديث حالة الطلب
   const handleStatusUpdate = async (newStatus) => {
     try {
       setActionLoading(true);
@@ -120,7 +114,6 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
-  // 🆕 ✅ تأكيد دفع دفعة قسط
   const handleConfirmInstallment = async () => {
     if (!selectedInstallment) return;
     try {
@@ -141,11 +134,18 @@ const AdminOrderDetailsPage = () => {
     }
   };
 
-  // 🆕 ✅ فتح modal تأكيد الدفعة
   const handleConfirmInstallmentClick = (installment) => {
     setSelectedInstallment(installment);
     setConfirmNote('');
     setShowConfirmInstallmentModal(true);
+  };
+
+  const buildAddressLine = () => {
+    const parts = [];
+    if (order?.governorate) parts.push(order.governorate);
+    if (order?.city) parts.push(order.city);
+    if (order?.shippingCountry) parts.push(order.shippingCountry);
+    return parts.join('، ');
   };
 
   if (loading) return <LoadingSpinner />;
@@ -157,31 +157,77 @@ const AdminOrderDetailsPage = () => {
     : null;
 
   const grandTotal = (order.totalPrice || 0) + (order.shippingCost || 0) + (order.codFee || 0);
-
-  // هل الإيصال محتاج مراجعة؟
   const needsPaymentReview = order.status === 'WaitingConfirmation' && order.payment?.receiptImageUrl;
-
-  // 🆕 ✅ هل الطلب بالتقسيط؟
   const isInstallmentOrder = order.isInstallment || order.installmentPlanId || installments.length > 0;
 
-  // الحالات اللي الأدمن يقدر يغيرها
   const getAvailableActions = () => {
     const actions = [];
+
     switch (order.status) {
       case 'PaymentConfirmed':
-        actions.push({ status: 'Processing', label: '🔄 بدء التجهيز', color: 'bg-blue-600 hover:bg-blue-700' });
-        actions.push({ status: 'Cancelled', label: '❌ إلغاء الطلب', color: 'bg-red-600 hover:bg-red-700' });
+        actions.push({
+          status: 'Processing',
+          label: '🔄 بدء التجهيز',
+          color: 'bg-blue-600 hover:bg-blue-700',
+        });
+        actions.push({
+          status: 'Cancelled',
+          label: '❌ إلغاء الطلب',
+          color: 'bg-red-600 hover:bg-red-700',
+        });
         break;
+
       case 'Processing':
-        actions.push({ status: 'Cancelled', label: '❌ إلغاء الطلب', color: 'bg-red-600 hover:bg-red-700' });
+        actions.push({
+          status: 'Cancelled',
+          label: '❌ إلغاء الطلب',
+          color: 'bg-red-600 hover:bg-red-700',
+        });
         break;
+
+      case 'Shipped':
+        actions.push({
+          status: 'Delivered',
+          label: '✅ تم التسليم',
+          color: 'bg-green-600 hover:bg-green-700',
+        });
+        actions.push({
+          status: 'DeliveryFailed',
+          label: '⚠️ فشل التسليم',
+          color: 'bg-orange-600 hover:bg-orange-700',
+        });
+        break;
+
+      case 'DeliveryFailed':
+        actions.push({
+          status: 'ReturnedToSeller',
+          label: '↩️ رجعت للبائع',
+          color: 'bg-gray-700 hover:bg-gray-800',
+        });
+        actions.push({
+          status: 'Shipped',
+          label: '🚚 إعادة الشحن',
+          color: 'bg-purple-600 hover:bg-purple-700',
+        });
+        break;
+
       case 'Delivered':
-        actions.push({ status: 'Completed', label: '🎉 إكمال الطلب', color: 'bg-emerald-600 hover:bg-emerald-700' });
-        actions.push({ status: 'Refunded', label: '🔄 استرجاع', color: 'bg-amber-600 hover:bg-amber-700' });
+        actions.push({
+          status: 'Completed',
+          label: '🎉 إكمال الطلب',
+          color: 'bg-emerald-600 hover:bg-emerald-700',
+        });
+        actions.push({
+          status: 'Refunded',
+          label: '🔄 استرجاع',
+          color: 'bg-amber-600 hover:bg-amber-700',
+        });
         break;
+
       default:
         break;
     }
+
     return actions;
   };
 
@@ -189,7 +235,6 @@ const AdminOrderDetailsPage = () => {
 
   return (
     <div>
-      {/* العنوان */}
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate('/admin/orders')}
@@ -200,7 +245,6 @@ const AdminOrderDetailsPage = () => {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-800">طلب #{order.id}</h1>
-            {/* 🆕 ✅ Badge التقسيط */}
             {isInstallmentOrder && (
               <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
                 📋 تقسيط
@@ -212,7 +256,6 @@ const AdminOrderDetailsPage = () => {
         <OrderStatusBadge status={order.status} />
       </div>
 
-      {/* ✅ تنبيه مراجعة الإيصال */}
       {needsPaymentReview && (
         <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-5 mb-6">
           <div className="flex items-start gap-4">
@@ -225,7 +268,6 @@ const AdminOrderDetailsPage = () => {
                 <strong>{PAYMENT_LABELS[order.payment.paymentMethod] || order.payment.paymentMethod}</strong>
               </p>
 
-              {/* صورة الإيصال */}
               <div
                 className="mt-3 cursor-pointer inline-block"
                 onClick={() => setPreviewImage(order.payment.receiptImageUrl)}
@@ -238,7 +280,6 @@ const AdminOrderDetailsPage = () => {
                 <p className="text-xs text-orange-600 mt-1">🔍 اضغط للتكبير</p>
               </div>
 
-              {/* أزرار التأكيد/الرفض */}
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={handleConfirmPayment}
@@ -260,7 +301,6 @@ const AdminOrderDetailsPage = () => {
         </div>
       )}
 
-      {/* ✅ أزرار تحديث الحالة */}
       {availableActions.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
           <p className="text-sm text-blue-700 font-medium mb-3">⚡ إجراءات متاحة:</p>
@@ -279,7 +319,24 @@ const AdminOrderDetailsPage = () => {
         </div>
       )}
 
-      {/* ✅ Timeline */}
+      {order.status === 'DeliveryFailed' && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+          <p className="font-bold text-orange-800">⚠️ الطلب في حالة فشل تسليم</p>
+          <p className="text-sm text-orange-600 mt-1">
+            لم يتم تسليم الشحنة للعميل. يمكنك إعادة الحالة إلى "تم الشحن" للمحاولة مرة أخرى أو تحويلها إلى "رجعت للبائع".
+          </p>
+        </div>
+      )}
+
+      {order.status === 'ReturnedToSeller' && (
+        <div className="bg-gray-50 border border-gray-300 rounded-xl p-4 mb-6">
+          <p className="font-bold text-gray-800">↩️ الشحنة رجعت للبائع</p>
+          <p className="text-sm text-gray-600 mt-1">
+            هذه حالة لوجستية للطلب وليست Return Request من العميل.
+          </p>
+        </div>
+      )}
+
       {order.timeline && order.timeline.length > 0 && (
         <div className="bg-white rounded-xl border p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">📍 مسار الطلب</h2>
@@ -291,7 +348,6 @@ const AdminOrderDetailsPage = () => {
         </div>
       )}
 
-      {/* 🆕 ✅ قسم الأقساط للأدمن */}
       {isInstallmentOrder && (
         <div className="mb-6">
           {installmentsLoading ? (
@@ -314,9 +370,7 @@ const AdminOrderDetailsPage = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* العمود الرئيسي */}
         <div className="lg:col-span-2 space-y-6">
-          {/* المنتجات */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">📦 المنتجات</h2>
             <div className="space-y-4">
@@ -346,7 +400,6 @@ const AdminOrderDetailsPage = () => {
             </div>
           </div>
 
-          {/* عنوان الشحن */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">🚚 عنوان الشحن</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -355,12 +408,20 @@ const AdminOrderDetailsPage = () => {
                 <p className="font-medium">{order.shippingAddress || '—'}</p>
               </div>
               <div>
+                <p className="text-gray-500">المحافظة</p>
+                <p className="font-medium">{order.governorate || '—'}</p>
+              </div>
+              <div>
                 <p className="text-gray-500">المدينة</p>
-                <p className="font-medium">{order.shippingCity || '—'}</p>
+                <p className="font-medium">{order.city || '—'}</p>
               </div>
               <div>
                 <p className="text-gray-500">الدولة</p>
                 <p className="font-medium">{order.shippingCountry || '—'}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-gray-500">السطر الكامل</p>
+                <p className="font-medium">{buildAddressLine() || '—'}</p>
               </div>
               {order.orderNotes && (
                 <div className="sm:col-span-2">
@@ -371,7 +432,6 @@ const AdminOrderDetailsPage = () => {
             </div>
           </div>
 
-          {/* بيانات الشحن (لو اتشحن) */}
           {order.trackingNumber && (
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">📍 بيانات الشحن</h2>
@@ -415,9 +475,7 @@ const AdminOrderDetailsPage = () => {
           )}
         </div>
 
-        {/* العمود الجانبي */}
         <div className="space-y-6">
-          {/* ملخص الطلب */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">💰 ملخص الطلب</h2>
             <div className="space-y-3 text-sm">
@@ -443,7 +501,6 @@ const AdminOrderDetailsPage = () => {
                 <span className="text-blue-600">{formatPrice(order.grandTotal || grandTotal)}</span>
               </div>
 
-              {/* 🆕 ✅ المدفوع والمتبقي للتقسيط */}
               {isInstallmentOrder && installments.length > 0 && (
                 <>
                   <hr />
@@ -451,7 +508,9 @@ const AdminOrderDetailsPage = () => {
                     <span className="text-green-600 font-medium">✅ المدفوع</span>
                     <span className="font-bold text-green-600">
                       {formatPrice(
-                        installments.filter(i => i.status === 'Paid').reduce((sum, i) => sum + i.amount, 0)
+                        installments
+                          .filter((i) => i.status === 'Paid')
+                          .reduce((sum, i) => sum + i.amount, 0)
                       )}
                     </span>
                   </div>
@@ -459,14 +518,16 @@ const AdminOrderDetailsPage = () => {
                     <span className="text-orange-600 font-medium">⏳ المتبقي</span>
                     <span className="font-bold text-orange-600">
                       {formatPrice(
-                        installments.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled').reduce((sum, i) => sum + i.amount, 0)
+                        installments
+                          .filter((i) => i.status !== 'Paid' && i.status !== 'Cancelled')
+                          .reduce((sum, i) => sum + i.amount, 0)
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-red-600 font-medium">🚨 متأخرة</span>
                     <span className="font-bold text-red-600">
-                      {installments.filter(i => i.status === 'Overdue').length} دفعات
+                      {installments.filter((i) => i.status === 'Overdue').length} دفعات
                     </span>
                   </div>
                 </>
@@ -488,7 +549,6 @@ const AdminOrderDetailsPage = () => {
             </div>
           </div>
 
-          {/* بيانات العميل */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">👤 العميل</h2>
             <div className="space-y-2 text-sm">
@@ -502,10 +562,15 @@ const AdminOrderDetailsPage = () => {
                   <span className="font-medium">{order.customerEmail || order.userEmail}</span>
                 </p>
               )}
+              {order.customerPhoneNumber && (
+                <p>
+                  <span className="text-gray-500">الهاتف: </span>
+                  <span className="font-medium">{order.customerPhoneNumber}</span>
+                </p>
+              )}
             </div>
           </div>
 
-          {/* بيانات البائع */}
           {(order.sellerName || order.storeName) && (
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">🏪 البائع</h2>
@@ -522,7 +587,6 @@ const AdminOrderDetailsPage = () => {
             </div>
           )}
 
-          {/* الدفع */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">💳 الدفع</h2>
             <div className="space-y-2 text-sm">
@@ -533,7 +597,6 @@ const AdminOrderDetailsPage = () => {
                 </span>
               </div>
 
-              {/* 🆕 ✅ نوع الدفع */}
               {isInstallmentOrder && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">نوع الدفع</span>
@@ -549,27 +612,27 @@ const AdminOrderDetailsPage = () => {
                   </span>
                 </div>
               )}
+
               {order.payment?.reference && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">المرجع</span>
                   <span className="font-mono text-xs">{order.payment.reference}</span>
                 </div>
               )}
+
               {order.payment?.confirmedAt && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">تاريخ التأكيد</span>
                   <span className="font-medium">{formatDate(order.payment.confirmedAt)}</span>
                 </div>
               )}
+
               {order.payment?.rejectionReason && (
                 <div className="mt-2 p-2 bg-red-50 rounded-lg">
-                  <p className="text-xs text-red-600">
-                    ❌ سبب الرفض: {order.payment.rejectionReason}
-                  </p>
+                  <p className="text-xs text-red-600">❌ سبب الرفض: {order.payment.rejectionReason}</p>
                 </div>
               )}
 
-              {/* صورة الإيصال */}
               {order.payment?.receiptImageUrl && (
                 <div className="mt-3">
                   <p className="text-gray-500 mb-1">الإيصال:</p>
@@ -586,7 +649,6 @@ const AdminOrderDetailsPage = () => {
         </div>
       </div>
 
-      {/* Modal رفض الإيصال */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
@@ -623,7 +685,6 @@ const AdminOrderDetailsPage = () => {
         </div>
       )}
 
-      {/* 🆕 ✅ Modal تأكيد دفعة قسط */}
       {showConfirmInstallmentModal && selectedInstallment && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
@@ -634,7 +695,9 @@ const AdminOrderDetailsPage = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">المبلغ:</span>
-                <span className="font-bold text-blue-700">{formatPrice(selectedInstallment.amount)}</span>
+                <span className="font-bold text-blue-700">
+                  {formatPrice(selectedInstallment.amount)}
+                </span>
               </div>
               {selectedInstallment.paymentProofUrl && (
                 <div className="mt-2">
@@ -686,7 +749,6 @@ const AdminOrderDetailsPage = () => {
         </div>
       )}
 
-      {/* Modal عرض الصورة */}
       {previewImage && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"

@@ -1,88 +1,110 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { formatPrice } from '../../utils/formatPrice';
-import shippingService from '../../api/shippingService';
 
-const ShippingOptionSelector = ({ selected, onChange }) => {
-  const [options, setOptions] = useState([]);
-  const [loading, setLoading] = useState(true);
+const ShippingOptionSelector = ({
+  zonesData,
+  selectedGovernorate,
+  selectedCity,
+  onGovernorateChange,
+  onCityChange,
+}) => {
+  // ✅ استخراج المحافظات المتاحة
+  const governorates = useMemo(() => {
+    return zonesData?.availableGovernorates || [];
+  }, [zonesData]);
 
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const data = await shippingService.getShippingOptions();
-        const list = Array.isArray(data) ? data : data?.items || [];
-        setOptions(list);
-        // لو مفيش اختيار → اختار أول واحد
-        if (!selected && list.length > 0) {
-          onChange(list[0].id);
-        }
-      } catch (err) {
-        console.error('فشل تحميل خيارات الشحن:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOptions();
-  }, []);
+  // ✅ استخراج المدن للمحافظة المختارة
+  const cities = useMemo(() => {
+    if (!selectedGovernorate) return [];
+    const gov = governorates.find((g) => g.governorate === selectedGovernorate);
+    return gov?.cities || [];
+  }, [selectedGovernorate, governorates]);
 
-  if (loading) {
-    return (
-      <div className="animate-pulse space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 bg-gray-100 rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
-  if (options.length === 0) {
-    return <p className="text-gray-500 text-sm">لا توجد خيارات شحن متاحة</p>;
-  }
+  // ✅ بيانات المدينة المختارة
+  const selectedCityData = useMemo(() => {
+    if (!selectedCity) return null;
+    return cities.find((c) => c.city === selectedCity) || null;
+  }, [selectedCity, cities]);
 
   return (
-    <div className="space-y-3">
-      {options.map((option) => (
-        <label
-          key={option.id}
-          className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all ${
-            selected === option.id
-              ? 'border-blue-500 bg-blue-50 shadow-sm'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-          }`}
+    <div className="space-y-4">
+
+      {/* اختيار المحافظة */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          المحافظة <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={selectedGovernorate || ''}
+          onChange={(e) => {
+            onGovernorateChange(e.target.value);
+            onCityChange('');
+          }}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm
+                     outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400
+                     bg-white transition-all"
         >
-          <input
-            type="radio"
-            name="shippingOption"
-            value={option.id}
-            checked={selected === option.id}
-            onChange={() => onChange(option.id)}
-            className="w-4 h-4 text-blue-600"
-          />
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-800">{option.name}</span>
-              {option.price === 0 && (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                  مجاني
-                </span>
-              )}
+          <option value="">-- اختر المحافظة --</option>
+          {governorates.map((gov) => (
+            <option key={gov.governorate} value={gov.governorate}>
+              {gov.governorate}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* اختيار المدينة */}
+      {selectedGovernorate && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            المدينة / المركز <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={selectedCity || ''}
+            onChange={(e) => onCityChange(e.target.value)}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm
+                       outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400
+                       bg-white transition-all"
+          >
+            <option value="">-- اختر المدينة --</option>
+            {cities.map((c) => (
+              <option key={c.city} value={c.city}>
+                {c.city} — {formatPrice(c.totalShippingCost)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* ✅ تفاصيل تكلفة الشحن per seller */}
+      {selectedCityData && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+          <p className="text-sm font-semibold text-blue-800 mb-2">🚚 تفاصيل تكلفة الشحن:</p>
+
+          {selectedCityData.sellerShippingDetails?.map((seller) => (
+            <div key={seller.sellerId} className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">
+                🏪 {seller.storeName}
+                {seller.estimatedDays > 0 && (
+                  <span className="text-xs text-gray-400 mr-1">
+                    ({seller.estimatedDays} أيام)
+                  </span>
+                )}
+              </span>
+              <span className="font-medium text-blue-700">
+                {formatPrice(seller.shippingCost)}
+              </span>
             </div>
-            {option.description && (
-              <p className="text-sm text-gray-500 mt-1">{option.description}</p>
-            )}
-            {option.estimatedDays > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                ⏰ التوصيل خلال {option.estimatedDays} أيام عمل
-              </p>
-            )}
-          </div>
-          <div className="text-left">
-            <span className={`font-bold text-lg ${option.price === 0 ? 'text-green-600' : 'text-blue-600'}`}>
-              {option.price === 0 ? 'مجاني' : formatPrice(option.price)}
+          ))}
+
+          <div className="border-t border-blue-200 pt-2 flex justify-between items-center">
+            <span className="font-bold text-blue-800 text-sm">إجمالي الشحن</span>
+            <span className="font-bold text-blue-700">
+              {formatPrice(selectedCityData.totalShippingCost)}
             </span>
           </div>
-        </label>
-      ))}
+        </div>
+      )}
     </div>
   );
 };

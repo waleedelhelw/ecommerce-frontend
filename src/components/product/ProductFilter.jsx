@@ -32,18 +32,25 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
   const handlePriceApply = () => {
     onFilterChange('minPrice', localMinPrice || null);
     onFilterChange('maxPrice', localMaxPrice || null);
+    setIsOpen(false);
   };
 
   const handleReset = () => {
     setLocalMinPrice('');
     setLocalMaxPrice('');
     onReset();
+    setIsOpen(false);
   };
 
-  const hasActiveFilters = filters.categoryId || filters.minPrice || filters.maxPrice || filters.minRating;
+  const hasActiveFilters =
+    filters.categoryId || filters.minPrice || filters.maxPrice || filters.minRating;
+
+  const handleQuickFilter = (key, value) => {
+    onFilterChange(key, value);
+  };
 
   const filterContent = (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* التصنيفات */}
       <div>
         <button
@@ -55,10 +62,10 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
         </button>
 
         {showCategories && (
-          <div className="space-y-1 max-h-48 overflow-y-auto">
+          <div className="space-y-1 max-h-56 overflow-y-auto">
             <button
-              onClick={() => onFilterChange('categoryId', null)}
-              className={`w-full text-right text-sm px-3 py-2 rounded-lg transition-colors ${
+              onClick={() => handleQuickFilter('categoryId', null)}
+              className={`w-full text-right text-sm px-3 py-2.5 rounded-xl transition-colors ${
                 !filters.categoryId
                   ? 'bg-blue-50 text-blue-600 font-medium'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -69,8 +76,8 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => onFilterChange('categoryId', cat.id)}
-                className={`w-full text-right text-sm px-3 py-2 rounded-lg transition-colors ${
+                onClick={() => handleQuickFilter('categoryId', cat.id)}
+                className={`w-full text-right text-sm px-3 py-2.5 rounded-xl transition-colors ${
                   filters.categoryId == cat.id
                     ? 'bg-blue-50 text-blue-600 font-medium'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -98,13 +105,13 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
 
         {showPrice && (
           <div>
-            <div className="flex gap-2 mb-2">
+            <div className="grid grid-cols-2 gap-2 mb-2">
               <input
                 type="number"
                 placeholder="من"
                 value={localMinPrice}
                 onChange={(e) => setLocalMinPrice(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 min="0"
               />
               <input
@@ -112,13 +119,13 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
                 placeholder="إلى"
                 value={localMaxPrice}
                 onChange={(e) => setLocalMaxPrice(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 min="0"
               />
             </div>
             <button
               onClick={handlePriceApply}
-              className="w-full bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full bg-blue-600 text-white text-sm py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
             >
               تطبيق
             </button>
@@ -139,8 +146,8 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
         {showRating && (
           <div className="space-y-1">
             <button
-              onClick={() => onFilterChange('minRating', null)}
-              className={`w-full text-right text-sm px-3 py-2 rounded-lg transition-colors ${
+              onClick={() => handleQuickFilter('minRating', null)}
+              className={`w-full text-right text-sm px-3 py-2.5 rounded-xl transition-colors ${
                 !filters.minRating
                   ? 'bg-blue-50 text-blue-600 font-medium'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -151,8 +158,8 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
             {[4, 3, 2, 1].map((rating) => (
               <button
                 key={rating}
-                onClick={() => onFilterChange('minRating', rating)}
-                className={`w-full text-right text-sm px-3 py-2 rounded-lg transition-colors ${
+                onClick={() => handleQuickFilter('minRating', rating)}
+                className={`w-full text-right text-sm px-3 py-2.5 rounded-xl transition-colors ${
                   filters.minRating == rating
                     ? 'bg-blue-50 text-blue-600 font-medium'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -165,11 +172,10 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
         )}
       </div>
 
-      {/* زر إعادة التعيين */}
       {hasActiveFilters && (
         <button
           onClick={handleReset}
-          className="w-full flex items-center justify-center gap-2 text-sm text-red-600 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 text-sm text-red-600 py-2.5 rounded-xl border border-red-200 hover:bg-red-50 transition-colors"
         >
           <FiX size={14} />
           إعادة تعيين الفلاتر
@@ -181,7 +187,7 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
   return (
     <>
       {/* Desktop Filter */}
-      <div className="hidden lg:block bg-white rounded-xl border p-5">
+      <div className="hidden lg:block bg-white rounded-2xl border p-5">
         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
           <FiFilter size={18} />
           الفلاتر
@@ -193,7 +199,7 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
       <div className="lg:hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-center gap-2 bg-white border rounded-xl px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="w-full flex items-center justify-center gap-2 bg-white border rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           <FiFilter size={16} />
           الفلاتر
@@ -205,7 +211,16 @@ const ProductFilter = ({ filters, onFilterChange, onReset }) => {
         </button>
 
         {isOpen && (
-          <div className="mt-3 bg-white rounded-xl border p-5">
+          <div className="mt-3 bg-white rounded-2xl border p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-800">تصفية النتائج</h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+              >
+                <FiX size={18} />
+              </button>
+            </div>
             {filterContent}
           </div>
         )}

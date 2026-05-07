@@ -38,6 +38,7 @@ const SellerDashboardPage = () => {
   if (error) return <ErrorMessage message={error} onRetry={fetchDashboard} />;
 
   const statCards = [
+    /*
     {
       title: 'إجمالي المبيعات',
       value: formatPrice(stats?.totalSales || 0),
@@ -60,6 +61,7 @@ const SellerDashboardPage = () => {
       bgLight: 'bg-yellow-50',
       subtitle: 'متاح للسحب الآن',
     },
+    */
     {
       title: 'رصيد معلق',
       value: formatPrice(stats?.pendingBalance || 0),
@@ -141,9 +143,7 @@ const SellerDashboardPage = () => {
                 className="bg-white rounded-lg p-4 flex items-center justify-between"
               >
                 <div>
-                  <p className="font-medium text-gray-800">
-                    طلب #{earning.orderId}
-                  </p>
+                  <p className="font-medium text-gray-800">طلب #{earning.orderId}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {earning.remainingDays > 0
                       ? `متبقي ${earning.remainingDays} يوم`
@@ -154,7 +154,6 @@ const SellerDashboardPage = () => {
                   <p className="font-bold text-green-600">
                     {formatPrice(earning.amount)}
                   </p>
-                  {/* شريط تقدم */}
                   <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-2">
                     <div
                       className="h-full bg-orange-500 rounded-full transition-all"

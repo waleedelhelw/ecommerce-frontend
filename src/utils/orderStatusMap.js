@@ -42,6 +42,18 @@ export const orderStatusMap = {
     icon: '🚚',
     step: 6,
   },
+  DeliveryFailed: {
+    label: 'فشل التسليم',
+    color: 'bg-orange-100 text-orange-800',
+    icon: '⚠️',
+    step: 7,
+  },
+  ReturnedToSeller: {
+    label: 'رجعت للبائع',
+    color: 'bg-gray-200 text-gray-800',
+    icon: '↩️',
+    step: 8,
+  },
   Delivered: {
     label: 'تم التسليم',
     color: 'bg-green-100 text-green-800',
