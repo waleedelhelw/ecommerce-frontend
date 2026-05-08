@@ -82,7 +82,9 @@ const CheckoutPage = () => {
   const grandTotal = cartTotal + selectedShippingCost + currentCodFee;
 
   // ✅ COD = مفيش تقسيط
-  const isInstallmentAvailable = formData.paymentMethod !== 'CashOnDelivery';
+  //const isInstallmentAvailable = formData.paymentMethod !== 'CashOnDelivery';
+  const isInstallmentAvailable = false;
+
 
   // ✅ هل في بائعين مش بيشحنوا؟
   const hasUnshippableSellers = zonesData?.hasUnshippableSellers || false;
