@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import SEO from '../../components/common/SEO';
 import { login as loginApi, googleLogin as googleLoginApi } from '../../api/authService';
+import cartService from '../../api/cartService';
 import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import ValidationSummary from '../../components/common/ValidationSummary';
@@ -18,9 +19,12 @@ const LoginPage = () => {
   const [apiError, setApiError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // ── helpers ──
   const getRedirect = (userData) => {
+    const state = location.state;
+    if (state?.addToCart) return '/cart';
     switch (userData.role) {
       case 'SuperAdmin': return '/admin';
       case 'Seller':
@@ -53,6 +57,9 @@ const LoginPage = () => {
       const response = await loginApi(email, password);
       if (response.success && response.data) {
         login(response.data);
+        if (location.state?.addToCart) {
+          try { await cartService.addToCart(location.state.addToCart, 1); } catch { /* empty */ }
+        }
         navigate(getRedirect(response.data));
       } else {
         if (response.message?.includes('غير مفعّل')) {
@@ -81,6 +88,9 @@ const LoginPage = () => {
       const response = await googleLoginApi(credentialResponse.credential);
       if (response.success && response.data) {
         login(response.data);
+        if (location.state?.addToCart) {
+          try { await cartService.addToCart(location.state.addToCart, 1); } catch { /* empty */ }
+        }
         navigate(getRedirect(response.data));
       } else {
         setApiError(response.message || 'فشل تسجيل الدخول بـ Google');

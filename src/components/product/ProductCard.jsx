@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiHeart } from 'react-icons/fi';
 import StarRating from '../common/StarRating';
 import { formatPrice } from '../../utils/formatPrice';
@@ -11,6 +11,7 @@ const ProductCard = ({ product, variant }) => {
   const { isAuthenticated, isCustomer } = useAuth();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, wishlistItems } = useWishlist();
+  const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -22,7 +23,11 @@ const ProductCard = ({ product, variant }) => {
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isAuthenticated && isCustomer) {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { addToCart: product.id } });
+      return;
+    }
+    if (isCustomer) {
       addToCart(product.id, 1);
     }
   };
@@ -126,7 +131,7 @@ const ProductCard = ({ product, variant }) => {
             )}
           </div>
 
-          {isAuthenticated && isCustomer && product.stockQuantity > 0 && (
+          {product.stockQuantity > 0 && (
             <button
               onClick={handleAddToCart}
               className="w-full mt-1 flex items-center justify-center gap-1.5 bg-black text-white py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 active:bg-gray-900 transition-colors"
