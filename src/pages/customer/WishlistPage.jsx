@@ -80,7 +80,9 @@ const WishlistPage = () => {
                     averageRating: item.averageRating || 0,
                     stockQuantity: item.stockQuantity,
                     categoryName: item.categoryName,
+                    storeName: item.storeName,
                   }}
+                  variant="simple"
                 />
                 <button
                   onClick={() => handleRemove(item.id)}

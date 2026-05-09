@@ -268,7 +268,7 @@ const SellerStorePage = () => {
             📦 منتجات المتجر
           </h2>
 
-          <ProductGrid products={products} loading={productsLoading} />
+          <ProductGrid products={products} loading={productsLoading} variant="simple" />
 
           {totalPages > 1 && (
             <div className="mt-8">

@@ -1,28 +1,28 @@
-import { useState } from 'react';
-import { FiChevronLeft, FiChevronRight, FiMaximize2, FiX } from 'react-icons/fi';
+import { useState, useRef, useCallback } from 'react';
+import { FiMaximize2, FiX } from 'react-icons/fi';
 
 const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const SWIPE_THRESHOLD = 50;
 
-  // ترتيب الصور - الرئيسية أولاً
   const allImages = [];
 
-  // لو فيه مصفوفة صور
   if (images && images.length > 0) {
     const sorted = [...images].sort((a, b) => a.displayOrder - b.displayOrder);
     sorted.forEach((img, idx) => {
       allImages.push({
         url: img.imageUrl,
-        // ✅ Alt Text وصفي
         alt: img.altText || `${productName} - صورة ${idx + 1}`,
         isMain: img.isMain,
       });
     });
   }
 
-  // لو مفيش صور أو فيه imageUrl أساسي ومش موجود في المصفوفة
   if (allImages.length === 0 && imageUrl) {
     allImages.push({
       url: imageUrl,
@@ -31,7 +31,6 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
     });
   }
 
-  // لو مفيش أي صور خالص
   if (allImages.length === 0) {
     allImages.push({
       url: '/placeholder-product.png',
@@ -43,139 +42,109 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
   const currentImage = allImages[selectedIndex] || allImages[0];
   const hasMultipleImages = allImages.length > 1;
 
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
     setImgError(false);
+    setImgLoaded(false);
     setSelectedIndex((current) => (current === 0 ? allImages.length - 1 : current - 1));
+  }, [allImages.length]);
+
+  const goToNext = useCallback(() => {
+    setImgError(false);
+    setImgLoaded(false);
+    setSelectedIndex((current) => (current === allImages.length - 1 ? 0 : current + 1));
+  }, [allImages.length]);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
   };
 
-  const goToNext = () => {
-    setImgError(false);
-    setSelectedIndex((current) => (current === allImages.length - 1 ? 0 : current + 1));
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
   };
+
+  const handleTouchEnd = () => {
+    if (!hasMultipleImages) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+      if (diff > 0) goToNext();
+      else goToPrevious();
+    }
+  };
+
+  const currentSrc = imgError ? '/placeholder-product.png' : currentImage.url;
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm border">
-      {/* الصورة الرئيسية */}
-      <div className="relative bg-gray-50">
-        <div
-          className="aspect-square sm:aspect-[4/5] lg:aspect-square max-h-[72vh] flex items-center justify-center p-3 sm:p-5"
-          role="img"
-          aria-label={currentImage.alt}
-        >
-          <img
-            src={imgError ? '/placeholder-product.png' : currentImage.url}
-            alt={currentImage.alt}
-            className="w-full h-full object-contain"
-            loading="eager"
-            onError={(e) => {
-              e.target.onerror = null;
-              setImgError(true);
-            }}
-          />
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+      {/* Main Image */}
+      <div
+        className="relative overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="aspect-square sm:aspect-[4/5] lg:aspect-square w-full relative overflow-hidden">
+          {!imgLoaded && !imgError && (
+            <div className="absolute inset-0 skeleton-shimmer z-10" />
+          )}
+
+          {imgLoaded && !imgError && (
+            <div
+              className="absolute inset-0 scale-110 blur-3xl opacity-60"
+              style={{
+                backgroundImage: `url(${currentSrc})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsPreviewOpen(true)}
+            className="relative z-10 w-full h-full block cursor-zoom-in"
+            aria-label="تكبير صورة المنتج"
+          >
+            <img
+              src={currentSrc}
+              alt={currentImage.alt}
+              className={`w-full h-full object-contain p-4 sm:p-6 lg:p-8 transition-all duration-500 ${
+                imgLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="eager"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => { setImgError(true); setImgLoaded(true); }}
+            />
+          </button>
         </div>
 
         <button
           type="button"
           onClick={() => setIsPreviewOpen(true)}
-          className="absolute top-3 left-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/95 text-gray-700 shadow-sm border hover:bg-gray-50 transition-colors"
+          className="absolute top-3 left-3 inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/90 text-gray-600 shadow-sm border border-gray-200 hover:bg-white hover:shadow-md transition-all z-20"
           aria-label="تكبير صورة المنتج"
           title="تكبير الصورة"
         >
-          <FiMaximize2 size={18} aria-hidden="true" />
+          <FiMaximize2 size={15} aria-hidden="true" />
         </button>
-
-        {hasMultipleImages && (
-          <>
-            <button
-              type="button"
-              onClick={goToPrevious}
-              className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/95 text-gray-800 shadow-sm border hover:bg-gray-50 transition-colors"
-              aria-label="الصورة السابقة"
-              title="الصورة السابقة"
-            >
-              <FiChevronRight size={22} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={goToNext}
-              className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/95 text-gray-800 shadow-sm border hover:bg-gray-50 transition-colors"
-              aria-label="الصورة التالية"
-              title="الصورة التالية"
-            >
-              <FiChevronLeft size={22} aria-hidden="true" />
-            </button>
-          </>
-        )}
       </div>
 
-      {isPreviewOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 p-3 sm:p-6 flex items-center justify-center">
-          <button
-            type="button"
-            onClick={() => setIsPreviewOpen(false)}
-            className="absolute top-4 left-4 inline-flex items-center justify-center w-11 h-11 rounded-full bg-white text-gray-900 hover:bg-gray-100 transition-colors"
-            aria-label="إغلاق الصورة"
-            title="إغلاق"
-          >
-            <FiX size={22} aria-hidden="true" />
-          </button>
-
-          {hasMultipleImages && (
-            <>
-              <button
-                type="button"
-                onClick={goToPrevious}
-                className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-11 h-11 rounded-full bg-white text-gray-900 hover:bg-gray-100 transition-colors"
-                aria-label="الصورة السابقة"
-                title="الصورة السابقة"
-              >
-                <FiChevronRight size={24} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                onClick={goToNext}
-                className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-11 h-11 rounded-full bg-white text-gray-900 hover:bg-gray-100 transition-colors"
-                aria-label="الصورة التالية"
-                title="الصورة التالية"
-              >
-                <FiChevronLeft size={24} aria-hidden="true" />
-              </button>
-            </>
-          )}
-
-        <img
-          src={imgError ? '/placeholder-product.png' : currentImage.url}
-          alt={currentImage.alt}
-          className="max-w-full max-h-full object-contain"
-          loading="eager"
-          onError={(e) => {
-            e.target.onerror = null;
-            setImgError(true);
-          }}
-        />
-        </div>
-      )}
-
-      {/* الصور الصغيرة (Thumbnails) */}
+      {/* Thumbnails */}
       {hasMultipleImages && (
-        <div className="p-3 border-t">
-          <div
-            className="flex gap-2 overflow-x-auto pb-1"
-            role="list"
-            aria-label="معرض صور المنتج"
-          >
+        <div className="px-3 sm:px-4 py-3 border-t border-gray-100">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" role="list" aria-label="معرض صور المنتج">
             {allImages.map((img, index) => (
               <button
                 key={index}
                 onClick={() => {
                   setSelectedIndex(index);
                   setImgError(false);
+                  setImgLoaded(false);
                 }}
-                className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors
-                  ${selectedIndex === index
-                    ? 'border-blue-500'
-                    : 'border-gray-200 hover:border-gray-400'
-                  }`}
+                className={`shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all ${
+                  selectedIndex === index
+                    ? 'border-blue-500 shadow-sm shadow-blue-500/20'
+                    : 'border-gray-100 hover:border-gray-300 opacity-70 hover:opacity-100'
+                }`}
                 aria-label={`عرض ${img.alt}`}
                 aria-current={selectedIndex === index ? 'true' : 'false'}
               >
@@ -183,7 +152,7 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
                   src={img.url}
                   alt={img.alt}
                   loading="lazy"
-                  className="w-full h-full object-contain bg-gray-50"
+                  className="w-full h-full object-cover bg-gray-50"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = '/placeholder-product.png';
@@ -192,6 +161,48 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Fullscreen Preview */}
+      {isPreviewOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <button
+            type="button"
+            onClick={() => setIsPreviewOpen(false)}
+            className="absolute top-4 left-4 z-10 inline-flex items-center justify-center w-11 h-11 rounded-full bg-white/10 text-white hover:bg-white/20 border border-white/20 transition-all"
+            aria-label="إغلاق الصورة"
+            title="إغلاق"
+          >
+            <FiX size={22} aria-hidden="true" />
+          </button>
+
+          <div className="absolute top-4 right-4 text-white/60 text-sm">
+            {selectedIndex + 1} / {allImages.length}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsPreviewOpen(false)}
+            className="w-full h-full flex items-center justify-center cursor-zoom-out"
+            aria-label="إغلاق"
+          >
+            <img
+              src={currentSrc}
+              alt={currentImage.alt}
+              className="max-w-[90vw] max-h-[85vh] object-contain pointer-events-none"
+              loading="eager"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/placeholder-product.png';
+              }}
+            />
+          </button>
         </div>
       )}
     </div>

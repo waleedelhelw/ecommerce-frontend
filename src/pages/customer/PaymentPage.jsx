@@ -83,7 +83,7 @@ const PaymentPage = () => {
       await orderService.uploadReceipt(id, { receiptImageUrl: imageUrl });
 
       toast.success('تم رفع الإيصال بنجاح! ✅ جاري المراجعة...');
-      navigate(`/orders/${id}`);
+      navigate(`/orders/${id}`, { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'فشل رفع الإيصال');
     } finally {

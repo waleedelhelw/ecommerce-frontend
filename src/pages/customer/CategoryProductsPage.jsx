@@ -109,7 +109,7 @@ const CategoryProductsPage = () => {
           </p>
         </div>
 
-        <ProductGrid products={products} loading={loading} />
+        <ProductGrid products={products} loading={loading} variant="simple" />
 
         {totalPages > 1 && (
           <div className="mt-6 sm:mt-8">

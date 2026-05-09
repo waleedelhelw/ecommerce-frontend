@@ -201,13 +201,13 @@ const CheckoutPage = () => {
 
       if (useInstallment && selectedPlanId) {
         toast.success('تم إنشاء الطلب بالتقسيط! ادفع الدفعة الأولى لتأكيد الطلب 📋');
-        navigate(`/orders/${orderId}/installments`);
+        navigate(`/orders/${orderId}/installments`, { replace: true });
       } else if (formData.paymentMethod !== 'CashOnDelivery') {
         toast.success('تم إنشاء الطلب! يرجى إتمام الدفع 💳');
-        navigate(`/orders/${orderId}/payment`);
+        navigate(`/orders/${orderId}/payment`, { replace: true });
       } else {
         toast.success('تم إنشاء الطلب بنجاح! 🎉');
-        navigate(`/orders/${orderId}`);
+        navigate(`/orders/${orderId}`, { replace: true });
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'فشل إنشاء الطلب');

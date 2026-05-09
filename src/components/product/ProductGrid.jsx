@@ -2,18 +2,18 @@ import ProductCard from './ProductCard';
 import EmptyState from '../common/EmptyState';
 import { Link } from 'react-router-dom';
 
-const ProductGrid = ({ products, loading }) => {
+const ProductGrid = ({ products, loading, variant }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl border overflow-hidden animate-pulse">
-            <div className="h-40 sm:h-48 md:h-52 bg-gray-200" />
-            <div className="p-3 sm:p-4 space-y-3">
+          <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
+            <div className="aspect-[4/3] bg-gray-200" />
+            <div className="p-3 space-y-2">
+              <div className="h-3 bg-gray-200 rounded w-3/4" />
               <div className="h-3 bg-gray-200 rounded w-1/2" />
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-4 bg-gray-200 rounded w-2/3" />
-              <div className="h-5 bg-gray-200 rounded w-1/3" />
+              <div className="h-4 bg-gray-200 rounded w-1/3" />
+              <div className="h-9 bg-gray-200 rounded-xl w-full" />
             </div>
           </div>
         ))}
@@ -28,7 +28,7 @@ const ProductGrid = ({ products, loading }) => {
         title="لا توجد منتجات"
         message="لم يتم العثور على منتجات مطابقة"
         action={
-          <Link to="/products" className="btn-primary">
+          <Link to="/products" className="bg-black text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors">
             عرض كل المنتجات
           </Link>
         }
@@ -37,9 +37,9 @@ const ProductGrid = ({ products, loading }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} variant={variant} />
       ))}
     </div>
   );
