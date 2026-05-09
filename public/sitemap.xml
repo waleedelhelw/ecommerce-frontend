@@ -4,35 +4,7 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/favicon.svg",
-      "destination": "/favicon.svg"
-    },
-    {
-      "source": "/og-image.svg",
-      "destination": "/og-image.svg"
-    },
-    {
-      "source": "/logo.svg",
-      "destination": "/logo.svg"
-    },
-    {
-      "source": "/icons.svg",
-      "destination": "/icons.svg"
-    },
-    {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|sitemap.xml|robots.txt|manifest.json|favicon.svg|og-image.svg|logo.svg|icons.svg).*)",
       "destination": "/index.html"
     }
   ],
@@ -94,10 +66,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, must-revalidate"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex"
         }
       ]
     },
