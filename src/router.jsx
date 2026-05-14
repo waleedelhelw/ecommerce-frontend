@@ -2,6 +2,7 @@ import { createBrowserRouter, Outlet } from 'react-router-dom';
 
 // ✅ ScrollToTop
 import ScrollToTop from './components/common/ScrollToTop';
+import ForegroundMessageHandler from './components/fcm/ForegroundMessageHandler';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -103,6 +104,7 @@ import SellerReturnDetailsPage from './pages/seller/SellerReturnDetailsPage';
 const RootLayout = () => (
   <>
     <ScrollToTop />
+    <ForegroundMessageHandler />
     <Outlet />
   </>
 );
