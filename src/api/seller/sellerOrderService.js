@@ -50,6 +50,24 @@ export const markReturnedToSeller = async (orderId, data) => {
   return response.data.data;
 };
 
+// ✅ 🆕 جلب مدفوعات الطلب
+export const getOrderPayments = async (orderId) => {
+  const response = await API.get(`${BASE}/${orderId}/payments`);
+  return response.data.data;
+};
+
+// ✅ 🆕 تأكيد دفع Self Mode
+export const confirmSellerPayment = async (orderId, paymentId) => {
+  const response = await API.put(`${BASE}/${orderId}/payments/${paymentId}/confirm`);
+  return response.data.data;
+};
+
+// ✅ 🆕 رفض دفع Self Mode
+export const rejectSellerPayment = async (orderId, paymentId, reason) => {
+  const response = await API.put(`${BASE}/${orderId}/payments/${paymentId}/reject`, { reason });
+  return response.data.data;
+};
+
 const sellerOrderService = {
   getMyOrders,
   getOrders: getMyOrders,
@@ -60,6 +78,9 @@ const sellerOrderService = {
   shipOrder,
   markDeliveryFailed,
   markReturnedToSeller,
+  getOrderPayments,
+  confirmSellerPayment,
+  rejectSellerPayment,
 };
 
 export default sellerOrderService;

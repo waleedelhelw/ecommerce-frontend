@@ -109,11 +109,40 @@ export const SORT_OPTIONS = [
 export const PAYMENT_METHODS = [
   { value: 'CashOnDelivery', label: '💵 الدفع عند الاستلام', icon: '💵', hasFee: true },
   { value: 'VodafoneCash', label: '📱 فودافون كاش', icon: '📱', settingKey: 'PlatformWalletVodafone' },
-  //{ value: 'EtisalatCash', label: '📱 إتصالات كاش', icon: '📱', settingKey: 'PlatformWalletEtisalat' },
-  //{ value: 'OrangeCash', label: '📱 أورانج كاش', icon: '📱', settingKey: 'PlatformWalletOrange' },
-  //{ value: 'InstaPay', label: '🏦 إنستاباي', icon: '🏦', settingKey: 'PlatformInstaPay' },
-  //{ value: 'BankTransfer', label: '🏦 تحويل بنكي', icon: '🏦', settingKey: 'PlatformBankAccount' },
+  { value: 'EtisalatCash', label: '📱 إتصالات كاش', icon: '📱', settingKey: 'PlatformWalletEtisalat' },
+  { value: 'OrangeCash', label: '📱 أورانج كاش', icon: '📱', settingKey: 'PlatformWalletOrange' },
+  { value: 'InstaPay', label: '🏦 إنستاباي', icon: '🏦', settingKey: 'PlatformInstaPay' },
+  { value: 'BankTransfer', label: '🏦 تحويل بنكي', icon: '🏦', settingKey: 'PlatformBankAccount' },
 ];
+
+// ============ ✅ Payment Target - جديد ============
+export const PAYMENT_TARGET = {
+  PLATFORM: 'Platform',
+  SELLER: 'Seller',
+};
+
+export const PAYMENT_TARGET_LABELS = {
+  Platform: { label: 'محفظة المنصة', icon: '🏛️', shortLabel: 'المنصة' },
+  Seller: { label: 'حساب التاجر', icon: '🏪', shortLabel: 'التاجر' },
+};
+
+// ============ ✅ Payment Status Labels - جديد ============
+export const PAYMENT_STATUS_LABELS = {
+  Pending: { label: 'بانتظار الدفع', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+  WaitingConfirmation: { label: 'بانتظار التأكيد', color: 'bg-blue-100 text-blue-800', icon: '🧾' },
+  Confirmed: { label: 'تم التأكيد', color: 'bg-green-100 text-green-800', icon: '✅' },
+  Completed: { label: 'مكتمل', color: 'bg-emerald-100 text-emerald-800', icon: '🎉' },
+  Failed: { label: 'فاشل', color: 'bg-red-100 text-red-800', icon: '❌' },
+  Refunded: { label: 'مسترجع', color: 'bg-amber-100 text-amber-800', icon: '🔄' },
+};
+
+// ============ ✅ Payment Label Values - جديد ============
+export const PAYMENT_LABEL_VALUES = {
+  FULL: 'الدفعة كاملة',
+  FIRST: 'الدفعة الأولى',
+  REMAINING: 'الدفعة المتبقية',
+  COD: 'دفعة COD',
+};
 
 // ✅ لعرض اسم طريقة الدفع في صفحة التفاصيل
 export const PAYMENT_LABELS = {

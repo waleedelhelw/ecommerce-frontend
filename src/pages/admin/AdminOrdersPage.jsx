@@ -6,6 +6,7 @@ import Pagination from '../../components/common/Pagination';
 import OrderStatusBadge from '../../components/admin/OrderStatusBadge';
 import { getAllOrders } from '../../api/admin/adminOrderService';
 import { formatPrice } from '../../utils/formatPrice';
+import { PAYMENT_TARGET_LABELS } from '../../utils/constants';
 import { formatDate } from '../../utils/formatDate';
 import toast from 'react-hot-toast';
 
@@ -58,10 +59,30 @@ const AdminOrdersPage = () => {
     {
       header: 'المبلغ',
       render: (row) => (
-        <span className="font-bold text-blue-600">
-          {formatPrice(row.totalAmount || row.totalPrice)}
-        </span>
+        <div>
+          <span className="font-bold text-blue-600">
+            {formatPrice(row.totalAmount || row.totalPrice)}
+          </span>
+          {row.totalPaidAmount > 0 && (
+            <div className="text-xs text-green-600">
+              مدفوع: {formatPrice(row.totalPaidAmount)}
+            </div>
+          )}
+        </div>
       ),
+    },
+    {
+      header: 'جهة الدفع',
+      render: (row) => {
+        const target = row.paymentTarget;
+        if (!target) return <span className="text-gray-400">—</span>;
+        const info = PAYMENT_TARGET_LABELS[target];
+        return (
+          <span className="text-xs font-medium text-gray-600">
+            {info?.icon} {info?.shortLabel || target}
+          </span>
+        );
+      },
     },
     {
       header: 'الحالة',

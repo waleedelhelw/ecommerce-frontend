@@ -92,31 +92,37 @@ const ProductsPage = () => {
   };
 
   useEffect(() => {
-    const fetchFlexibleSearchResults = async (baseParams, seedProducts = []) => {
+    const abortController = new AbortController();
+
+    const fetchFlexibleSearchResults = async (baseParams, seedProducts = [], currentSearchTerm, currentSortBy, currentPageNumber) => {
       const fallbackParams = { ...baseParams, pageNumber: 1, pageSize: PAGINATION.MAX_PAGE_SIZE };
       delete fallbackParams.searchTerm;
 
       const firstPage = await productService.getProducts(fallbackParams);
+      if (abortController.signal.aborted) return;
       const firstItems = firstPage.items || firstPage.products || firstPage || [];
       const fallbackTotalPages = Math.min(firstPage.totalPages || 1, FALLBACK_SEARCH_PAGE_LIMIT);
       const allItems = [...seedProducts, ...firstItems];
 
       for (let pageNumber = 2; pageNumber <= fallbackTotalPages; pageNumber += 1) {
+        if (abortController.signal.aborted) return;
         const pageData = await productService.getProducts({ ...fallbackParams, pageNumber });
         allItems.push(...(pageData.items || pageData.products || pageData || []));
       }
+
+      if (abortController.signal.aborted) return;
 
       const uniqueProducts = Array.from(
         new Map(allItems.map((product) => [product.id || product.productId, product])).values()
       );
       const matchedProducts = sortProducts(
-        uniqueProducts.filter((product) => matchesFlexibleSearch(product, filters.searchTerm)),
-        filters.sortBy
+        uniqueProducts.filter((product) => matchesFlexibleSearch(product, currentSearchTerm)),
+        currentSortBy
       );
 
-      const startIndex = (filters.pageNumber - 1) * filters.pageSize;
-      setProducts(matchedProducts.slice(startIndex, startIndex + filters.pageSize));
-      setTotalPages(Math.max(1, Math.ceil(matchedProducts.length / filters.pageSize)));
+      const startIndex = (currentPageNumber - 1) * PAGINATION.DEFAULT_PAGE_SIZE;
+      setProducts(matchedProducts.slice(startIndex, startIndex + PAGINATION.DEFAULT_PAGE_SIZE));
+      setTotalPages(Math.max(1, Math.ceil(matchedProducts.length / PAGINATION.DEFAULT_PAGE_SIZE)));
       setTotalItems(matchedProducts.length);
     };
 
@@ -126,10 +132,14 @@ const ProductsPage = () => {
         setError(null);
         const params = buildParams(filters);
         const data = await productService.getProducts(params);
+        if (abortController.signal.aborted) return;
         const fetchedProducts = data.items || data.products || data || [];
 
         if (filters.searchTerm) {
-          await fetchFlexibleSearchResults(params, fetchedProducts);
+          await fetchFlexibleSearchResults(
+            params, fetchedProducts,
+            filters.searchTerm, filters.sortBy, filters.pageNumber
+          );
           return;
         }
 
@@ -137,13 +147,18 @@ const ProductsPage = () => {
         setTotalPages(data.totalPages || 1);
         setTotalItems(data.totalCount || data.totalItems || 0);
       } catch (err) {
+        if (abortController.signal.aborted) return;
         setError('فشل في تحميل المنتجات');
         console.error('Error fetching products:', err);
       } finally {
-        setLoading(false);
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
     fetchProducts();
+
+    return () => abortController.abort();
   }, [filters.categoryId, filters.searchTerm, filters.sellerId, filters.minPrice, filters.maxPrice, filters.minRating, filters.sortBy, filters.pageNumber, filters.pageSize]);
 
   useEffect(() => {
@@ -208,7 +223,7 @@ const ProductsPage = () => {
 
         {/* Search */}
         <div className="mb-3">
-          <SearchBar onSearch={handleSearch} placeholder="ابحث عن منتج..." />
+          <SearchBar onSearch={handleSearch} placeholder="ابحث عن منتج..." initialValue={filters.searchTerm} />
         </div>
 
         {/* Category Tabs */}

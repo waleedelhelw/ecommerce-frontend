@@ -8,9 +8,11 @@ export const getPendingPayments = async (params) => {
   return response.data.data;
 };
 
-// ✅ تأكيد الدفع — لازم نبعت body فاضي عالأقل
-export const confirmPayment = async (paymentId) => {
-  const response = await API.put(`${BASE}/${paymentId}/confirm`, {});
+// ✅ تأكيد الدفع — مع ملاحظة اختيارية
+export const confirmPayment = async (paymentId, note) => {
+  const body = {};
+  if (note) body.note = note;
+  const response = await API.put(`${BASE}/${paymentId}/confirm`, body);
   return response.data.data;
 };
 

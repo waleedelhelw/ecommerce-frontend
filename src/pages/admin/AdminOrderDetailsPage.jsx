@@ -11,7 +11,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { formatPrice } from '../../utils/formatPrice';
 import { formatDate } from '../../utils/formatDate';
-import { PAYMENT_LABELS } from '../../utils/constants';
+import { PAYMENT_LABELS, PAYMENT_TARGET_LABELS, PAYMENT_STATUS_LABELS } from '../../utils/constants';
 import { paymentStatusMap, getStatusInfo } from '../../utils/orderStatusMap';
 import toast from 'react-hot-toast';
 
@@ -21,9 +21,10 @@ const AdminOrderDetailsPage = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
   const [installments, setInstallments] = useState([]);
@@ -68,18 +69,24 @@ const AdminOrderDetailsPage = () => {
     }
   }, [order]);
 
-  const handleConfirmPayment = async () => {
-    if (!order?.payment?.id) return;
+  const handleConfirmPayment = async (paymentId) => {
+    if (!paymentId) return;
     try {
-      setActionLoading(true);
-      await adminPaymentService.confirmPayment(order.payment.id);
+      setActionLoading(paymentId);
+      await adminPaymentService.confirmPayment(paymentId);
       toast.success('تم تأكيد الدفع بنجاح ✅');
       fetchOrder();
     } catch (err) {
       toast.error(err.response?.data?.message || 'فشل تأكيد الدفع');
     } finally {
-      setActionLoading(false);
+      setActionLoading(null);
     }
+  };
+
+  const handleOpenRejectModal = (paymentId) => {
+    setSelectedPaymentId(paymentId);
+    setRejectReason('');
+    setShowRejectModal(true);
   };
 
   const handleRejectPayment = async () => {
@@ -88,16 +95,17 @@ const AdminOrderDetailsPage = () => {
       return;
     }
     try {
-      setActionLoading(true);
-      await adminPaymentService.rejectPayment(order.payment.id, rejectReason);
+      setActionLoading(selectedPaymentId);
+      await adminPaymentService.rejectPayment(selectedPaymentId, rejectReason);
       toast.success('تم رفض الإيصال ❌');
       setShowRejectModal(false);
+      setSelectedPaymentId(null);
       setRejectReason('');
       fetchOrder();
     } catch (err) {
       toast.error(err.response?.data?.message || 'فشل رفض الإيصال');
     } finally {
-      setActionLoading(false);
+      setActionLoading(null);
     }
   };
 
@@ -157,7 +165,9 @@ const AdminOrderDetailsPage = () => {
     : null;
 
   const grandTotal = (order.totalPrice || 0) + (order.shippingCost || 0) + (order.codFee || 0);
-  const needsPaymentReview = order.status === 'WaitingConfirmation' && order.payment?.receiptImageUrl;
+  const pendingReviewPayments = (order.payments || []).filter(
+    (p) => p.status === 'WaitingConfirmation' && p.receiptImageUrl && p.paymentTarget === 'Platform'
+  );
   const isInstallmentOrder = order.isInstallment || order.installmentPlanId || installments.length > 0;
 
   const getAvailableActions = () => {
@@ -250,54 +260,73 @@ const AdminOrderDetailsPage = () => {
                 📋 تقسيط
               </span>
             )}
+            {order.startedWithPartialPayment && (
+              <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
+                💳 بدأ بدفعة أولى
+              </span>
+            )}
           </div>
           <p className="text-gray-500 text-sm">{formatDate(order.createdAt || order.orderDate)}</p>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
 
-      {needsPaymentReview && (
-        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-5 mb-6">
-          <div className="flex items-start gap-4">
-            <span className="text-3xl">🧾</span>
-            <div className="flex-1">
-              <h3 className="font-bold text-orange-800 text-lg">إيصال دفع يحتاج مراجعة!</h3>
-              <p className="text-sm text-orange-700 mt-1">
-                العميل رفع إيصال دفع بقيمة{' '}
-                <strong>{formatPrice(order.payment.amount)}</strong> عبر{' '}
-                <strong>{PAYMENT_LABELS[order.payment.paymentMethod] || order.payment.paymentMethod}</strong>
-              </p>
+      {pendingReviewPayments.length > 0 && (
+        <div className="space-y-4 mb-6">
+          {pendingReviewPayments.map((payment) => (
+            <div key={payment.id} className="bg-orange-50 border-2 border-orange-300 rounded-xl p-5">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl">🧾</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-orange-800 text-lg">إيصال دفع يحتاج مراجعة!</h3>
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
+                      {payment.label || 'دفعة'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-orange-700 mt-1">
+                    العميل رفع إيصال دفع بقيمة{' '}
+                    <strong>{formatPrice(payment.amount)}</strong> عبر{' '}
+                    <strong>{payment.paymentMethodDisplay || PAYMENT_LABELS[payment.paymentMethod] || payment.paymentMethod}</strong>
+                  </p>
+                  {payment.targetDisplay && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      جهة الدفع: {payment.targetDisplay}
+                    </p>
+                  )}
 
-              <div
-                className="mt-3 cursor-pointer inline-block"
-                onClick={() => setPreviewImage(order.payment.receiptImageUrl)}
-              >
-                <img
-                  src={order.payment.receiptImageUrl}
-                  alt="إيصال الدفع"
-                  className="w-48 h-48 object-cover rounded-xl border-2 border-orange-200 hover:opacity-90 transition-opacity"
-                />
-                <p className="text-xs text-orange-600 mt-1">🔍 اضغط للتكبير</p>
-              </div>
+                  <div
+                    className="mt-3 cursor-pointer inline-block"
+                    onClick={() => setPreviewImage(payment.receiptImageUrl)}
+                  >
+                    <img
+                      src={payment.receiptImageUrl}
+                      alt="إيصال الدفع"
+                      className="w-48 h-48 object-cover rounded-xl border-2 border-orange-200 hover:opacity-90 transition-opacity"
+                    />
+                    <p className="text-xs text-orange-600 mt-1">🔍 اضغط للتكبير</p>
+                  </div>
 
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={handleConfirmPayment}
-                  disabled={actionLoading}
-                  className="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium transition-colors"
-                >
-                  {actionLoading ? 'جاري التأكيد...' : '✅ تأكيد الدفع'}
-                </button>
-                <button
-                  onClick={() => setShowRejectModal(true)}
-                  disabled={actionLoading}
-                  className="bg-red-600 text-white px-6 py-2.5 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition-colors"
-                >
-                  ❌ رفض الإيصال
-                </button>
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={() => handleConfirmPayment(payment.id)}
+                      disabled={actionLoading === payment.id}
+                      className="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium transition-colors"
+                    >
+                      {actionLoading === payment.id ? 'جاري التأكيد...' : '✅ تأكيد الدفع'}
+                    </button>
+                    <button
+                      onClick={() => handleOpenRejectModal(payment.id)}
+                      disabled={actionLoading === payment.id}
+                      className="bg-red-600 text-white px-6 py-2.5 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition-colors"
+                    >
+                      ❌ رفض الإيصال
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
 
@@ -597,6 +626,16 @@ const AdminOrderDetailsPage = () => {
                 </span>
               </div>
 
+              {order.paymentTarget && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">جهة الدفع</span>
+                  <span className="font-medium">
+                    {PAYMENT_TARGET_LABELS[order.paymentTarget]?.icon}{' '}
+                    {PAYMENT_TARGET_LABELS[order.paymentTarget]?.label || order.paymentTarget}
+                  </span>
+                </div>
+              )}
+
               {isInstallmentOrder && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">نوع الدفع</span>
@@ -604,44 +643,53 @@ const AdminOrderDetailsPage = () => {
                 </div>
               )}
 
-              {paymentStatus && (
+              {order.totalPaidAmount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">الحالة</span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${paymentStatus.color}`}>
-                    {paymentStatus.icon} {paymentStatus.label}
-                  </span>
+                  <span className="text-gray-500">المدفوع</span>
+                  <span className="font-medium text-green-600">{formatPrice(order.totalPaidAmount)}</span>
                 </div>
               )}
 
-              {order.payment?.reference && (
+              {order.remainingAmount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">المرجع</span>
-                  <span className="font-mono text-xs">{order.payment.reference}</span>
+                  <span className="text-gray-500">المتبقي</span>
+                  <span className="font-medium text-orange-600">{formatPrice(order.remainingAmount)}</span>
                 </div>
               )}
 
-              {order.payment?.confirmedAt && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">تاريخ التأكيد</span>
-                  <span className="font-medium">{formatDate(order.payment.confirmedAt)}</span>
-                </div>
-              )}
+              <hr />
 
-              {order.payment?.rejectionReason && (
-                <div className="mt-2 p-2 bg-red-50 rounded-lg">
-                  <p className="text-xs text-red-600">❌ سبب الرفض: {order.payment.rejectionReason}</p>
-                </div>
-              )}
-
-              {order.payment?.receiptImageUrl && (
-                <div className="mt-3">
-                  <p className="text-gray-500 mb-1">الإيصال:</p>
-                  <img
-                    src={order.payment.receiptImageUrl}
-                    alt="إيصال الدفع"
-                    className="w-full rounded-lg border cursor-pointer hover:opacity-90"
-                    onClick={() => setPreviewImage(order.payment.receiptImageUrl)}
-                  />
+              {/* 🆕 عرض المدفوعات */}
+              {(order.payments || []).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-500">المدفوعات:</p>
+                  {(order.payments || []).map((p) => {
+                    const ps = PAYMENT_STATUS_LABELS[p.status] || {};
+                    return (
+                      <div key={p.id} className="bg-gray-50 rounded-lg p-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium">{p.label || 'دفعة'}</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${ps.color || 'bg-gray-100'}`}>
+                            {ps.icon} {ps.label || p.status}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>{formatPrice(p.amount)}</span>
+                          {p.receiptImageUrl && (
+                            <button
+                              onClick={() => setPreviewImage(p.receiptImageUrl)}
+                              className="text-blue-600 hover:underline"
+                            >
+                              📄 الإيصال
+                            </button>
+                          )}
+                        </div>
+                        {p.rejectionReason && (
+                          <p className="text-xs text-red-500 mt-1">❌ {p.rejectionReason}</p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

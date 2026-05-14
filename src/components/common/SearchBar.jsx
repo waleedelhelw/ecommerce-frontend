@@ -1,12 +1,21 @@
-import { useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiSearch, FiX } from 'react-icons/fi';
 
-const SearchBar = ({ onSearch, placeholder = 'ابحث...' }) => {
-  const [term, setTerm] = useState('');
+const SearchBar = ({ onSearch, placeholder = 'ابحث...', initialValue = '' }) => {
+  const [term, setTerm] = useState(initialValue);
+
+  useEffect(() => {
+    setTerm(initialValue);
+  }, [initialValue]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSearch(term);
+  };
+
+  const handleClear = () => {
+    setTerm('');
+    onSearch('');
   };
 
   return (
@@ -20,6 +29,15 @@ const SearchBar = ({ onSearch, placeholder = 'ابحث...' }) => {
           placeholder={placeholder}
           className="input-field pr-10"
         />
+        {term && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <FiX size={16} />
+          </button>
+        )}
       </div>
       <button type="submit" className="btn-primary">
         بحث

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import OrderTimeline from '../../components/order/OrderTimeline';
 import OrderItems from '../../components/order/OrderItems';
+import PaymentsList from '../../components/order/PaymentsList';
 import InstallmentTimeline from '../../components/order/InstallmentTimeline';
 import PayInstallmentModal from '../../components/order/PayInstallmentModal';
 import LoadingScreen from '../../components/common/LoadingScreen';
@@ -12,10 +13,11 @@ import ReturnStatusBadge from '../../components/return/ReturnStatusBadge';
 import orderService from '../../api/orderService';
 import returnService from '../../api/returnService';
 import installmentService from '../../api/installmentService';
+import settingsService from '../../api/settingsService';
 import { formatDate } from '../../utils/formatDate';
 import { formatPrice } from '../../utils/formatPrice';
 import { orderStatusMap } from '../../utils/orderStatusMap';
-import { PAYMENT_LABELS } from '../../utils/constants';
+import { PAYMENT_LABELS, PAYMENT_TARGET_LABELS } from '../../utils/constants';
 import { checkOrderReturnable } from '../../utils/returnStatusMap';
 import { FiRefreshCw, FiEye, FiTruck, FiPhone, FiCopy } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -38,13 +40,18 @@ const OrderDetailsPage = () => {
 
   const [activeReturn, setActiveReturn] = useState(null);
   const [checkingReturn, setCheckingReturn] = useState(true);
+  const [paymentInfo, setPaymentInfo] = useState(null);
 
   const fetchOrder = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await orderService.getOrder(id);
-      setOrder(data);
+      const [orderData, settingsData] = await Promise.all([
+        orderService.getOrder(id),
+        settingsService.getPaymentInfo().catch(() => null),
+      ]);
+      setOrder(orderData);
+      setPaymentInfo(settingsData);
     } catch (err) {
       setError('فشل في تحميل تفاصيل الطلب');
     } finally {
@@ -133,6 +140,13 @@ const OrderDetailsPage = () => {
     fetchOrder();
   };
 
+  // 🆕 رفع إيصال دفع (من PaymentsList)
+  const handleUploadReceipt = async (paymentId, data) => {
+    await orderService.uploadPaymentReceipt(id, paymentId, data);
+    toast.success('تم رفع الإيصال بنجاح! ✅ جاري المراجعة...');
+    fetchOrder();
+  };
+
   const handleCopyTracking = async () => {
     if (!order?.trackingNumber) return;
     try {
@@ -153,13 +167,17 @@ const OrderDetailsPage = () => {
   if (!order) return <ErrorMessage message="الطلب غير موجود" />;
 
   const status = orderStatusMap[order.status] || orderStatusMap.Pending;
-  const canCancel = ['Pending', 'Processing'].includes(order.status);
+  const payments = order.payments || [];
+  const pendingPayments = payments.filter((p) => p.status === 'Pending');
+  const failedPayments = payments.filter((p) => p.status === 'Failed');
+
+  const canCancel = ['PendingPayment', 'WaitingConfirmation', 'PaymentConfirmed', 'PaymentFailed', 'Processing'].includes(order.status);
   const canConfirmDelivery = order.status === 'Shipped';
   const isDelivered = order.status === 'Delivered';
   const isCompleted = order.status === 'Completed';
   const isDeliveryFailed = order.status === 'DeliveryFailed';
   const isReturnedToSeller = order.status === 'ReturnedToSeller';
-  const needsPayment = ['PendingPayment', 'PaymentFailed'].includes(order.status);
+  const needsPayment = pendingPayments.length > 0 || failedPayments.length > 0;
   const isInstallmentOrder = order.isInstallment || order.installmentPlanId || installments.length > 0;
   const returnableInfo = checkOrderReturnable(order);
   const canRequestReturn = returnableInfo.canReturn && !activeReturn;
@@ -193,22 +211,27 @@ const OrderDetailsPage = () => {
               📋 طلب بالتقسيط
             </span>
           )}
+          {order.startedWithPartialPayment && (
+            <span className="inline-block mt-1 text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
+              💳 بدأ بدفعة أولى
+            </span>
+          )}
         </div>
         <span className={`px-4 py-2 rounded-full text-sm font-medium ${status.color}`}>
           {status.icon} {status.label}
         </span>
       </div>
 
-      {needsPayment && !isInstallmentOrder && (
+      {needsPayment && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">💳</span>
             <div>
-              <p className="font-bold text-orange-800">الطلب في انتظار الدفع</p>
+              <p className="font-bold text-orange-800">في انتظار الدفع</p>
               <p className="text-sm text-orange-600">
-                {order.status === 'PaymentFailed'
+                {failedPayments.length > 0
                   ? 'الإيصال السابق اترفض — يمكنك رفع إيصال جديد'
-                  : 'يرجى إتمام الدفع ورفع إيصال التحويل'}
+                  : `متبقي ${pendingPayments.length} دفعة في انتظار الدفع`}
               </p>
             </div>
           </div>
@@ -221,21 +244,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {isInstallmentOrder && needsPayment && (
-        <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4 mb-6">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">📋</span>
-            <div>
-              <p className="font-bold text-blue-800">طلب بالتقسيط - ادفع الدفعة الأولى</p>
-              <p className="text-sm text-blue-600">
-                لازم تدفع الدفعة الأولى عشان الطلب يتأكد ويبدأ التجهيز. شوف جدول الدفعات تحت 👇
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {order.status === 'WaitingConfirmation' && (
+      {payments.some((p) => p.status === 'WaitingConfirmation') && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center gap-3">
           <span className="text-2xl">⏳</span>
           <div>
@@ -607,6 +616,38 @@ const OrderDetailsPage = () => {
               </span>
             </div>
 
+            {/* 🆕 المدفوع والمتبقي */}
+            {order.totalPaidAmount > 0 && (
+              <>
+                <hr className="border-dashed" />
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">✅ المدفوع</span>
+                  <span className="font-bold text-green-600">
+                    {formatPrice(order.totalPaidAmount)}
+                  </span>
+                </div>
+                {order.remainingAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-orange-500">⏳ المتبقي</span>
+                    <span className="font-bold text-orange-500">
+                      {formatPrice(order.remainingAmount)}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* 🆕 جهة الدفع */}
+            {order.paymentTarget && (
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>جهة الدفع</span>
+                <span>
+                  {PAYMENT_TARGET_LABELS[order.paymentTarget]?.icon}{' '}
+                  {PAYMENT_TARGET_LABELS[order.paymentTarget]?.label || order.paymentTarget}
+                </span>
+              </div>
+            )}
+
             {isInstallmentOrder && installments.length > 0 && (
               <>
                 <hr className="border-dashed" />
@@ -649,21 +690,21 @@ const OrderDetailsPage = () => {
             </div>
           )}
 
-          {order.payment?.receiptImageUrl && (
-            <div className="mt-4 pt-4 border-t border-dashed">
-              <h3 className="font-semibold text-sm text-gray-500 mb-2">🧾 إيصال الدفع</h3>
-              <a
-                href={order.payment.receiptImageUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline text-sm font-medium"
-              >
-                📄 عرض الإيصال ↗
-              </a>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* 🆕 المدفوعات */}
+      {payments.length > 0 && (
+        <div className="mb-6">
+          <h2 className="font-bold text-gray-800 mb-4">💳 المدفوعات</h2>
+          <PaymentsList
+            payments={payments}
+            paymentInfo={paymentInfo}
+            showUpload={true}
+            onUploadReceipt={handleUploadReceipt}
+          />
+        </div>
+      )}
 
       <div className="mb-6">
         <OrderItems items={order.items || order.orderItems || []} />

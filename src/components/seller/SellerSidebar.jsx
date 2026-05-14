@@ -10,19 +10,20 @@ import {
   FiRefreshCw,
   FiTrendingUp,
   FiTruck,
+  FiCreditCard,
 } from 'react-icons/fi';
 
-const SellerSidebar = ({ isOpen, onClose }) => {
+const SellerSidebar = ({ isOpen, onClose, counts = {} }) => {
   const location = useLocation();
 
   const menuItems = [
     { path: '/seller/dashboard', icon: <FiHome size={20} />, label: 'لوحة التحكم', exact: true },
     { path: '/seller/products', icon: <FiPackage size={20} />, label: 'منتجاتي' },
-    { path: '/seller/orders', icon: <FiShoppingBag size={20} />, label: 'طلباتي' },
+    { path: '/seller/orders', icon: <FiShoppingBag size={20} />, label: 'طلباتي', badge: counts.pendingOrders },
     { path: '/seller/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع' },
-    { path: '/seller/finance', icon: <FiTrendingUp size={20} />, label: 'المركز المالي' },
-    // ✅ جديد — مناطق الشحن
+    { path: '/seller/finance', icon: <FiTrendingUp size={20} />, label: 'المركز المالي', badge: counts.pendingPayments },
     { path: '/seller/shipping-zones', icon: <FiTruck size={20} />, label: 'مناطق الشحن' },
+    { path: '/seller/payment-methods', icon: <FiCreditCard size={20} />, label: 'طرق الدفع' },
     { path: '/seller/payouts', icon: <FiDollarSign size={20} />, label: 'سحب الأرباح' },
     { path: '/seller/profile', icon: <FiSettings size={20} />, label: 'إعدادات المتجر' },
   ];
@@ -78,7 +79,12 @@ const SellerSidebar = ({ isOpen, onClose }) => {
                 }`}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.badge > 0 && (
+                <span className="min-w-[20px] h-5 flex items-center justify-center bg-red-500 text-white text-[11px] font-bold rounded-full px-1.5">
+                  {item.badge}
+                </span>
+              )}
             </Link>
           ))}
         </nav>

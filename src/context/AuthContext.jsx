@@ -1,7 +1,50 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
 import { ROLES, SELLER_STATUS, ROUTES } from '../utils/constants';
+import { getFcmToken } from '../firebase/firebase';
+import { registerFcmToken } from '../api/notificationService';
 
 export const AuthContext = createContext(null);
+
+async function setupFcmToken() {
+  try {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission !== 'granted') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+    }
+
+    const token = await getFcmToken();
+    if (token) {
+      await registerFcmToken(token);
+    }
+  } catch (err) {
+    console.error('FCM token registration failed:', err);
+  }
+}
+
+async function removeFcmToken() {
+  try {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+
+    const authToken = localStorage.getItem('token');
+    if (!authToken) return;
+
+    const fcmToken = await getFcmToken();
+    if (!fcmToken) return;
+
+    await fetch('/api/notifications/unregister-token', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ token: fcmToken }),
+    });
+  } catch {
+    // silent
+  }
+}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -22,6 +65,7 @@ export const AuthProvider = ({ children }) => {
           const parsedUser = JSON.parse(savedUser);
           setUser(parsedUser);
           setIsAuthenticated(true);
+          setTimeout(() => setupFcmToken(), 2000);
         } else {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
@@ -57,10 +101,13 @@ export const AuthProvider = ({ children }) => {
 
     setUser(userData);
     setIsAuthenticated(true);
+
+    setupFcmToken();
   }, []);
 
   // ============ تسجيل الخروج ============
   const logout = useCallback(() => {
+    removeFcmToken();
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');

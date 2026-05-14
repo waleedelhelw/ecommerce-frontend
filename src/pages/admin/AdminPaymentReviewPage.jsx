@@ -6,7 +6,7 @@ import ErrorMessage from '../../components/common/ErrorMessage';
 import Pagination from '../../components/common/Pagination';
 import { formatPrice } from '../../utils/formatPrice';
 import { formatDate } from '../../utils/formatDate';
-import { PAYMENT_LABELS, PAGINATION } from '../../utils/constants';
+import { PAYMENT_LABELS, PAGINATION, PAYMENT_TARGET_LABELS, PAYMENT_STATUS_LABELS } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 const AdminPaymentReviewPage = () => {
@@ -98,7 +98,7 @@ const AdminPaymentReviewPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {payments.map((payment) => (
-            <div key={payment.paymentId} className="bg-white rounded-xl border overflow-hidden">
+            <div key={payment.id} className="bg-white rounded-xl border overflow-hidden">
               {/* صورة الإيصال */}
               {payment.receiptImageUrl && (
                 <div
@@ -134,25 +134,41 @@ const AdminPaymentReviewPage = () => {
 
                 <div className="space-y-2 text-sm text-gray-600 mb-4">
                   <p>👤 {payment.customerName || 'عميل'}</p>
-                  <p>💳 {PAYMENT_LABELS[payment.paymentMethod] || payment.paymentMethod}</p>
+                  <p>💳 {payment.paymentMethodDisplay || PAYMENT_LABELS[payment.paymentMethod] || payment.paymentMethod}</p>
+                  {payment.paymentTarget && (
+                    <p>
+                      🎯 {PAYMENT_TARGET_LABELS[payment.paymentTarget]?.icon}{' '}
+                      {payment.targetDisplay || PAYMENT_TARGET_LABELS[payment.paymentTarget]?.label || payment.paymentTarget}
+                    </p>
+                  )}
+                  {payment.label && (
+                    <p className="text-xs font-medium text-gray-500">🏷️ {payment.label}</p>
+                  )}
                   <p>📅 {formatDate(payment.createdAt)}</p>
-                  {payment.reference && (
-                    <p className="text-xs text-gray-400">Ref: {payment.reference}</p>
+                  {payment.transactionReference && (
+                    <p className="text-xs text-gray-400">Ref: {payment.transactionReference}</p>
+                  )}
+                  {payment.sellerPaymentMethod && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded-lg text-xs">
+                      <p className="font-semibold text-blue-700">🏪 حساب التاجر:</p>
+                      <p className="text-blue-600">{payment.sellerPaymentMethod.accountIdentifier}</p>
+                      <p className="text-blue-500">باسم: {payment.sellerPaymentMethod.accountHolderName}</p>
+                    </div>
                   )}
                 </div>
 
                 {/* ✅ أزرار الإجراء — paymentId بدل id */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleConfirm(payment.paymentId)}
-                    disabled={actionLoading === payment.paymentId}
+                    onClick={() => handleConfirm(payment.id)}
+                    disabled={actionLoading === payment.id}
                     className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium transition-colors"
                   >
-                    {actionLoading === payment.paymentId ? '...' : '✅ تأكيد'}
+                    {actionLoading === payment.id ? '...' : '✅ تأكيد'}
                   </button>
                   <button
-                    onClick={() => setRejectModal({ open: true, paymentId: payment.paymentId })}
-                    disabled={actionLoading === payment.paymentId}
+                    onClick={() => setRejectModal({ open: true, paymentId: payment.id })}
+                    disabled={actionLoading === payment.id}
                     className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium transition-colors"
                   >
                     ❌ رفض

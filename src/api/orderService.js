@@ -22,9 +22,15 @@ export const cancelOrder = async (id) => {
   return response.data.data;
 };
 
-// ✅ رفع إيصال الدفع
-export const uploadReceipt = async (orderId, data) => {
-  const response = await API.post(`${BASE}/${orderId}/upload-receipt`, data);
+// ✅ 🆕 رفع إيصال الدفع - لكل paymentId
+export const uploadPaymentReceipt = async (orderId, paymentId, data) => {
+  const response = await API.post(`${BASE}/${orderId}/payments/${paymentId}/upload-receipt`, data);
+  return response.data.data;
+};
+
+// ✅ 🆕 جلب مدفوعات الطلب
+export const getOrderPayments = async (orderId) => {
+  const response = await API.get(`${BASE}/${orderId}/payments`);
   return response.data.data;
 };
 
@@ -40,6 +46,13 @@ export const getOrderTimeline = async (orderId) => {
   return response.data.data;
 };
 
+// ============ دوال قديمة - محفوظة للتوافق مع الكود القديم ============
+// ❌ مستخدم قديم - استبدل بـ uploadPaymentReceipt(orderId, paymentId, data)
+export const uploadReceipt = async (orderId, data) => {
+  const response = await API.post(`${BASE}/${orderId}/upload-receipt`, data);
+  return response.data.data;
+};
+
 const orderService = {
   createOrder,
   getOrders: getMyOrders,
@@ -48,6 +61,8 @@ const orderService = {
   getOrderById,
   cancelOrder,
   uploadReceipt,
+  uploadPaymentReceipt,
+  getOrderPayments,
   confirmDelivery,
   getOrderTimeline,
 };

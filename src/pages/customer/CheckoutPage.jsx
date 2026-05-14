@@ -9,6 +9,7 @@ import useCart from '../../hooks/useCart';
 import orderService from '../../api/orderService';
 import shippingService from '../../api/shippingService';
 import settingsService from '../../api/settingsService';
+import { getSellerPaymentMethods, getSellerById } from '../../api/customer/customerSellerService';
 import { formatPrice } from '../../utils/formatPrice';
 import { showValidationFeedback } from '../../utils/formValidation';
 import toast from 'react-hot-toast';
@@ -21,15 +22,26 @@ const CheckoutPage = () => {
   const [zonesLoading, setZonesLoading] = useState(true);
   const [errors, setErrors] = useState({});
 
-  // ✅ بيانات مناطق الشحن الجديدة
   const [zonesData, setZonesData] = useState(null);
   const [codFee, setCodFee] = useState(0);
 
-  // التقسيط
+  const [paymentType, setPaymentType] = useState('CashOnDelivery');
+  const [paymentTarget, setPaymentTarget] = useState('Platform');
+  const [sellerPaymentMethodId, setSellerPaymentMethodId] = useState(null);
+  const [sellerPaymentMethods, setSellerPaymentMethods] = useState([]);
+  const [loadingSellerMethods, setLoadingSellerMethods] = useState(false);
+  const [sellerMethodsError, setSellerMethodsError] = useState(null);
+  const [initialPaymentAmount, setInitialPaymentAmount] = useState('');
+  const [selectedPlatformMethod, setSelectedPlatformMethod] = useState('');
+
+  // ✅ جديد — حالة الدفع المباشر للبائع
+  const [sellerSelfPaymentDisabled, setSellerSelfPaymentDisabled] = useState(false);
+  // ✅ جديد — السماح بالدفع الجزئي
+  const [allowStartWithPartialPayment, setAllowStartWithPartialPayment] = useState(false);
+
   const [useInstallment, setUseInstallment] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
 
-  // ✅ formData الجديد — بدون shippingOptionId و shippingCity
   const [formData, setFormData] = useState({
     shippingAddress: '',
     governorate: '',
@@ -43,7 +55,6 @@ const CheckoutPage = () => {
   // ✅ جلب مناطق الشحن وإعدادات المنصة
   useEffect(() => {
     const fetchData = async () => {
-      // جلب مناطق الشحن
       try {
         setZonesLoading(true);
         const zonesResult = await shippingService.getCartAvailableZones();
@@ -55,11 +66,11 @@ const CheckoutPage = () => {
         setZonesLoading(false);
       }
 
-      // جلب رسوم COD
       try {
-        const settings = await settingsService.getPaymentInfo();
-        const codSetting = settings?.find?.((s) => s.key === 'CODExtraFee');
-        if (codSetting) setCodFee(parseFloat(codSetting.value) || 0);
+        const paymentInfo = await settingsService.getPaymentInfo();
+        if (paymentInfo && paymentInfo.codExtraFee !== undefined) {
+          setCodFee(Number(paymentInfo.codExtraFee));
+        }
       } catch {
         setCodFee(20);
       }
@@ -78,16 +89,62 @@ const CheckoutPage = () => {
   }, [formData.governorate, formData.city, zonesData]);
 
   const selectedShippingCost = selectedCityData?.totalShippingCost || 0;
-  const currentCodFee = formData.paymentMethod === 'CashOnDelivery' ? codFee : 0;
+  const currentCodFee = paymentType === 'CashOnDelivery' ? codFee : 0;
   const grandTotal = cartTotal + selectedShippingCost + currentCodFee;
 
-  // ✅ COD = مفيش تقسيط
-  //const isInstallmentAvailable = formData.paymentMethod !== 'CashOnDelivery';
   const isInstallmentAvailable = false;
-
-
-  // ✅ هل في بائعين مش بيشحنوا؟
   const hasUnshippableSellers = zonesData?.hasUnshippableSellers || false;
+
+  // ✅ جلب بيانات البائع وطرق الدفع لما يختار مدينة أو يغير نوع الدفع
+  useEffect(() => {
+    if (paymentType === 'Electronic' && selectedCityData) {
+      const fetchSellerData = async () => {
+        try {
+          setLoadingSellerMethods(true);
+          setSellerMethodsError(null);
+
+          const firstSellerId = selectedCityData?.sellerShippingDetails?.[0]?.sellerId;
+          if (!firstSellerId) return;
+
+          // ✅ جيب بيانات البائع عشان تعرف acceptDirectPayment و allowStartWithPartialPayment
+          const sellerData = await getSellerById(firstSellerId);
+          const acceptDirectPayment = sellerData?.acceptDirectPayment === true;
+          setSellerSelfPaymentDisabled(!acceptDirectPayment);
+          setAllowStartWithPartialPayment(sellerData?.allowStartWithPartialPayment === true);
+
+          // ✅ لو التاجر مش بيدعم الدفع المباشر وكان مختار Seller → حوله لـ Platform
+          if (!acceptDirectPayment) {
+            setPaymentTarget('Platform');
+            setSellerPaymentMethodId(null);
+            setSellerPaymentMethods([]);
+            if (paymentTarget === 'Seller') {
+              toast('هذا التاجر لا يقبل الدفع المباشر، تم التحويل للمنصة', { icon: 'ℹ️' });
+            }
+            return;
+          }
+
+          // ✅ لو الدفع المباشر متاح وكان مختار Seller → جيب طرق الدفع
+          if (paymentTarget === 'Seller') {
+            const methods = await getSellerPaymentMethods(firstSellerId);
+            setSellerPaymentMethods(methods || []);
+          }
+
+        } catch (err) {
+          setSellerMethodsError('فشل تحميل طرق دفع التاجر');
+          setSellerPaymentMethods([]);
+        } finally {
+          setLoadingSellerMethods(false);
+        }
+      };
+
+      fetchSellerData();
+    } else {
+      setSellerPaymentMethods([]);
+      setSellerPaymentMethodId(null);
+      setSellerSelfPaymentDisabled(false);
+      setAllowStartWithPartialPayment(false);
+    }
+  }, [paymentType, selectedCityData, paymentTarget]);
 
   // ── Handlers ──
 
@@ -108,12 +165,49 @@ const CheckoutPage = () => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  const handlePaymentChange = (method) => {
-    setFormData((prev) => ({ ...prev, paymentMethod: method }));
-    // ✅ COD → إلغاء التقسيط تلقائياً
-    if (method === 'CashOnDelivery') {
+  const handlePaymentTypeChange = (type) => {
+    setPaymentType(type);
+    if (type === 'CashOnDelivery') {
+      setFormData((prev) => ({ ...prev, paymentMethod: 'CashOnDelivery' }));
+      setPaymentTarget('Platform');
+      setSellerPaymentMethodId(null);
       setUseInstallment(false);
       setSelectedPlanId(null);
+      setSellerSelfPaymentDisabled(false);
+      setAllowStartWithPartialPayment(false);
+    } else {
+      // ✅ لو الدفع المباشر معطل → Platform مباشرة
+      // لو متاح → Platform as default (الـ useEffect هيتحقق)
+      setPaymentTarget('Platform');
+      setSellerPaymentMethodId(null);
+      setFormData((prev) => ({ ...prev, paymentMethod: selectedPlatformMethod }));
+    }
+  };
+
+  const handlePlatformMethodChange = (method) => {
+    setSelectedPlatformMethod(method);
+    setFormData((prev) => ({ ...prev, paymentMethod: method }));
+  };
+
+  const handlePaymentTargetChange = (target) => {
+    // ✅ منع اختيار Seller لو الدفع المباشر معطل
+    if (target === 'Seller' && sellerSelfPaymentDisabled) return;
+
+    setPaymentTarget(target);
+    setSellerPaymentMethodId(null);
+    if (target === 'Platform') {
+      setSellerPaymentMethods([]);
+      setFormData((prev) => ({ ...prev, paymentMethod: selectedPlatformMethod }));
+    } else {
+      setFormData((prev) => ({ ...prev, paymentMethod: '' }));
+    }
+  };
+
+  const handleSellerPaymentMethodChange = (id) => {
+    setSellerPaymentMethodId(id);
+    const method = sellerPaymentMethods.find((m) => m.id === id || Number(m.id) === Number(id));
+    if (method?.paymentMethod) {
+      setFormData((prev) => ({ ...prev, paymentMethod: method.paymentMethod }));
     }
   };
 
@@ -155,6 +249,26 @@ const CheckoutPage = () => {
     if (useInstallment && !selectedPlanId)
       newErrors.installmentPlan = 'اختر خطة التقسيط';
 
+    if (paymentType === 'Electronic' && paymentTarget === 'Seller' && !sellerPaymentMethodId) {
+      newErrors.sellerPaymentMethod = 'اختر طريقة دفع التاجر للتحويل';
+    }
+    if (paymentType === 'Electronic' && paymentTarget === 'Seller' && !formData.paymentMethod) {
+      newErrors.paymentMethod = 'لم يتم تحديد طريقة الدفع';
+    }
+
+    if (paymentType === 'Electronic' && paymentTarget === 'Platform' && !formData.paymentMethod) {
+      newErrors.paymentMethod = 'اختر طريقة الدفع';
+    }
+
+    if (initialPaymentAmount) {
+      const amount = parseFloat(initialPaymentAmount);
+      if (isNaN(amount) || amount <= 0) {
+        newErrors.initialPaymentAmount = 'المبلغ يجب أن يكون أكبر من 0';
+      } else if (amount > grandTotal) {
+        newErrors.initialPaymentAmount = 'المبلغ لا يمكن أن يكون أكبر من الإجمالي';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -182,7 +296,6 @@ const CheckoutPage = () => {
     try {
       setLoading(true);
 
-      // ✅ Payload الجديد — بدون shippingOptionId و shippingCity
       const orderPayload = {
         shippingAddress: formData.shippingAddress.trim(),
         governorate: formData.governorate,
@@ -192,6 +305,14 @@ const CheckoutPage = () => {
         paymentMethod: formData.paymentMethod,
         orderNotes: formData.orderNotes?.trim() || null,
         installmentPlanId: useInstallment ? selectedPlanId : null,
+        paymentTarget: paymentTarget,
+        sellerPaymentMethodId:
+          paymentTarget === 'Seller' && paymentType === 'Electronic'
+            ? sellerPaymentMethodId
+            : null,
+        initialPaymentAmount: initialPaymentAmount
+          ? parseFloat(initialPaymentAmount)
+          : null,
       };
 
       const data = await orderService.createOrder(orderPayload);
@@ -202,9 +323,9 @@ const CheckoutPage = () => {
       if (useInstallment && selectedPlanId) {
         toast.success('تم إنشاء الطلب بالتقسيط! ادفع الدفعة الأولى لتأكيد الطلب 📋');
         navigate(`/orders/${orderId}/installments`, { replace: true });
-      } else if (formData.paymentMethod !== 'CashOnDelivery') {
+      } else if (paymentType === 'Electronic') {
         toast.success('تم إنشاء الطلب! يرجى إتمام الدفع 💳');
-        navigate(`/orders/${orderId}/payment`, { replace: true });
+        navigate(`/orders/${orderId}`, { replace: true });
       } else {
         toast.success('تم إنشاء الطلب بنجاح! 🎉');
         navigate(`/orders/${orderId}`, { replace: true });
@@ -228,7 +349,6 @@ const CheckoutPage = () => {
 
       <h1 className="text-2xl font-bold mb-6">💳 إتمام الطلب</h1>
 
-      {/* ✅ تحذير البائعين اللي مش بيشحنوا */}
       {!zonesLoading && hasUnshippableSellers && (
         <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 mb-6">
           <div className="flex items-start gap-3">
@@ -248,8 +368,6 @@ const CheckoutPage = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* ── الفورم ── */}
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <ValidationSummary errors={errors} className="mb-2" />
@@ -259,8 +377,6 @@ const CheckoutPage = () => {
               <h2 className="text-lg font-bold mb-4">📍 عنوان الشحن</h2>
 
               <div className="space-y-4">
-
-                {/* العنوان التفصيلي */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     العنوان التفصيلي <span className="text-red-500">*</span>
@@ -279,7 +395,6 @@ const CheckoutPage = () => {
                   )}
                 </div>
 
-                {/* ✅ اختيار المحافظة والمدينة */}
                 {zonesLoading ? (
                   <div className="animate-pulse space-y-3">
                     <div className="h-10 bg-gray-100 rounded-xl" />
@@ -303,7 +418,6 @@ const CheckoutPage = () => {
                   </div>
                 )}
 
-                {/* الدولة */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     الدولة
@@ -317,7 +431,6 @@ const CheckoutPage = () => {
                   />
                 </div>
 
-                {/* رقم التواصل */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     رقم التواصل مع مندوب الشحن <span className="text-red-500">*</span>
@@ -351,13 +464,76 @@ const CheckoutPage = () => {
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-bold mb-4">💳 طريقة الدفع</h2>
               <PaymentMethodSelector
-                selected={formData.paymentMethod}
-                onChange={handlePaymentChange}
+                paymentType={paymentType}
+                onPaymentTypeChange={handlePaymentTypeChange}
+                selectedMethod={selectedPlatformMethod}
+                onMethodChange={handlePlatformMethodChange}
                 codFee={codFee}
+                paymentTarget={paymentTarget}
+                onTargetChange={handlePaymentTargetChange}
+                sellerPaymentMethods={sellerPaymentMethods}
+                selectedSellerMethodId={sellerPaymentMethodId}
+                onSellerMethodChange={handleSellerPaymentMethodChange}
+                loadingSellerMethods={loadingSellerMethods}
+                sellerMethodsError={sellerMethodsError}
+                // ✅ جديد
+                sellerSelfPaymentDisabled={sellerSelfPaymentDisabled}
               />
+
+              {errors.paymentMethod && (
+                <p className="mt-2 text-sm text-red-500">{errors.paymentMethod}</p>
+              )}
+              {errors.sellerPaymentMethod && (
+                <p className="mt-2 text-sm text-red-500">{errors.sellerPaymentMethod}</p>
+              )}
+
+              {paymentType === 'Electronic' && paymentTarget === 'Seller' && !useInstallment && allowStartWithPartialPayment && (
+                <div className="border-t pt-4 mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    مبلغ الدفعة الأولى (اختياري)
+                  </label>
+                  <p className="text-xs text-gray-400 mb-2">
+                    اتركه فارغاً للدفع كامل، أو أدخل مبلغ أقل للدفع على دفعتين
+                  </p>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={initialPaymentAmount}
+                      onChange={(e) => {
+                        setInitialPaymentAmount(e.target.value);
+                        if (errors.initialPaymentAmount) {
+                          setErrors((prev) => ({ ...prev, initialPaymentAmount: '' }));
+                        }
+                      }}
+                      placeholder={`مثال: ${Math.floor(grandTotal / 2)}`}
+                      min="1"
+                      max={grandTotal}
+                      className={`input-field w-full ${
+                        errors.initialPaymentAmount ? 'input-error' : ''
+                      }`}
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                      ج.م
+                    </span>
+                  </div>
+                  {errors.initialPaymentAmount && (
+                    <p className="mt-1 text-sm text-red-500">{errors.initialPaymentAmount}</p>
+                  )}
+                  {initialPaymentAmount &&
+                    parseFloat(initialPaymentAmount) > 0 &&
+                    parseFloat(initialPaymentAmount) < grandTotal && (
+                      <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                        <p className="text-xs text-blue-700">
+                          💡 سيتم تقسيم الدفعة على قسطين: أول دفعة{' '}
+                          {formatPrice(parseFloat(initialPaymentAmount))} + المتبقي{' '}
+                          {formatPrice(grandTotal - parseFloat(initialPaymentAmount))}
+                        </p>
+                      </div>
+                    )}
+                </div>
+              )}
             </div>
 
-            {/* ✅ التقسيط — يظهر فقط لو مش COD */}
             {isInstallmentAvailable && (
               <div className="bg-white rounded-xl border p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -404,7 +580,8 @@ const CheckoutPage = () => {
                 📝 ملاحظات (اختياري)
               </label>
               <p className="text-xs text-gray-500 mb-2 leading-5">
-                لو المنتج له لون أو مقاس أو أي تفاصيل اختيار، اكتب هنا اللون/المقاس المطلوب أو أي ملاحظة تساعد البائع يجهز طلبك صح.
+                لو المنتج له لون أو مقاس أو أي تفاصيل اختيار، اكتب هنا اللون/المقاس المطلوب أو
+                أي ملاحظة تساعد البائع يجهز طلبك صح.
               </p>
               <textarea
                 name="orderNotes"
@@ -416,7 +593,6 @@ const CheckoutPage = () => {
               />
             </div>
 
-            {/* زرار التأكيد */}
             <button
               type="submit"
               disabled={loading || cartItems.length === 0 || hasUnshippableSellers}
@@ -437,8 +613,6 @@ const CheckoutPage = () => {
             <h3 className="text-lg font-bold mb-4">ملخص الطلب</h3>
 
             <div className="space-y-3 mb-4">
-
-              {/* المنتجات */}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">
                   المنتجات ({cartItems.reduce((sum, item) => sum + item.quantity, 0)})
@@ -446,7 +620,6 @@ const CheckoutPage = () => {
                 <span>{formatPrice(cartTotal)}</span>
               </div>
 
-              {/* الشحن الكلي */}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">الشحن</span>
                 <span className={!formData.city ? 'text-gray-400' : 'text-gray-800'}>
@@ -454,7 +627,6 @@ const CheckoutPage = () => {
                 </span>
               </div>
 
-              {/* ✅ تفاصيل الشحن per seller */}
               {selectedCityData?.sellerShippingDetails?.map((seller) => (
                 <div
                   key={seller.sellerId}
@@ -465,7 +637,6 @@ const CheckoutPage = () => {
                 </div>
               ))}
 
-              {/* رسوم COD */}
               {currentCodFee > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">رسوم الدفع عند الاستلام</span>
@@ -481,7 +652,31 @@ const CheckoutPage = () => {
               <span className="text-blue-600">{formatPrice(grandTotal)}</span>
             </div>
 
-            {/* ملاحظة التقسيط */}
+            {paymentType === 'Electronic' && paymentTarget === 'Seller' && (
+              <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <p className="text-sm font-bold text-orange-800 mb-1">🏪 دفع مباشر للتاجر</p>
+                <p className="text-xs text-orange-700">
+                  المبلغ هتحوله لحساب التاجر مباشرة. المنصة مش هتتدخل في النزاعات المالية.
+                </p>
+              </div>
+            )}
+
+            {paymentType === 'Electronic' &&
+              paymentTarget === 'Seller' &&
+              !useInstallment &&
+              allowStartWithPartialPayment &&
+              initialPaymentAmount &&
+              parseFloat(initialPaymentAmount) > 0 &&
+              parseFloat(initialPaymentAmount) < grandTotal && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm font-bold text-blue-800 mb-1">💳 دفع على دفعتين</p>
+                  <p className="text-xs text-blue-700">
+                    هتدفع {formatPrice(parseFloat(initialPaymentAmount))} الأول والباقي{' '}
+                    {formatPrice(grandTotal - parseFloat(initialPaymentAmount))} بعدين.
+                  </p>
+                </div>
+              )}
+
             {useInstallment && selectedPlanId && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm font-bold text-blue-800 mb-1">📋 طلب بالتقسيط</p>
@@ -491,7 +686,7 @@ const CheckoutPage = () => {
               </div>
             )}
 
-            {formData.paymentMethod !== 'CashOnDelivery' && !useInstallment && (
+            {paymentType === 'Electronic' && !useInstallment && (paymentTarget === 'Platform' || !allowStartWithPartialPayment || !initialPaymentAmount) && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
                 💡 بعد تأكيد الطلب هتنتقل لصفحة الدفع لرفع إيصال التحويل
               </div>

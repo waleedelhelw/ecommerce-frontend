@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { FiStar, FiPackage, FiCalendar, FiPhone } from 'react-icons/fi';
 import SEO from '../../components/common/SEO';
+import SearchBar from '../../components/common/SearchBar';
 import {
   getSellerById,
   getSellerBySlug,
@@ -26,6 +27,7 @@ const SellerStorePage = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchSeller = useCallback(async () => {
     try {
@@ -42,6 +44,11 @@ const SellerStorePage = () => {
     }
   }, [sellerId, isSlugRoute]);
 
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
   const fetchProducts = useCallback(async () => {
     try {
       setProductsLoading(true);
@@ -49,6 +56,7 @@ const SellerStorePage = () => {
         pageNumber: currentPage,
         pageSize: 12,
       };
+      if (searchTerm) params.searchTerm = searchTerm;
       const data = isSlugRoute
         ? await getSellerProductsBySlug(sellerId, params)
         : await getSellerProducts(sellerId, params);
@@ -59,7 +67,7 @@ const SellerStorePage = () => {
     } finally {
       setProductsLoading(false);
     }
-  }, [sellerId, isSlugRoute, currentPage]);
+  }, [sellerId, isSlugRoute, currentPage, searchTerm]);
 
   useEffect(() => {
     fetchSeller();
@@ -264,9 +272,19 @@ const SellerStorePage = () => {
           />
 
           {/* منتجات المتجر */}
-          <h2 className="text-xl font-bold text-gray-800 mb-4 mt-6">
-            📦 منتجات المتجر
-          </h2>
+          <div className="flex items-center justify-between mt-6 mb-4">
+            <h2 className="text-xl font-bold text-gray-800">
+              📦 منتجات المتجر
+            </h2>
+          </div>
+
+          <div className="mb-4">
+            <SearchBar
+              onSearch={handleSearch}
+              placeholder="ابحث في منتجات المتجر..."
+              initialValue={searchTerm}
+            />
+          </div>
 
           <ProductGrid products={products} loading={productsLoading} variant="simple" />
 

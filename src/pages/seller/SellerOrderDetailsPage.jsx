@@ -4,6 +4,8 @@ import {
   FiArrowRight,
   FiPhone,
   FiCopy,
+  FiCheck,
+  FiX,
   FiPackage,
   FiTruck,
   FiUser,
@@ -20,6 +22,9 @@ import {
   shipOrder,
   markDeliveryFailed,
   markReturnedToSeller,
+  getOrderPayments,
+  confirmSellerPayment,
+  rejectSellerPayment,
 } from '../../api/seller/sellerOrderService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -27,7 +32,7 @@ import OrderTimeline from '../../components/order/OrderTimeline';
 import { formatPrice } from '../../utils/formatPrice';
 import { formatDate } from '../../utils/formatDate';
 import { orderStatusMap, getStatusInfo, paymentStatusMap } from '../../utils/orderStatusMap';
-import { PAYMENT_LABELS } from '../../utils/constants';
+import { PAYMENT_LABELS, PAYMENT_TARGET_LABELS, PAYMENT_STATUS_LABELS } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 const SellerOrderDetailsPage = () => {
@@ -53,6 +58,13 @@ const SellerOrderDetailsPage = () => {
   const [showReturnedForm, setShowReturnedForm] = useState(false);
   const [returnedReason, setReturnedReason] = useState('');
 
+  const [payments, setPayments] = useState([]);
+  const [paymentActionLoading, setPaymentActionLoading] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [previewImage, setPreviewImage] = useState(null);
+
   useEffect(() => {
     fetchOrder();
   }, [id]);
@@ -63,10 +75,20 @@ const SellerOrderDetailsPage = () => {
       setError(null);
       const data = await getOrderById(id);
       setOrder(data);
+      fetchPayments();
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل تفاصيل الطلب');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPayments = async () => {
+    try {
+      const data = await getOrderPayments(id);
+      setPayments(data || []);
+    } catch {
+      // silent
     }
   };
 
@@ -174,6 +196,39 @@ const SellerOrderDetailsPage = () => {
     }
   };
 
+  const handleConfirmPayment = async (paymentId) => {
+    try {
+      setPaymentActionLoading(true);
+      await confirmSellerPayment(id, paymentId);
+      toast.success('تم تأكيد الدفع ✅');
+      fetchOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل تأكيد الدفع');
+    } finally {
+      setPaymentActionLoading(false);
+    }
+  };
+
+  const handleRejectPayment = async () => {
+    if (!rejectReason.trim()) {
+      toast.error('يرجى كتابة سبب الرفض');
+      return;
+    }
+    try {
+      setPaymentActionLoading(true);
+      await rejectSellerPayment(id, selectedPaymentId, rejectReason.trim());
+      toast.success('تم رفض الدفع');
+      setShowRejectModal(false);
+      setRejectReason('');
+      setSelectedPaymentId(null);
+      fetchOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل رفض الدفع');
+    } finally {
+      setPaymentActionLoading(false);
+    }
+  };
+
   const getPaymentMethodLabel = (method) => {
     if (!method) return 'غير محدد';
     return PAYMENT_LABELS?.[method] || method;
@@ -243,6 +298,16 @@ const SellerOrderDetailsPage = () => {
           {status.icon} {status.label}
         </span>
       </div>
+
+      {order.startedWithPartialPayment && (
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 mb-6 flex items-center gap-2">
+          <span className="text-lg">💳</span>
+          <div>
+            <p className="font-semibold text-purple-800 text-sm">بدأ بدفعة أولى</p>
+            <p className="text-xs text-purple-600">هذا الطلب بدأ بدفعة أولى، والباقي سيُدفع لاحقاً</p>
+          </div>
+        </div>
+      )}
 
       {order.status === 'PaymentConfirmed' && (
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6 flex items-center justify-between gap-4 flex-wrap">
@@ -732,6 +797,21 @@ const SellerOrderDetailsPage = () => {
                 </div>
               </div>
 
+              {order.totalPaidAmount > 0 && (
+                <div className="border-t pt-2.5 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-green-600 font-medium">✅ المدفوع</span>
+                    <span className="font-bold text-green-600">{formatPrice(order.totalPaidAmount)}</span>
+                  </div>
+                  {order.remainingAmount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-orange-600 font-medium">⏳ المتبقي</span>
+                      <span className="font-bold text-orange-600">{formatPrice(order.remainingAmount)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="border-t pt-2.5 space-y-2">
                 <div className="flex justify-between text-gray-500">
                   <span>طريقة الدفع</span>
@@ -759,6 +839,94 @@ const SellerOrderDetailsPage = () => {
             </div>
           </div>
 
+          {payments.length > 0 && (
+            <div className="bg-white rounded-2xl border shadow-sm p-6">
+              <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <FiDollarSign size={18} className="text-purple-500" />
+                المدفوعات
+              </h2>
+              <div className="space-y-3">
+                {payments.map((payment) => {
+                  const targetInfo = PAYMENT_TARGET_LABELS[payment.paymentTarget];
+                  const statusInfo = PAYMENT_STATUS_LABELS[payment.status];
+                  const isSelfPending =
+                    payment.paymentTarget === 'Seller' && payment.status === 'WaitingConfirmation';
+                  return (
+                    <div
+                      key={payment.id}
+                      className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <span>{targetInfo?.icon || '💳'}</span>
+                          <span className="font-semibold text-gray-700">
+                            {targetInfo?.label || payment.paymentTarget}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs px-2.5 py-1 rounded-full font-semibold ${statusInfo?.color || 'bg-gray-100 text-gray-600'}`}
+                        >
+                          {statusInfo?.icon} {statusInfo?.label || payment.status}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>{payment.label || 'دفعة'}</span>
+                        <span className="font-bold text-gray-800">
+                          {formatPrice(payment.amount)}
+                        </span>
+                      </div>
+                      {payment.receiptImageUrl && (
+                        <div
+                          className="mt-2 cursor-pointer inline-block"
+                          onClick={() => setPreviewImage(payment.receiptImageUrl)}
+                        >
+                          <img
+                            src={payment.receiptImageUrl}
+                            alt="إيصال الدفع"
+                            className="w-32 h-32 object-cover rounded-xl border border-gray-200 hover:opacity-80 transition-opacity"
+                          />
+                          <p className="text-xs text-blue-600 mt-1">🔍 اضغط للتكبير</p>
+                        </div>
+                      )}
+                      {payment.paymentMethod && (
+                        <div className="text-xs text-gray-500">
+                          طريقة الدفع: {getPaymentMethodLabel(payment.paymentMethod)}
+                        </div>
+                      )}
+                      {payment.transactionReference && (
+                        <div className="text-xs text-gray-500">
+                          رقم المرجع: {payment.transactionReference}
+                        </div>
+                      )}
+                      {isSelfPending && (
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            onClick={() => handleConfirmPayment(payment.id)}
+                            disabled={paymentActionLoading}
+                            className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700 disabled:opacity-50 text-xs font-semibold transition-colors"
+                          >
+                            <FiCheck size={14} /> تأكيد الدفع
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedPaymentId(payment.id);
+                              setRejectReason('');
+                              setShowRejectModal(true);
+                            }}
+                            disabled={paymentActionLoading}
+                            className="flex-1 flex items-center justify-center gap-1.5 bg-red-500 text-white py-2 rounded-xl hover:bg-red-600 disabled:opacity-50 text-xs font-semibold transition-colors"
+                          >
+                            <FiX size={14} /> رفض
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl border shadow-sm p-6">
             <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
               <FiUser size={18} className="text-purple-500" />
@@ -785,35 +953,103 @@ const SellerOrderDetailsPage = () => {
           </div>
 
           {['Delivered', 'Completed'].includes(order.status) && (
-            <div
-              className={`rounded-2xl border p-5 ${
-                order.status === 'Completed'
-                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-                  : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
-              }`}
-            >
-              {order.status === 'Completed' ? (
+            order.paymentTarget === 'Seller' ? (
+              <div className="rounded-2xl border p-5 bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
                 <div className="text-center">
-                  <div className="text-4xl mb-2">💰</div>
-                  <p className="font-bold text-green-800">تم إضافة أرباحك!</p>
-                  <p className="text-2xl font-extrabold text-green-600 mt-1">
-                    {formatPrice(order.sellerAmount)}
+                  <div className="text-4xl mb-2">💸</div>
+                  <p className="font-bold text-purple-800">دفع مباشر للتاجر</p>
+                  <p className="text-sm text-purple-600 mt-1">
+                    هذا الطلب تم دفعه مباشرة لحسابك — المعاملة مسجلة في سجلك المالي
                   </p>
                 </div>
-              ) : (
-                <div>
-                  <p className="font-bold text-blue-800 flex items-center gap-1.5">
-                    <FiClock size={15} /> في فترة الانتظار
-                  </p>
-                  <p className="text-sm text-blue-600 mt-1.5">
-                    سيتم إضافة أرباحك <span className="font-bold">{formatPrice(order.sellerAmount)}</span> بعد 3 أيام من التسليم
-                  </p>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div
+                className={`rounded-2xl border p-5 ${
+                  order.status === 'Completed'
+                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+                    : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+                }`}
+              >
+                {order.status === 'Completed' ? (
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">💰</div>
+                    <p className="font-bold text-green-800">تم إضافة أرباحك!</p>
+                    <p className="text-2xl font-extrabold text-green-600 mt-1">
+                      {formatPrice(order.sellerAmount)}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-bold text-blue-800 flex items-center gap-1.5">
+                      <FiClock size={15} /> في فترة الانتظار
+                    </p>
+                    <p className="text-sm text-blue-600 mt-1.5">
+                      سيتم إضافة أرباحك <span className="font-bold">{formatPrice(order.sellerAmount)}</span> بعد 3 أيام من التسليم
+                    </p>
+                  </div>
+                )}
+              </div>
+            )
           )}
         </div>
       </div>
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh]">
+            <img
+              src={previewImage}
+              alt="إيصال الدفع"
+              className="max-w-full max-h-[90vh] rounded-xl object-contain"
+            />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-2 left-2 bg-white/80 text-black w-8 h-8 rounded-full flex items-center justify-center hover:bg-white"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">رفض الدفع</h3>
+            <p className="text-sm text-gray-500 mb-4">اكتب سبب رفض الدفع</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="سبب الرفض..."
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleRejectPayment}
+                disabled={paymentActionLoading}
+                className="flex-1 bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 disabled:opacity-50 font-semibold text-sm transition-colors"
+              >
+                {paymentActionLoading ? 'جاري...' : 'تأكيد الرفض'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason('');
+                  setSelectedPaymentId(null);
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 font-semibold text-sm transition-colors"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -40,6 +40,12 @@ export const updateCommissionRate = async (userId, commissionRate) => {
   return response.data;
 };
 
+// ============ تفعيل/تعطيل الدفع المباشر ============
+export const toggleSelfPayment = async (userId, disabled) => {
+  const response = await API.put(`${BASE}/${userId}/toggle-self-payment`, { disabled });
+  return response.data;
+};
+
 const adminSellerService = {
   getSellers: getAllSellers,
   getSellerById,
@@ -47,6 +53,7 @@ const adminSellerService = {
   rejectSeller,
   suspendSeller,
   updateCommissionRate,
+  toggleSelfPayment,
 };
 
 export default adminSellerService;

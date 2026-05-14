@@ -2,7 +2,7 @@ import API from './axiosInstance';
 
 // ✅ جلب معلومات الدفع (أرقام المحافظ) - للعميل
 export const getPaymentInfo = async () => {
-  const response = await API.get('/settings/payment-info');
+  const response = await API.get('/payment-info');
   return response.data.data;
 };
 

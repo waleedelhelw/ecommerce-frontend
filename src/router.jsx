@@ -54,6 +54,8 @@ import SellerRejectedPage from './pages/seller/SellerRejectedPage';
 import SellerFinancePage from './pages/seller/SellerFinancePage';
 // ✅ جديد — مناطق الشحن
 import SellerShippingZonesPage from './pages/seller/SellerShippingZonesPage';
+// ✅ جديد — طرق الدفع
+import SellerPaymentMethodsPage from './pages/seller/SellerPaymentMethodsPage';
 
 // Admin Pages
 import DashboardPage from './pages/admin/DashboardPage';
@@ -366,6 +368,14 @@ const router = createBrowserRouter([
             element: (
               <SellerRoute>
                 <SellerShippingZonesPage />
+              </SellerRoute>
+            ),
+          },
+          {
+            path: 'payment-methods',
+            element: (
+              <SellerRoute>
+                <SellerPaymentMethodsPage />
               </SellerRoute>
             ),
           },

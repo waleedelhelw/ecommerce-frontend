@@ -3,10 +3,12 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { FiMenu, FiLogOut, FiUser } from 'react-icons/fi';
 import SellerSidebar from '../components/seller/SellerSidebar';
 import useAuth from '../hooks/useAuth';
+import useSellerNotificationCounts from '../hooks/useSellerNotificationCounts';
 
 const SellerLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout, isSellerApproved } = useAuth();
+  const counts = useSellerNotificationCounts();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,7 +20,7 @@ const SellerLayout = () => {
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar - فقط للبائع المعتمد */}
       {isSellerApproved && (
-        <SellerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <SellerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} counts={counts} />
       )}
 
       {/* Main Content */}

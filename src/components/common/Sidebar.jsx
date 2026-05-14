@@ -17,7 +17,7 @@ import {
   FiRefreshCw, // 🆕
 } from 'react-icons/fi';
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, counts = {} }) => {
   const location = useLocation();
 
   const menuItems = [
@@ -26,8 +26,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/admin/products', icon: <FiPackage size={20} />, label: 'المنتجات' },
     { path: '/admin/categories', icon: <FiGrid size={20} />, label: 'التصنيفات' },
     { path: '/admin/orders', icon: <FiShoppingBag size={20} />, label: 'الطلبات' },
-    { path: '/admin/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع', badge: true }, // 🆕
-    { path: '/admin/payments', icon: <FiCreditCard size={20} />, label: 'مراجعة الإيصالات', badge: true },
+    { path: '/admin/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع' },
+    { path: '/admin/payments', icon: <FiCreditCard size={20} />, label: 'مراجعة الإيصالات', badge: counts.pendingPayments },
     { path: '/admin/users', icon: <FiUsers size={20} />, label: 'المستخدمين' },
     { path: '/admin/reviews', icon: <FiStar size={20} />, label: 'التقييمات' },
     { path: '/admin/payouts', icon: <FiDollarSign size={20} />, label: 'السحوبات' },
@@ -90,9 +90,13 @@ const Sidebar = ({ isOpen, onClose }) => {
             >
               {item.icon}
               <span className="flex-1">{item.label}</span>
-              {item.badge && (
+              {item.badge > 0 ? (
+                <span className="min-w-[20px] h-5 flex items-center justify-center bg-red-500 text-white text-[11px] font-bold rounded-full px-1.5">
+                  {item.badge}
+                </span>
+              ) : item.badge === true ? (
                 <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              )}
+              ) : null}
             </Link>
           ))}
         </nav>

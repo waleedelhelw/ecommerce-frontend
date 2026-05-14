@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { Toaster } from 'react-hot-toast';
+import ForegroundMessageHandler from './components/fcm/ForegroundMessageHandler';
 import router from './router';
 import './index.css';
 
@@ -18,6 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <CartProvider>
             <WishlistProvider>
               <RouterProvider router={router} />
+              <ForegroundMessageHandler />
               <Toaster position="top-center" />
             </WishlistProvider>
           </CartProvider>

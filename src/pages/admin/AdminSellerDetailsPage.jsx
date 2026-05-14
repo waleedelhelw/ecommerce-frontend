@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowRight, FiCheck, FiX, FiSlash } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiX, FiSlash, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import {
   getSellerById,
   approveSeller,
   rejectSeller,
   suspendSeller,
   updateCommissionRate,
+  toggleSelfPayment,
 } from '../../api/admin/adminSellerService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -32,9 +33,10 @@ const AdminSellerDetailsPage = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // ✅ إصلاح - نستخدم string عشان يدعم "0" صح
   const [newCommission, setNewCommission] = useState('');
   const [commissionLoading, setCommissionLoading] = useState(false);
+
+  const [selfPaymentLoading, setSelfPaymentLoading] = useState(false);
 
   useEffect(() => {
     fetchSeller();
@@ -44,12 +46,8 @@ const AdminSellerDetailsPage = () => {
     try {
       setLoading(true);
       setError(null);
-
       const data = await getSellerById(id);
       setSeller(data);
-
-      // ✅ إصلاح المشكلة الرئيسية
-      // ?? بدل || عشان 0 تعتبر قيمة صحيحة مش falsy
       setNewCommission(String(data.commissionRate ?? 10));
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل بيانات البائع');
@@ -85,8 +83,6 @@ const AdminSellerDetailsPage = () => {
   };
 
   const handleUpdateCommission = async () => {
-    // ✅ إصلاح الـ validation
-    // newCommission هنا string، فنحوّله لـ number أول
     const value = parseFloat(newCommission);
 
     if (newCommission === '' || isNaN(value)) {
@@ -111,6 +107,22 @@ const AdminSellerDetailsPage = () => {
     }
   };
 
+  const handleToggleSelfPayment = async () => {
+    try {
+      setSelfPaymentLoading(true);
+      // ✅ الإصلاح: استخدام === true عشان نتأكد من القيمة الفعلية
+      const currentDisabled = seller.selfPaymentDisabled === true;
+      const newDisabled = !currentDisabled;
+      await toggleSelfPayment(id, newDisabled);
+      toast.success(newDisabled ? 'تم تعطيل الدفع المباشر 🚫' : 'تم تفعيل الدفع المباشر ✅');
+      fetchSeller();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل تحديث حالة الدفع المباشر');
+    } finally {
+      setSelfPaymentLoading(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} onRetry={fetchSeller} />;
   if (!seller) return null;
@@ -123,8 +135,10 @@ const AdminSellerDetailsPage = () => {
     seller.walletNumber ||
     seller.instaPayAccount;
 
-  // ✅ إصلاح العرض - ?? بدل ||
   const displayCommission = seller.commissionRate ?? 10;
+
+  // ✅ الإصلاح الرئيسي: === true بدل ?? false
+  const selfPaymentDisabled = seller.selfPaymentDisabled === true;
 
   return (
     <div>
@@ -358,16 +372,13 @@ const AdminSellerDetailsPage = () => {
             </div>
           </div>
 
-          {/* ✅ تعديل العمولة - متعدل */}
+          {/* نسبة العمولة */}
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-1">نسبة العمولة</h2>
 
-            {/* ✅ إصلاح العرض - ?? بدل || */}
             <p className="text-sm text-gray-500 mb-3">
               النسبة الحالية:{' '}
-              <span className="font-bold text-gray-800">
-                {displayCommission}%
-              </span>
+              <span className="font-bold text-gray-800">{displayCommission}%</span>
             </p>
 
             <div className="flex gap-2">
@@ -391,10 +402,77 @@ const AdminSellerDetailsPage = () => {
               </button>
             </div>
 
-            {/* ✅ جديد - تلميح */}
             <p className="text-xs text-gray-400 mt-2">
               يمكن إدخال 0 لإلغاء العمولة على هذا البائع
             </p>
+          </div>
+
+          {/* الدفع المباشر */}
+          <div className="bg-white rounded-xl border p-6">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="text-lg font-semibold text-gray-800">الدفع المباشر</h2>
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                  selfPaymentDisabled ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                }`}
+              >
+                {selfPaymentDisabled ? '🚫 معطل' : '✅ مفعل'}
+              </span>
+            </div>
+
+            <div className="space-y-2 text-sm mb-4">
+              <div className="flex justify-between text-gray-500">
+                <span>وضع الدفع (اختيار التاجر)</span>
+                <span className={`font-medium ${seller.processingMode === 'Self' ? 'text-green-600' : 'text-gray-600'}`}>
+                  {seller.processingMode === 'Self' ? 'Self' : 'Platform'}
+                </span>
+              </div>
+              <div className="flex justify-between text-gray-500">
+                <span>تعطيل الإدارة</span>
+                <span className={`font-medium ${selfPaymentDisabled ? 'text-red-600' : 'text-green-600'}`}>
+                  {selfPaymentDisabled ? 'نعم' : 'لا'}
+                </span>
+              </div>
+              <div className="flex justify-between text-gray-500 border-t pt-2">
+                <span className="font-semibold text-gray-700">القرار الفعلي</span>
+                <span className={`font-bold ${seller.acceptDirectPayment ? 'text-green-600' : 'text-red-600'}`}>
+                  {seller.acceptDirectPayment ? '✅ يقبل الدفع المباشر' : '❌ لا يقبل'}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">
+              {selfPaymentDisabled
+                ? 'العميل لا يمكنه الدفع مباشرة لحساب هذا التاجر'
+                : 'العميل يمكنه اختيار الدفع المباشر لحساب التاجر'}
+            </p>
+
+            {/* ✅ تحذير لو التاجر لسه Platform */}
+            {seller.processingMode !== 'Self' && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                <p className="text-xs text-yellow-700">
+                  ⚠️ التاجر لم يفعل الدفع المباشر من إعداداته بعد. لازم يدخل صفحة إعدادات المتجر ويفعّله عشان يقدر يستقبل مدفوعات مباشرة.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={handleToggleSelfPayment}
+              disabled={selfPaymentLoading}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg disabled:opacity-50 font-medium transition-colors ${
+                selfPaymentDisabled
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-orange-500 text-white hover:bg-orange-600'
+              }`}
+            >
+              {selfPaymentLoading ? (
+                'جاري...'
+              ) : selfPaymentDisabled ? (
+                <><FiToggleRight size={18} /> تفعيل الدفع المباشر</>
+              ) : (
+                <><FiToggleLeft size={18} /> تعطيل الدفع المباشر</>
+              )}
+            </button>
           </div>
 
           {/* التقييم */}

@@ -21,10 +21,24 @@ export const updatePayoutInfo = async (data) => {
   return response.data.data;
 };
 
+// ✅ 🆕 تحديث وضع الدفع (Self / Platform)
+export const updatePaymentMode = async (mode) => {
+  const response = await API.put(`${BASE}/payment-mode`, { mode });
+  return response.data.data;
+};
+
+// ✅ 🆕 تفعيل/تعطيل الدفع الجزئي
+export const updatePartialPaymentSettings = async (allowStartWithPartialPayment) => {
+  const response = await API.put(`${BASE}/partial-payment-settings`, { allowStartWithPartialPayment });
+  return response.data.data;
+};
+
 const sellerProfileService = {
   getSellerProfile,
   updateSellerProfile,
   updatePayoutInfo,
+  updatePaymentMode,
+  updatePartialPaymentSettings,
 };
 
 export default sellerProfileService;

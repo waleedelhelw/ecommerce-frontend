@@ -29,3 +29,9 @@ export const getSellerProductsBySlug = async (slug, params) => {
   const response = await API.get(`${BASE}/by-slug/${slug}/products`, { params });
   return response.data.data;
 };
+
+// ✅ 🆕 طرق دفع البائع العامة (لـ Self Mode)
+export const getSellerPaymentMethods = async (sellerId) => {
+  const response = await API.get(`${BASE}/${sellerId}/payment-methods`);
+  return response.data.data;
+};

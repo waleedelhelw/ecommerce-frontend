@@ -3,10 +3,12 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { FiMenu, FiLogOut, FiUser } from 'react-icons/fi';
 import Sidebar from '../components/common/Sidebar';
 import useAuth from '../hooks/useAuth';
+import useAdminNotificationCounts from '../hooks/useAdminNotificationCounts';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
+  const counts = useAdminNotificationCounts();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -17,7 +19,7 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} counts={counts} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen w-full lg:w-auto">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FiSave, FiUpload, FiX } from 'react-icons/fi';
-import { getSellerProfile, updateSellerProfile, updatePayoutInfo } from '../../api/seller/sellerProfileService';
+import { FiSave, FiUpload, FiX, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import { getSellerProfile, updateSellerProfile, updatePayoutInfo, updatePaymentMode, updatePartialPaymentSettings } from '../../api/seller/sellerProfileService';
 import { uploadImage } from '../../utils/cloudinary';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -13,6 +13,8 @@ const SellerProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPayout, setSavingPayout] = useState(false);
+  const [paymentModeLoading, setPaymentModeLoading] = useState(false);
+  const [partialPaymentLoading, setPartialPaymentLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [logoUploading, setLogoUploading] = useState(false);
@@ -145,6 +147,21 @@ const SellerProfilePage = () => {
       toast.error(err.response?.data?.message || 'فشل تحديث بيانات السحب');
     } finally {
       setSavingPayout(false);
+    }
+  };
+
+  // ✅ تبديل وضع الدفع (Self / Platform)
+  const handlePaymentModeToggle = async () => {
+    const newMode = profile?.processingMode === 'Self' ? 'Platform' : 'Self';
+    try {
+      setPaymentModeLoading(true);
+      await updatePaymentMode(newMode);
+      toast.success(newMode === 'Self' ? 'تم تفعيل الدفع المباشر ✅' : 'تم تعطيل الدفع المباشر');
+      fetchProfile();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل تغيير وضع الدفع');
+    } finally {
+      setPaymentModeLoading(false);
     }
   };
 
@@ -323,147 +340,224 @@ const SellerProfilePage = () => {
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <button type="submit" disabled={saving || logoUploading || bannerUploading} className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium">
-              <FiSave size={18} />
-              {saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+          {/* ✅ وضع الدفع (Self / Platform) */}
+          <div className="bg-white rounded-xl border p-6">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="text-lg font-semibold text-gray-800">الدفع المباشر</h2>
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                  profile?.processingMode === 'Self' && !profile?.selfPaymentDisabled
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {profile?.processingMode === 'Self' && !profile?.selfPaymentDisabled
+                  ? '🟢 مفعل'
+                  : profile?.selfPaymentDisabled
+                  ? '🔴 معطل من الإدارة'
+                  : '⚪ غير مفعل'}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              {profile?.processingMode === 'Self'
+                ? 'العملاء يمكنهم الدفع مباشرة لحسابك البنكي/المحفظة'
+                : 'جميع المدفوعات تكون عبر المنصة'}
+            </p>
+            {profile?.selfPaymentDisabled && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-4">
+                <p className="text-xs text-orange-700">
+                  ⚠️ الإدارة عطلت الدفع المباشر مؤقتاً. هتقدر تشغله تاني من نفس الزرار.
+                </p>
+              </div>
+            )}
+            <button
+              onClick={handlePaymentModeToggle}
+              disabled={paymentModeLoading}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg disabled:opacity-50 font-medium transition-colors ${
+                profile?.processingMode === 'Self'
+                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {paymentModeLoading ? (
+                'جاري...'
+              ) : profile?.processingMode === 'Self' ? (
+                <><FiToggleLeft size={18} /> تعطيل الدفع المباشر</>
+              ) : (
+                <><FiToggleRight size={18} /> تفعيل الدفع المباشر</>
+              )}
             </button>
-          </div>
-        </form>
-      )}
-
-      {/* ✅ Tab: بيانات السحب */}
-      {activeTab === 'payout' && (
-        <form onSubmit={handlePayoutSubmit} className="space-y-6">
-          {/* طريقة السحب المفضلة */}
-          <div className="bg-white rounded-xl border p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">💰 طريقة السحب المفضلة</h2>
-            <p className="text-sm text-gray-500 mb-4">اختر الطريقة اللي تحب تستلم بيها أرباحك</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {PAYOUT_METHODS.map((method) => (
-                <label
-                  key={method.value}
-                  className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                    payoutForm.preferredPayoutMethod === method.value
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="preferredPayoutMethod"
-                    value={method.value}
-                    checked={payoutForm.preferredPayoutMethod === method.value}
-                    onChange={handlePayoutChange}
-                    className="w-4 h-4 text-green-600"
-                  />
-                  <span className="font-medium text-sm">{method.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* بيانات المحفظة الإلكترونية */}
-          <div className="bg-white rounded-xl border p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">📱 بيانات المحفظة الإلكترونية</h2>
-            <p className="text-sm text-gray-500 mb-4">لو بتفضل تستلم على محفظة إلكترونية</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">مزود المحفظة</label>
-                <select
-                  name="walletProvider"
-                  value={payoutForm.walletProvider}
-                  onChange={handlePayoutChange}
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="">اختر...</option>
-                  <option value="VodafoneCash">فودافون كاش</option>
-                  <option value="EtisalatCash">إتصالات كاش</option>
-                  <option value="OrangeCash">أورانج كاش</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">رقم المحفظة</label>
-                <input
-                  type="tel"
-                  name="walletNumber"
-                  value={payoutForm.walletNumber}
-                  onChange={handlePayoutChange}
-                  placeholder="01XXXXXXXXX"
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* بيانات إنستاباي */}
-          <div className="bg-white rounded-xl border p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">🏦 إنستاباي</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">حساب إنستاباي</label>
-              <input
-                type="text"
-                name="instaPayAccount"
-                value={payoutForm.instaPayAccount}
-                onChange={handlePayoutChange}
-                placeholder="username@instapay"
-                className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-          </div>
-
-          {/* بيانات الحساب البنكي */}
-          <div className="bg-white rounded-xl border p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">🏦 الحساب البنكي</h2>
-            <p className="text-sm text-gray-500 mb-4">لو بتفضل تستلم بتحويل بنكي</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك</label>
-                <input
-                  type="text"
-                  name="bankName"
-                  value={payoutForm.bankName}
-                  onChange={handlePayoutChange}
-                  placeholder="مثال: البنك الأهلي المصري"
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب</label>
-                <input
-                  type="text"
-                  name="bankAccountNumber"
-                  value={payoutForm.bankAccountNumber}
-                  onChange={handlePayoutChange}
-                  placeholder="رقم الحساب البنكي"
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب</label>
-                <input
-                  type="text"
-                  name="bankAccountHolder"
-                  value={payoutForm.bankAccountHolder}
-                  onChange={handlePayoutChange}
-                  placeholder="الاسم كما هو في البنك"
-                  className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-            </div>
           </div>
 
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={savingPayout}
+              disabled={saving}
               className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
             >
               <FiSave size={18} />
-              {savingPayout ? 'جاري الحفظ...' : '💾 حفظ بيانات السحب'}
+              {saving ? 'جاري الحفظ...' : '💾 حفظ بيانات المتجر'}
             </button>
           </div>
         </form>
+      )}
+
+      {/* ✅ Tab: السحب والإعدادات المالية */}
+      {activeTab === 'payout' && (
+        <div className="space-y-6">
+          {/* بيانات السحب البنكية */}
+          <form onSubmit={handlePayoutSubmit} className="bg-white rounded-xl border p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">🏦 بيانات السحب البنكية</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك</label>
+                <input type="text" name="bankName" value={payoutForm.bankName} onChange={handlePayoutChange} className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب البنكي</label>
+                <input type="text" name="bankAccountNumber" value={payoutForm.bankAccountNumber} onChange={handlePayoutChange} className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">صاحب الحساب</label>
+                <input type="text" name="bankAccountHolder" value={payoutForm.bankAccountHolder} onChange={handlePayoutChange} className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">رقم المحفظة</label>
+                <input type="text" name="walletNumber" value={payoutForm.walletNumber} onChange={handlePayoutChange} className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مزود المحفظة</label>
+                <select name="walletProvider" value={payoutForm.walletProvider} onChange={handlePayoutChange} className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 bg-white">
+                  <option value="">اختر...</option>
+                  {PAYOUT_METHODS.filter(m => m.value.includes('Cash')).map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">حساب إنستاباي</label>
+                <input type="text" name="instaPayAccount" value={payoutForm.instaPayAccount} onChange={handlePayoutChange} className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">طريقة السحب المفضلة</label>
+                <select name="preferredPayoutMethod" value={payoutForm.preferredPayoutMethod} onChange={handlePayoutChange} className="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-green-500 bg-white">
+                  <option value="">اختر...</option>
+                  {PAYOUT_METHODS.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                type="submit"
+                disabled={savingPayout}
+                className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
+              >
+                <FiSave size={18} />
+                {savingPayout ? 'جاري الحفظ...' : '💾 حفظ بيانات السحب'}
+              </button>
+            </div>
+          </form>
+
+          {/* ✅ الدفع الجزئي */}
+          <div className="bg-white rounded-xl border p-6">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="text-lg font-semibold text-gray-800">الدفع الجزئي (دفعة أولى)</h2>
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                  profile?.allowStartWithPartialPayment
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {profile?.allowStartWithPartialPayment ? '🟢 مفعل' : '⚪ غير مفعل'}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              {profile?.allowStartWithPartialPayment
+                ? 'العملاء يمكنهم بدء الطلب بدفعة أولى والباقي يُدفع لاحقاً'
+                : 'العملاء يدفعون كامل المبلغ عند إنشاء الطلب'}
+            </p>
+            <button
+              onClick={async () => {
+                try {
+                  setPartialPaymentLoading(true);
+                  await updatePartialPaymentSettings(!profile?.allowStartWithPartialPayment);
+                  toast.success(!profile?.allowStartWithPartialPayment ? 'تم تفعيل الدفع الجزئي ✅' : 'تم تعطيل الدفع الجزئي');
+                  fetchProfile();
+                } catch (err) {
+                  toast.error(err.response?.data?.message || 'فشل تغيير إعدادات الدفع الجزئي');
+                } finally {
+                  setPartialPaymentLoading(false);
+                }
+              }}
+              disabled={partialPaymentLoading}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg disabled:opacity-50 font-medium transition-colors ${
+                profile?.allowStartWithPartialPayment
+                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {partialPaymentLoading ? (
+                'جاري...'
+              ) : profile?.allowStartWithPartialPayment ? (
+                <><FiToggleLeft size={18} /> تعطيل الدفع الجزئي</>
+              ) : (
+                <><FiToggleRight size={18} /> تفعيل الدفع الجزئي</>
+              )}
+            </button>
+          </div>
+
+          {/* ✅ وضع الدفع (Self / Platform) — نسخة مكررة لسهولة الوصول */}
+          <div className="bg-white rounded-xl border p-6">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="text-lg font-semibold text-gray-800">الدفع المباشر</h2>
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                  profile?.processingMode === 'Self' && !profile?.selfPaymentDisabled
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {profile?.processingMode === 'Self' && !profile?.selfPaymentDisabled
+                  ? '🟢 مفعل'
+                  : profile?.selfPaymentDisabled
+                  ? '🔴 معطل من الإدارة'
+                  : '⚪ غير مفعل'}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              {profile?.processingMode === 'Self'
+                ? 'العملاء يمكنهم الدفع مباشرة لحسابك البنكي/المحفظة'
+                : 'جميع المدفوعات تكون عبر المنصة'}
+            </p>
+            {profile?.selfPaymentDisabled && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-4">
+                <p className="text-xs text-orange-700">
+                  ⚠️ الإدارة عطلت الدفع المباشر مؤقتاً. هتقدر تشغله تاني من نفس الزرار.
+                </p>
+              </div>
+            )}
+            <button
+              onClick={handlePaymentModeToggle}
+              disabled={paymentModeLoading}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg disabled:opacity-50 font-medium transition-colors ${
+                profile?.processingMode === 'Self'
+                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {paymentModeLoading ? (
+                'جاري...'
+              ) : profile?.processingMode === 'Self' ? (
+                <><FiToggleLeft size={18} /> تعطيل الدفع المباشر</>
+              ) : (
+                <><FiToggleRight size={18} /> تفعيل الدفع المباشر</>
+              )}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
