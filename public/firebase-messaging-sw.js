@@ -25,37 +25,55 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+function getVal(data, ...keys) {
+  for (const key of keys) {
+    if (data[key] !== undefined && data[key] !== null) return String(data[key]);
+  }
+  return null;
+}
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
 
-  // 1. Use explicit url if provided
-  let urlToOpen = data.url || '/';
+  // 1. Use explicit url if provided (try common key formats)
+  const url = getVal(data, 'url', 'Url', 'URL', 'deepLink', 'DeepLink', 'link');
 
-  // 2. If no url but has orderId, determine path based on user role
-  if (!data.url && data.orderId) {
-    const orderId = data.orderId;
+  // 2. Try to get orderId (try common key formats)
+  const orderId = getVal(data, 'orderId', 'OrderId', 'id', 'Id', 'order_id', 'Order_Id');
 
-    // Try to infer role from currently open pages
+  if (url) {
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-        const hasAdminPage = clientList.some((c) => c.url.includes('/admin/'));
-        const hasSellerPage = clientList.some((c) => c.url.includes('/seller/'));
-
-        if (hasAdminPage) urlToOpen = `/admin/orders/${orderId}`;
-        else if (hasSellerPage) urlToOpen = `/seller/orders/${orderId}`;
-        else urlToOpen = `/orders/${orderId}`;
-
-        return openOrFocus(clientList, urlToOpen);
+        return openOrFocus(clientList, url);
       })
     );
     return;
   }
 
+  if (orderId) {
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        const hasAdminPage = clientList.some((c) => c.url.includes('/admin/'));
+        const hasSellerPage = clientList.some((c) => c.url.includes('/seller/'));
+
+        const targetUrl = hasAdminPage
+          ? `/admin/orders/${orderId}`
+          : hasSellerPage
+            ? `/seller/orders/${orderId}`
+            : `/orders/${orderId}`;
+
+        return openOrFocus(clientList, targetUrl);
+      })
+    );
+    return;
+  }
+
+  // Fallback: just open home
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      return openOrFocus(clientList, urlToOpen);
+      return openOrFocus(clientList, '/');
     })
   );
 });

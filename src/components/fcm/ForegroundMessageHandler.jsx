@@ -4,10 +4,19 @@ import { getMessagingInstance, onMessage } from '../../firebase/firebase';
 import useAuth from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
-export function resolveNotificationUrl(data, user) {
-  if (data.url) return data.url;
+function getDataValue(data, ...keys) {
+  for (const key of keys) {
+    const value = data[key];
+    if (value !== undefined && value !== null) return value;
+  }
+  return null;
+}
 
-  const orderId = data.orderId;
+export function resolveNotificationUrl(data, user) {
+  const url = getDataValue(data, 'url', 'Url', 'URL', 'deepLink', 'DeepLink', 'link');
+  if (url) return url;
+
+  const orderId = getDataValue(data, 'orderId', 'OrderId', 'id', 'Id', 'order_id', 'Order_Id');
   if (!orderId) return '/';
 
   const role = user?.role;
