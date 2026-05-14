@@ -6,7 +6,6 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
-import { Toaster } from 'react-hot-toast';
 import router from './router';
 import './index.css';
 
@@ -18,7 +17,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <CartProvider>
             <WishlistProvider>
               <RouterProvider router={router} />
-              <Toaster position="top-center" />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>

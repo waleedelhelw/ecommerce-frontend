@@ -3,6 +3,7 @@ import { createBrowserRouter, Outlet } from 'react-router-dom';
 // ✅ ScrollToTop
 import ScrollToTop from './components/common/ScrollToTop';
 import ForegroundMessageHandler from './components/fcm/ForegroundMessageHandler';
+import { Toaster } from 'react-hot-toast';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -105,6 +106,7 @@ const RootLayout = () => (
   <>
     <ScrollToTop />
     <ForegroundMessageHandler />
+    <Toaster position="top-center" />
     <Outlet />
   </>
 );

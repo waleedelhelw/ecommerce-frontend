@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getMessagingInstance, onMessage } from '../../firebase/firebase';
 import useAuth from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -27,8 +26,9 @@ export function resolveNotificationUrl(data, user) {
 
 const ForegroundMessageHandler = () => {
   const unsubRef = useRef(null);
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const userRef = useRef(user);
+  userRef.current = user;
 
   useEffect(() => {
     let cancelled = false;
@@ -47,8 +47,8 @@ const ForegroundMessageHandler = () => {
             <div
               onClick={() => {
                 toast.dismiss(t.id);
-                const url = resolveNotificationUrl(data, user);
-                navigate(url);
+                const url = resolveNotificationUrl(data, userRef.current);
+                window.location.href = url;
               }}
               className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors max-w-sm"
             >
@@ -76,7 +76,7 @@ const ForegroundMessageHandler = () => {
         unsubRef.current();
       }
     };
-  }, [navigate, user]);
+  }, [user]);
 };
 
 export default ForegroundMessageHandler;
