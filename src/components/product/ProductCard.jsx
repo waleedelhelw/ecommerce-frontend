@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiHeart } from 'react-icons/fi';
 import StarRating from '../common/StarRating';
 import { formatPrice } from '../../utils/formatPrice';
+import { getOptimizedImage } from '../../utils/cloudinary';
 import useAuth from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
 import useWishlist from '../../hooks/useWishlist';
@@ -56,11 +57,11 @@ const ProductCard = ({ product, variant }) => {
     return (
       <Link
         to={`/products/${product.id}`}
-        className="group bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md active:scale-[0.97] flex flex-col"
+        className="group bg-white rounded-xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.97] flex flex-col"
         aria-label={`عرض تفاصيل ${product.name} - ${formatPrice(product.price)}`}
       >
         <div className="relative overflow-hidden">
-          <div className="aspect-[4/3] w-full relative overflow-hidden">
+          <div className="aspect-square w-full relative overflow-hidden">
             {!imageError ? (
               <>
                 {!imageLoaded && <div className="absolute inset-0 skeleton-shimmer z-10" />}
@@ -69,7 +70,7 @@ const ProductCard = ({ product, variant }) => {
                   <div
                     className="absolute inset-0 scale-110 blur-2xl opacity-60"
                     style={{
-                      backgroundImage: `url(${product.imageUrl})`,
+                      backgroundImage: `url(${getOptimizedImage(product.imageUrl)})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                     }}
@@ -77,10 +78,10 @@ const ProductCard = ({ product, variant }) => {
                 )}
 
                 <img
-                  src={product.imageUrl || '/placeholder-product.png'}
+                  src={getOptimizedImage(product.imageUrl) || '/placeholder-product.png'}
                   alt={altText}
                   loading="lazy"
-                  className={`relative z-10 w-full h-full object-contain p-2 transition-all duration-500 ${
+                  className={`relative z-10 w-full h-full object-contain p-1.5 transition-all duration-500 ${
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
                   onLoad={() => setImageLoaded(true)}
@@ -118,23 +119,25 @@ const ProductCard = ({ product, variant }) => {
             <p className="text-[11px] text-gray-400 line-clamp-1">{product.storeName}</p>
           )}
 
-          <StarRating rating={product.averageRating || product.rating || 0} size={11} />
+          {(product.reviewCount || product.reviewsCount || 0) > 0 && (
+            <StarRating rating={product.averageRating || product.rating || 0} size={11} />
+          )}
 
           <div className="flex items-center gap-1 mt-0.5">
             {hasDiscount ? (
               <>
-                <span className="text-base font-extrabold text-black">{formatPrice(discountPrice)}</span>
+                <span className="text-base font-extrabold text-green-700">{formatPrice(discountPrice)}</span>
                 <span className="text-xs text-gray-400 line-through">{formatPrice(product.price)}</span>
               </>
             ) : (
-              <span className="text-base font-extrabold text-black">{formatPrice(product.price)}</span>
+              <span className="text-base font-extrabold text-green-700">{formatPrice(product.price)}</span>
             )}
           </div>
 
           {product.stockQuantity > 0 && (
             <button
               onClick={handleAddToCart}
-              className="w-full mt-1 flex items-center justify-center gap-1.5 bg-black text-white py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 active:bg-gray-900 transition-colors"
+              className="w-full mt-1 flex items-center justify-center gap-1.5 border-2 border-gray-800 text-gray-800 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 hover:text-white active:bg-gray-900 transition-colors"
               aria-label={`إضافة ${product.name} إلى السلة`}
             >
               <FiShoppingCart size={15} />
@@ -149,19 +152,19 @@ const ProductCard = ({ product, variant }) => {
   return (
     <Link
       to={`/products/${product.id}`}
-      className="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-blue-200 active:scale-[0.99] flex flex-col"
+      className="group bg-white border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-lg hover:border-blue-200 active:scale-[0.99] flex flex-col"
       aria-label={`عرض تفاصيل ${product.name} - السعر ${formatPrice(product.price)}`}
     >
       <div className="relative bg-gradient-to-b from-gray-50 to-gray-100 overflow-hidden">
-        <div className="aspect-[4/3] w-full flex items-center justify-center p-4 sm:p-5">
+        <div className="aspect-square w-full flex items-center justify-center">
           {!imageError ? (
             <>
               {!imageLoaded && <div className="absolute inset-0 skeleton-shimmer" />}
               <img
-                src={product.imageUrl || '/placeholder-product.png'}
+                src={getOptimizedImage(product.imageUrl) || '/placeholder-product.png'}
                 alt={altText}
                 loading="lazy"
-                className={`w-full h-full object-contain transition-all duration-500 group-hover:scale-110 ${
+                className={`w-full h-full object-contain p-1.5 transition-all duration-500 group-hover:scale-110 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 onLoad={() => setImageLoaded(true)}
@@ -231,15 +234,17 @@ const ProductCard = ({ product, variant }) => {
           </p>
         )}
 
-        <div className="mb-2.5">
-          <StarRating rating={product.averageRating || product.rating || 0} size={13} />
-        </div>
+        {(product.reviewCount || product.reviewsCount || 0) > 0 && (
+          <div className="mb-2.5">
+            <StarRating rating={product.averageRating || product.rating || 0} size={13} />
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="min-w-0">
             {hasDiscount ? (
               <div className="flex flex-col">
-                <span className="text-base sm:text-lg font-bold text-blue-600 block leading-none">
+                <span className="text-base sm:text-lg font-bold text-green-700 block leading-none">
                   {formatPrice(discountPrice)}
                 </span>
                 <span className="text-[11px] text-gray-400 line-through">
@@ -247,7 +252,7 @@ const ProductCard = ({ product, variant }) => {
                 </span>
               </div>
             ) : (
-              <span className="text-base sm:text-lg font-bold text-blue-600 block" aria-label={`السعر ${formatPrice(product.price)}`}>
+              <span className="text-base sm:text-lg font-bold text-green-700 block" aria-label={`السعر ${formatPrice(product.price)}`}>
                 {formatPrice(product.price)}
               </span>
             )}
@@ -256,7 +261,7 @@ const ProductCard = ({ product, variant }) => {
           {isAuthenticated && isCustomer && product.stockQuantity > 0 && (
             <button
               onClick={handleAddToCart}
-              className="shrink-0 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm hover:shadow-md"
+              className="shrink-0 p-2 border-2 border-gray-300 text-gray-500 rounded-xl hover:border-gray-800 hover:text-gray-800 active:bg-gray-100 transition-colors"
               aria-label={`إضافة ${product.name} إلى السلة`}
               title="إضافة إلى السلة"
             >

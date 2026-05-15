@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const ProductGrid = ({ products, loading, variant }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:gap-5">
         {[...Array(8)].map((_, i) => (
           <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
             <div className="aspect-[4/3] bg-gray-200" />
@@ -37,7 +37,7 @@ const ProductGrid = ({ products, loading, variant }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 gap-4 sm:gap-5">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} variant={variant} />
       ))}

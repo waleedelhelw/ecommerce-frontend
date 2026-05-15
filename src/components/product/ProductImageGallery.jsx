@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { FiMaximize2, FiX } from 'react-icons/fi';
+import { getOptimizedImage } from '../../utils/cloudinary';
 
 const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -91,7 +92,7 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
             <div
               className="absolute inset-0 scale-110 blur-3xl opacity-60"
               style={{
-                backgroundImage: `url(${currentSrc})`,
+                backgroundImage: `url(${getOptimizedImage(currentSrc)})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -105,7 +106,7 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
             aria-label="تكبير صورة المنتج"
           >
             <img
-              src={currentSrc}
+              src={getOptimizedImage(currentSrc)}
               alt={currentImage.alt}
               className={`w-full h-full object-contain p-4 sm:p-6 lg:p-8 transition-all duration-500 ${
                 imgLoaded ? 'opacity-100' : 'opacity-0'
@@ -149,7 +150,7 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
                 aria-current={selectedIndex === index ? 'true' : 'false'}
               >
                 <img
-                  src={img.url}
+                  src={getOptimizedImage(img.url)}
                   alt={img.alt}
                   loading="lazy"
                   className="w-full h-full object-cover bg-gray-50"
@@ -193,7 +194,7 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
             aria-label="إغلاق"
           >
             <img
-              src={currentSrc}
+              src={getOptimizedImage(currentSrc)}
               alt={currentImage.alt}
               className="max-w-[90vw] max-h-[85vh] object-contain pointer-events-none"
               loading="eager"

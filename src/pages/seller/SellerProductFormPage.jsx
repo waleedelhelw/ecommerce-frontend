@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiSave, FiArrowRight, FiPlus, FiTrash2, FiUpload, FiImage, FiLoader } from 'react-icons/fi';
+import { FiSave, FiArrowRight, FiPlus, FiTrash2, FiUpload, FiImage, FiLoader, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { createProduct, updateProduct, getMyProductById } from '../../api/seller/sellerProductService';
 import { getCategories } from '../../api/categoryService';
 import { uploadImage } from '../../utils/cloudinary';
@@ -23,6 +23,7 @@ const SellerProductFormPage = () => {
   // ✅ حالة رفع الصور
   const [uploadingMain, setUploadingMain] = useState(false);
   const [uploadingAdditional, setUploadingAdditional] = useState(false);
+  const [showImageGuide, setShowImageGuide] = useState(true);
 
   const [form, setForm] = useState({
     name: '',
@@ -269,11 +270,11 @@ const SellerProductFormPage = () => {
 
       {error && <ErrorMessage message={error} />}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* ═══════════════════════════════════════ */}
         {/* البيانات الأساسية */}
         {/* ═══════════════════════════════════════ */}
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-white rounded-xl border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">البيانات الأساسية</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -352,8 +353,51 @@ const SellerProductFormPage = () => {
         {/* ═══════════════════════════════════════ */}
         {/* ✅ الصورة الرئيسية - رفع من الجهاز */}
         {/* ═══════════════════════════════════════ */}
-        <div className="bg-white rounded-xl border p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">الصورة الرئيسية</h2>
+        <div className="bg-white rounded-xl border p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">الصورة الرئيسية</h2>
+            <button
+              type="button"
+              onClick={() => setShowImageGuide((prev) => !prev)}
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+            >
+              {showImageGuide ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+              <span className="hidden sm:inline">{showImageGuide ? 'إخفاء' : 'إظهار'} المواصفات</span>
+            </button>
+          </div>
+
+          {showImageGuide && (
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 sm:p-4 mb-4 text-xs sm:text-sm text-amber-900 space-y-3">
+              <div className="flex items-start gap-2">
+                <span className="text-lg shrink-0">💡</span>
+                <div>
+                  <p className="font-semibold">عايز صور احترافية لمنتجك؟</p>
+                  <p className="text-amber-700 mt-1">
+                    ارفع صورة المنتج بتاعك على <strong>Gemini</strong> وانسخ البرومبت ده وحطه — 
+                    Gemini هيظبطلك الصورة بالمواصفات المطلوبة ويديك كل بيانات المنتج.
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-amber-200 pt-3">
+                <p className="font-semibold mb-2">🤖 البرومبت:</p>
+                <div className="bg-white rounded-lg p-3 text-xs text-gray-700 border border-amber-100 font-mono leading-relaxed select-all whitespace-pre-wrap">
+{`Create a professional e-commerce product photo from this image. Make it square 1:1, at least 1000x1000px, with a clean white or light solid background. Center the product to fill most of the frame. High resolution, well-lit, professional look. No text, logos, or watermarks.
+
+Then, tell me everything about this product in Arabic: what's it called, what's it used for, what are its features, what category does it belong to, and what's a good price for it in EGP.`}</div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText('Create a professional e-commerce product photo from this image. Make it square 1:1, at least 1000x1000px, with a clean white or light solid background. Center the product to fill most of the frame. High resolution, well-lit, professional look. No text, logos, or watermarks.\n\nThen, tell me everything about this product in Arabic: what\'s it called, what\'s it used for, what are its features, what category does it belong to, and what\'s a good price for it in EGP.');
+                    toast.success('تم نسخ البرومبت');
+                  }}
+                  className="mt-1 text-xs bg-amber-600 text-white px-3 py-1.5 rounded-lg hover:bg-amber-700 transition-colors"
+                >
+                  📋 نسخ البرومبت
+                </button>
+              </div>
+            </div>
+          )}
 
           {form.imageUrl ? (
             <div className="relative inline-block">
@@ -374,7 +418,7 @@ const SellerProductFormPage = () => {
           ) : (
             <div
               onClick={() => !uploadingMain && mainImageRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
+              className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-colors
                 ${uploadingMain
                   ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
                   : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
@@ -407,8 +451,8 @@ const SellerProductFormPage = () => {
         {/* ═══════════════════════════════════════ */}
         {/* ✅ الصور الإضافية - رفع من الجهاز */}
         {/* ═══════════════════════════════════════ */}
-        <div className="bg-white rounded-xl border p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-xl border p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold text-gray-800">صور إضافية</h2>
             <button
               type="button"
@@ -430,6 +474,10 @@ const SellerProductFormPage = () => {
             </button>
           </div>
 
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-200 rounded-lg p-3 mb-4 text-xs text-amber-700">
+            <p>💡 يفضّل أن تكون الصور الإضافية بنفس مواصفات الصورة الرئيسية — استخدم نفس البرومبت مع Gemini.</p>
+          </div>
+
           <input
             ref={additionalImagesRef}
             type="file"
@@ -442,7 +490,7 @@ const SellerProductFormPage = () => {
           {form.images.length === 0 ? (
             <div
               onClick={() => !uploadingAdditional && additionalImagesRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
+              className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-colors
                 ${uploadingAdditional
                   ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
                   : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
@@ -544,11 +592,11 @@ const SellerProductFormPage = () => {
         {/* ✅ حالة المنتج - في حالة التعديل بس */}
         {/* ═══════════════════════════════════════ */}
         {isEdit && (
-          <div className="bg-white rounded-xl border p-6">
-            <div className="flex items-center justify-between">
-              <div>
+          <div className="bg-white rounded-xl border p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-gray-800">حالة المنتج</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
                   {form.isActive ? 'المنتج نشط ومعروض للعملاء' : 'المنتج غير نشط ومخفي عن العملاء'}
                 </p>
               </div>
@@ -572,18 +620,18 @@ const SellerProductFormPage = () => {
         {/* ═══════════════════════════════════════ */}
         {/* زر الحفظ */}
         {/* ═══════════════════════════════════════ */}
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
           <button
             type="button"
             onClick={() => navigate('/seller/products')}
-            className="px-6 py-2.5 border rounded-lg text-gray-600 hover:bg-gray-50"
+            className="w-full sm:w-auto px-6 py-3 sm:py-2.5 border rounded-lg text-gray-600 hover:bg-gray-50 text-sm"
           >
             إلغاء
           </button>
           <button
             type="submit"
             disabled={loading || uploadingMain || uploadingAdditional}
-            className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
           >
             <FiSave size={18} />
             {loading ? 'جاري الحفظ...' : isEdit ? 'تحديث المنتج' : 'إضافة المنتج'}
