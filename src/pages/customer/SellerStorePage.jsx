@@ -174,7 +174,7 @@ const SellerStorePage = () => {
         title={`متجر ${seller.storeName}`}
         description={seoDescription}
         keywords={seoKeywords}
-        image={seller.logoUrl || seller.bannerUrl || '/og-image.png'}
+        image={seller.logoUrl || seller.bannerUrl || '/og-image.jpg'}
         url={publicStorePath}
         type="website"
         structuredData={combinedSchema}

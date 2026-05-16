@@ -1,6 +1,6 @@
 const API_BASE = 'https://waleedecommerceapi.runasp.net/api';
 const SITE_URL = 'https://tasawwaq.store';
-const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
+const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 const CRAWLER_PATTERN = /WhatsApp|FacebookExternalHit|Facebot|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Pinterest|Googlebot|facebook|telegram|twitter|linkedin/i;
 

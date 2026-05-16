@@ -16,7 +16,7 @@ const SEO = ({
   title,
   description = 'تسوّق - سوق مفتوح للبيع والشراء',
   keywords = 'تسوق, متجر الكتروني, شراء, بيع, تسوق اونلاين',
-  image = '/og-image.png',
+  image = '/og-image.jpg',
   url,
   type = 'website',
   noindex = false,

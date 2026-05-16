@@ -174,7 +174,7 @@ const ProductDetailsPage = () => {
         title={product.name}
         description={seoDescription}
         keywords={seoKeywords}
-        image={productImages[0] || '/og-image.png'}
+        image={productImages[0] || '/og-image.jpg'}
         url={`/products/${product.id}`}
         type="product"
         structuredData={combinedStructuredData}
