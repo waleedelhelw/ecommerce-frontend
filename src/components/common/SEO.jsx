@@ -14,7 +14,7 @@ import { Helmet } from 'react-helmet-async';
  */
 const SEO = ({
   title,
-  description = 'تسوّق - منصة التسوق الإلكتروني الأولى. اشترِ من آلاف المنتجات أو افتح متجرك الخاص.',
+  description = 'تسوّق - سوق مفتوح للبيع والشراء',
   keywords = 'تسوق, متجر الكتروني, شراء, بيع, تسوق اونلاين',
   image = '/og-image.png',
   url,
@@ -28,7 +28,7 @@ const SEO = ({
   // ✅ Title formatting
   const fullTitle = title
     ? title.includes('تسوّق') ? title : `${title} | ${SITE_NAME}`
-    : `${SITE_NAME} | منصة التسوق الإلكتروني الأولى`;
+    : SITE_NAME;
 
   // ✅ Image URL
   const fullImageUrl = image?.startsWith('http')
