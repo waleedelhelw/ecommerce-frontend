@@ -27,8 +27,6 @@ export const createProduct = async (data) => {
       : data.stockQuantity || 0,
   };
 
-  console.log('📤 Create product payload:', JSON.stringify(cleanData, null, 2));
-
   const response = await API.post(BASE, cleanData);
   return response.data.data;
 };

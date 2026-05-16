@@ -32,7 +32,6 @@ const ProfilePage = () => {
       setLoading(true);
       setError(null);
       const data = await profileService.getProfile();
-      console.log("🔍 Profile Data:", JSON.stringify(data, null, 2));
       setProfile(data);
       setFormData({
         name: data.name || '',
@@ -79,7 +78,6 @@ const ProfilePage = () => {
       setIsEditing(false);
       fetchProfile();
     } catch (error) {
-      console.log("🔍 Profile Error:", JSON.stringify(error.response?.data, null, 2));
       toast.error(error.response?.data?.message || 'فشل تحديث الملف الشخصي');
     } finally {
       setSaving(false);

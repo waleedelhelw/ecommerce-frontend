@@ -23,14 +23,14 @@ const HomePage = () => {
     '@type': 'WebSite',
     name: 'تسوّق',
     alternateName: 'Tasawwaq',
-    url: 'https://tasawwaq.vercel.app',
+    url: 'https://tasawwaq.store',
     description: 'منصة التسوق الإلكتروني الأولى. اشترِ من آلاف المنتجات أو افتح متجرك الخاص.',
     inLanguage: 'ar-EG',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://tasawwaq.vercel.app/products?search={search_term_string}',
+        urlTemplate: 'https://tasawwaq.store/products?search={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },
@@ -41,8 +41,8 @@ const HomePage = () => {
     '@type': 'Organization',
     name: 'تسوّق',
     alternateName: 'Tasawwaq',
-    url: 'https://tasawwaq.vercel.app',
-    logo: 'https://tasawwaq.vercel.app/logo.svg',
+    url: 'https://tasawwaq.store',
+    logo: 'https://tasawwaq.store/logo.svg',
     description: 'منصة تسوّق الإلكترونية - السوق الإلكتروني الأول في مصر للتسوق وفتح المتاجر',
     foundingDate: '2025',
     areaServed: {

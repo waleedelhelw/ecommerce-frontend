@@ -44,8 +44,8 @@ const CategoriesPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.vercel.app' },
-      { '@type': 'ListItem', position: 2, name: 'التصنيفات', item: 'https://tasawwaq.vercel.app/categories' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'التصنيفات', item: 'https://tasawwaq.store/categories' },
     ],
   };
 
@@ -54,7 +54,7 @@ const CategoriesPage = () => {
     '@type': 'CollectionPage',
     name: 'تصنيفات المنتجات',
     description: 'تصفّح جميع تصنيفات المنتجات على تسوّق',
-    url: 'https://tasawwaq.vercel.app/categories',
+    url: 'https://tasawwaq.store/categories',
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: categories.length,
@@ -62,7 +62,7 @@ const CategoriesPage = () => {
         '@type': 'ListItem',
         position: index + 1,
         name: cat.name,
-        url: `https://tasawwaq.vercel.app/categories/${cat.id}/products`,
+        url: `https://tasawwaq.store/categories/${cat.id}/products`,
       })),
     },
   } : null;

@@ -216,8 +216,6 @@ const SellerProductFormPage = () => {
           })),
       };
 
-      console.log('📤 Payload:', JSON.stringify(payload, null, 2));
-
       if (isEdit) {
         await updateProduct(id, payload);
         toast.success('تم تحديث المنتج بنجاح');

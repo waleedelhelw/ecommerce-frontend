@@ -16,13 +16,13 @@ const SEO = ({
   title,
   description = 'تسوّق - منصة التسوق الإلكتروني الأولى. اشترِ من آلاف المنتجات أو افتح متجرك الخاص.',
   keywords = 'تسوق, متجر الكتروني, شراء, بيع, تسوق اونلاين',
-  image = '/og-image.svg',
+  image = '/og-image.png',
   url,
   type = 'website',
   noindex = false,
   structuredData = null,
 }) => {
-  const SITE_URL = 'https://tasawwaq.vercel.app';
+  const SITE_URL = 'https://tasawwaq.store';
   const SITE_NAME = 'تسوّق';
 
   // ✅ Title formatting

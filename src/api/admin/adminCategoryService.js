@@ -7,9 +7,6 @@ export const getAllCategories = async (params) => {
   const response = await API.get(BASE, { params });
   const result = response.data;
 
-  // ✅ Debug: شوف الـ response شكله إيه بالظبط
-  console.log('📦 Categories API Response:', JSON.stringify(result, null, 2));
-
   return result;
 };
 

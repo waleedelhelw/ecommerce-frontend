@@ -33,7 +33,6 @@ const AdminPayoutsPage = () => {
         pageNumber: currentPage,
         pageSize: 10,
       });
-      console.log('Payouts Data:', JSON.stringify(data, null, 2));
       setPayouts(data?.items || data || []);
       setTotalPages(data?.totalPages || 1);
     } catch (error) {

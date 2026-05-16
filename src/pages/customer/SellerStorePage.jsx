@@ -122,7 +122,7 @@ const SellerStorePage = () => {
     '@type': 'Store',
     name: seller.storeName,
     description: seller.storeDescription || `متجر ${seller.storeName} على تسوّق`,
-    url: `https://tasawwaq.vercel.app${publicStorePath}`,
+    url: `https://tasawwaq.store${publicStorePath}`,
     ...(seller.logoUrl && { image: seller.logoUrl, logo: seller.logoUrl }),
     ...(sellerPhone && { telephone: sellerPhone }),
     ...(seller.rating > 0 && {
@@ -145,19 +145,19 @@ const SellerStorePage = () => {
         '@type': 'ListItem',
         position: 1,
         name: 'الرئيسية',
-        item: 'https://tasawwaq.vercel.app',
+        item: 'https://tasawwaq.store',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'المتاجر',
-        item: 'https://tasawwaq.vercel.app/sellers',
+        item: 'https://tasawwaq.store/sellers',
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: seller.storeName,
-        item: `https://tasawwaq.vercel.app${publicStorePath}`,
+        item: `https://tasawwaq.store${publicStorePath}`,
       },
     ],
   };
@@ -174,7 +174,7 @@ const SellerStorePage = () => {
         title={`متجر ${seller.storeName}`}
         description={seoDescription}
         keywords={seoKeywords}
-        image={seller.logoUrl || seller.bannerUrl || '/og-image.svg'}
+        image={seller.logoUrl || seller.bannerUrl || '/og-image.png'}
         url={publicStorePath}
         type="website"
         structuredData={combinedSchema}

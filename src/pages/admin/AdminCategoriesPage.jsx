@@ -51,9 +51,6 @@ const AdminCategoriesPage = () => {
       const items = extractArray(data);
       const pages = extractTotalPages(data);
 
-      console.log('📋 Extracted categories:', items);
-      console.log('📄 Total pages:', pages);
-
       setCategories(items);
       setTotalPages(pages);
     } catch (error) {

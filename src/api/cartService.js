@@ -3,7 +3,6 @@ import API from './axiosInstance';
 const cartService = {
   getCart: async () => {
     const response = await API.get('/customer/cart');
-    console.log("🔍 Cart Response:", response.data);
     return response.data.data;
   },
 

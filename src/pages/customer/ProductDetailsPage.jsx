@@ -81,7 +81,7 @@ const ProductDetailsPage = () => {
     },
     offers: {
       '@type': 'Offer',
-      url: `https://tasawwaq.vercel.app/products/${product.id}`,
+      url: `https://tasawwaq.store/products/${product.id}`,
       priceCurrency: 'EGP',
       price: product.price,
       availability: product.stock > 0
@@ -124,13 +124,13 @@ const ProductDetailsPage = () => {
       '@type': 'ListItem',
       position: 1,
       name: 'الرئيسية',
-      item: 'https://tasawwaq.vercel.app',
+      item: 'https://tasawwaq.store',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'المنتجات',
-      item: 'https://tasawwaq.vercel.app/products',
+      item: 'https://tasawwaq.store/products',
     },
   ];
 
@@ -139,20 +139,20 @@ const ProductDetailsPage = () => {
       '@type': 'ListItem',
       position: 3,
       name: product.categoryName,
-      item: `https://tasawwaq.vercel.app/categories/${product.categoryId}/products`,
+      item: `https://tasawwaq.store/categories/${product.categoryId}/products`,
     });
     breadcrumbListItems.push({
       '@type': 'ListItem',
       position: 4,
       name: product.name,
-      item: `https://tasawwaq.vercel.app/products/${product.id}`,
+      item: `https://tasawwaq.store/products/${product.id}`,
     });
   } else {
     breadcrumbListItems.push({
       '@type': 'ListItem',
       position: 3,
       name: product.name,
-      item: `https://tasawwaq.vercel.app/products/${product.id}`,
+      item: `https://tasawwaq.store/products/${product.id}`,
     });
   }
 
@@ -174,7 +174,7 @@ const ProductDetailsPage = () => {
         title={product.name}
         description={seoDescription}
         keywords={seoKeywords}
-        image={productImages[0] || '/og-image.svg'}
+        image={productImages[0] || '/og-image.png'}
         url={`/products/${product.id}`}
         type="product"
         structuredData={combinedStructuredData}

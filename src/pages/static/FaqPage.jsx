@@ -102,8 +102,8 @@ const FaqPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.vercel.app' },
-      { '@type': 'ListItem', position: 2, name: 'الأسئلة الشائعة', item: 'https://tasawwaq.vercel.app/faq' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'الأسئلة الشائعة', item: 'https://tasawwaq.store/faq' },
     ],
   };
 

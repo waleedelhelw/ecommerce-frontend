@@ -89,8 +89,8 @@ const PrivacyPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.vercel.app' },
-      { '@type': 'ListItem', position: 2, name: 'سياسة الخصوصية', item: 'https://tasawwaq.vercel.app/privacy' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'سياسة الخصوصية', item: 'https://tasawwaq.store/privacy' },
     ],
   };
 

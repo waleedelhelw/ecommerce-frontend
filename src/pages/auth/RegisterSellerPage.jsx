@@ -97,7 +97,7 @@ const RegisterSellerPage = () => {
     provider: {
       '@type': 'Organization',
       name: 'تسوّق',
-      url: 'https://tasawwaq.vercel.app',
+      url: 'https://tasawwaq.store',
     },
     areaServed: {
       '@type': 'Country',

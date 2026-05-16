@@ -128,8 +128,8 @@ const TermsPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.vercel.app' },
-      { '@type': 'ListItem', position: 2, name: 'الشروط والأحكام', item: 'https://tasawwaq.vercel.app/terms' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'الشروط والأحكام', item: 'https://tasawwaq.store/terms' },
     ],
   };
 

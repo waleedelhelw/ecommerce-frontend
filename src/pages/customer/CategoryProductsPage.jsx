@@ -67,19 +67,19 @@ const CategoryProductsPage = () => {
         '@type': 'ListItem',
         position: 1,
         name: 'الرئيسية',
-        item: 'https://tasawwaq.vercel.app',
+        item: 'https://tasawwaq.store',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'التصنيفات',
-        item: 'https://tasawwaq.vercel.app/categories',
+        item: 'https://tasawwaq.store/categories',
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: categoryName,
-        item: `https://tasawwaq.vercel.app/categories/${id}/products`,
+        item: `https://tasawwaq.store/categories/${id}/products`,
       },
     ],
   };

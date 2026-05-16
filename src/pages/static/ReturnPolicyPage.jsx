@@ -30,8 +30,8 @@ const ReturnsPolicyPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.vercel.app' },
-      { '@type': 'ListItem', position: 2, name: 'سياسة الإرجاع', item: 'https://tasawwaq.vercel.app/returns' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'سياسة الإرجاع', item: 'https://tasawwaq.store/returns' },
     ],
   };
 
