@@ -22,7 +22,7 @@ const SEO = ({
   noindex = false,
   structuredData = null,
 }) => {
-  const SITE_URL = 'https://tasawwaq.store';
+  const SITE_URL = 'https://www.tasawwaq.store';
   const SITE_NAME = 'تسوّق';
 
   // ✅ Title formatting

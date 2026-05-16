@@ -67,19 +67,19 @@ const CategoryProductsPage = () => {
         '@type': 'ListItem',
         position: 1,
         name: 'الرئيسية',
-        item: 'https://tasawwaq.store',
+        item: 'https://www.tasawwaq.store',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'التصنيفات',
-        item: 'https://tasawwaq.store/categories',
+        item: 'https://www.tasawwaq.store/categories',
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: categoryName,
-        item: `https://tasawwaq.store/categories/${id}/products`,
+        item: `https://www.tasawwaq.store/categories/${id}/products`,
       },
     ],
   };

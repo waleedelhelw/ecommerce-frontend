@@ -43,8 +43,8 @@ const HowToSellPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
-      { '@type': 'ListItem', position: 2, name: 'افتح متجرك', item: 'https://tasawwaq.store/how-to-sell' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://www.tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'افتح متجرك', item: 'https://www.tasawwaq.store/how-to-sell' },
     ],
   };
 

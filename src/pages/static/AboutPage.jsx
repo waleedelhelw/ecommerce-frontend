@@ -10,13 +10,13 @@ const AboutPage = () => {
     '@type': 'AboutPage',
     name: 'عن تسوّق',
     description: 'تعرّف على منصة تسوّق - السوق الإلكتروني الأول في مصر. مهمتنا، رؤيتنا، وقيمنا.',
-    url: 'https://tasawwaq.store/about',
+    url: 'https://www.tasawwaq.store/about',
     mainEntity: {
       '@type': 'Organization',
       name: 'تسوّق',
       alternateName: 'Tasawwaq',
-      url: 'https://tasawwaq.store',
-      logo: 'https://tasawwaq.store/logo.svg',
+      url: 'https://www.tasawwaq.store',
+      logo: 'https://www.tasawwaq.store/logo.svg',
       description: 'منصة تسوّق الإلكترونية - السوق الإلكتروني الأول في مصر',
       foundingDate: '2025',
       areaServed: { '@type': 'Country', name: 'Egypt' },
@@ -28,8 +28,8 @@ const AboutPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
-      { '@type': 'ListItem', position: 2, name: 'عن تسوّق', item: 'https://tasawwaq.store/about' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://www.tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'عن تسوّق', item: 'https://www.tasawwaq.store/about' },
     ],
   };
 

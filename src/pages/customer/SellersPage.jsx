@@ -43,13 +43,13 @@ const SellersPage = () => {
         '@type': 'ListItem',
         position: 1,
         name: 'الرئيسية',
-        item: 'https://tasawwaq.store',
+        item: 'https://www.tasawwaq.store',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'المتاجر',
-        item: 'https://tasawwaq.store/sellers',
+        item: 'https://www.tasawwaq.store/sellers',
       },
     ],
   };
@@ -60,7 +60,7 @@ const SellersPage = () => {
     '@type': 'CollectionPage',
     name: 'المتاجر على تسوّق',
     description: 'تصفّح جميع المتاجر الموثوقة على منصة تسوّق',
-    url: 'https://tasawwaq.store/sellers',
+    url: 'https://www.tasawwaq.store/sellers',
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: sellers.length,
@@ -70,7 +70,7 @@ const SellersPage = () => {
         item: {
           '@type': 'Store',
           name: seller.storeName,
-          url: `https://tasawwaq.store/sellers/${seller.userId}`,
+          url: `https://www.tasawwaq.store/sellers/${seller.userId}`,
           ...(seller.logoUrl && { image: seller.logoUrl }),
           ...(seller.rating > 0 && {
             aggregateRating: {

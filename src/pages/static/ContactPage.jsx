@@ -34,11 +34,11 @@ const ContactPage = () => {
     '@type': 'ContactPage',
     name: 'تواصل معنا',
     description: 'تواصل مع فريق دعم تسوّق - نحن هنا لمساعدتك',
-    url: 'https://tasawwaq.store/contact',
+    url: 'https://www.tasawwaq.store/contact',
     mainEntity: {
       '@type': 'Organization',
       name: 'تسوّق',
-      url: 'https://tasawwaq.store',
+      url: 'https://www.tasawwaq.store',
       contactPoint: [
         {
           '@type': 'ContactPoint',
@@ -56,8 +56,8 @@ const ContactPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://tasawwaq.store' },
-      { '@type': 'ListItem', position: 2, name: 'تواصل معنا', item: 'https://tasawwaq.store/contact' },
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://www.tasawwaq.store' },
+      { '@type': 'ListItem', position: 2, name: 'تواصل معنا', item: 'https://www.tasawwaq.store/contact' },
     ],
   };
 

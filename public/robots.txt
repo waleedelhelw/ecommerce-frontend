@@ -1,5 +1,5 @@
 # robots.txt for Tasawwaq E-commerce Platform
-# https://tasawwaq.store
+# https://www.tasawwaq.store
 
 # ✅ Allow all search engines
 User-agent: *
@@ -40,7 +40,7 @@ Disallow: /change-password
 Disallow: /api/
 
 # ✅ Sitemap location
-Sitemap: https://tasawwaq.store/sitemap.xml
+Sitemap: https://www.tasawwaq.store/sitemap.xml
 
 # 🤖 Block bad bots (optional)
 User-agent: AhrefsBot

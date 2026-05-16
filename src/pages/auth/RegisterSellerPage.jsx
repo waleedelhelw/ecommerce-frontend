@@ -97,7 +97,7 @@ const RegisterSellerPage = () => {
     provider: {
       '@type': 'Organization',
       name: 'تسوّق',
-      url: 'https://tasawwaq.store',
+      url: 'https://www.tasawwaq.store',
     },
     areaServed: {
       '@type': 'Country',

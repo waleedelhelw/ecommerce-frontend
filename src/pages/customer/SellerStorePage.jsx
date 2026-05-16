@@ -122,7 +122,7 @@ const SellerStorePage = () => {
     '@type': 'Store',
     name: seller.storeName,
     description: seller.storeDescription || `متجر ${seller.storeName} على تسوّق`,
-    url: `https://tasawwaq.store${publicStorePath}`,
+    url: `https://www.tasawwaq.store${publicStorePath}`,
     ...(seller.logoUrl && { image: seller.logoUrl, logo: seller.logoUrl }),
     ...(sellerPhone && { telephone: sellerPhone }),
     ...(seller.rating > 0 && {
@@ -145,19 +145,19 @@ const SellerStorePage = () => {
         '@type': 'ListItem',
         position: 1,
         name: 'الرئيسية',
-        item: 'https://tasawwaq.store',
+        item: 'https://www.tasawwaq.store',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'المتاجر',
-        item: 'https://tasawwaq.store/sellers',
+        item: 'https://www.tasawwaq.store/sellers',
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: seller.storeName,
-        item: `https://tasawwaq.store${publicStorePath}`,
+        item: `https://www.tasawwaq.store${publicStorePath}`,
       },
     ],
   };
