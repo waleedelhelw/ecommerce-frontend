@@ -77,15 +77,15 @@ const ReturnCard = ({
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
         <div className="text-xs text-gray-500">
-          {basePath === '/seller/returns' && returnRequest.userName && (
-            <span>العميل: {returnRequest.userName}</span>
+          {basePath === '/seller/returns' && returnRequest.customerName && (
+            <span>العميل: {returnRequest.customerName}</span>
           )}
           {basePath === '/returns' && returnRequest.storeName && (
             <span>المتجر: {returnRequest.storeName}</span>
           )}
           {basePath === '/admin/returns' && (
             <span>
-              {returnRequest.userName} → {returnRequest.storeName || returnRequest.sellerName}
+              {returnRequest.customerName} → {returnRequest.storeName || returnRequest.sellerName}
             </span>
           )}
         </div>

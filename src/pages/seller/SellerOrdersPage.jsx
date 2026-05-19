@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiEye, FiPhone } from 'react-icons/fi';
+import { FiEye, FiPhone, FiPlus } from 'react-icons/fi';
 import { getMyOrders } from '../../api/seller/sellerOrderService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -8,11 +8,13 @@ import Pagination from '../../components/common/Pagination';
 import { formatPrice } from '../../utils/formatPrice';
 import { formatDate } from '../../utils/formatDate';
 import { orderStatusMap, getStatusInfo } from '../../utils/orderStatusMap';
+import CreateGuestOrderModal from '../../components/seller/CreateGuestOrderModal';
 
 const SellerOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showGuestModal, setShowGuestModal] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -77,9 +79,18 @@ const SellerOrdersPage = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">طلباتي</h1>
-        <p className="text-gray-500 mt-1">إدارة الطلبات الواردة لمتجرك</p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">طلباتي</h1>
+          <p className="text-gray-500 mt-1">إدارة الطلبات الواردة لمتجرك</p>
+        </div>
+        <button
+          onClick={() => setShowGuestModal(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+        >
+          <FiPlus size={16} />
+          إنشاء طلب خارجي
+        </button>
       </div>
 
       <div className="bg-white rounded-xl border p-4 mb-4">
@@ -138,9 +149,9 @@ const SellerOrdersPage = () => {
 
                       <td className="px-4 py-3 text-gray-700">
                         <div>
-                          <p className="font-medium">{order.userName || 'غير معروف'}</p>
-                          {order.userEmail && (
-                            <p className="text-xs text-gray-400 mt-0.5">{order.userEmail}</p>
+                          <p className="font-medium">{order.customerName || 'غير معروف'}</p>
+                          {order.customerEmail && (
+                            <p className="text-xs text-gray-400 mt-0.5">{order.customerEmail}</p>
                           )}
                         </div>
                       </td>
@@ -191,6 +202,15 @@ const SellerOrdersPage = () => {
             </div>
           )}
         </div>
+      )}
+      {showGuestModal && (
+        <CreateGuestOrderModal
+          onClose={() => setShowGuestModal(false)}
+          onSuccess={() => {
+            setShowGuestModal(false);
+            fetchOrders();
+          }}
+        />
       )}
     </div>
   );

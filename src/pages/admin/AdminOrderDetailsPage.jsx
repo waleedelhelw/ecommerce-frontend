@@ -583,12 +583,12 @@ const AdminOrderDetailsPage = () => {
             <div className="space-y-2 text-sm">
               <p>
                 <span className="text-gray-500">الاسم: </span>
-                <span className="font-medium">{order.customerName || order.userName || 'غير معروف'}</span>
+                <span className="font-medium">{order.customerName || 'غير معروف'}</span>
               </p>
-              {(order.customerEmail || order.userEmail) && (
+              {order.customerEmail && (
                 <p>
                   <span className="text-gray-500">البريد: </span>
-                  <span className="font-medium">{order.customerEmail || order.userEmail}</span>
+                  <span className="font-medium">{order.customerEmail}</span>
                 </p>
               )}
               {order.customerPhoneNumber && (

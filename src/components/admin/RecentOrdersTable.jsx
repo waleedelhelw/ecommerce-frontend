@@ -37,7 +37,7 @@ const RecentOrdersTable = ({ orders }) => {
                 <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium">#{order.id}</td>
                   <td className="px-6 py-4 text-sm">
-                    {order.customerName || order.userName || `${order.userFirstName || ''} ${order.userLastName || ''}`.trim() || 'غير معروف'}
+                    {order.customerName || 'غير معروف'}
                   </td>
                   <td className="px-6 py-4 font-bold text-sm">
                     {formatPrice(order.totalAmount || order.totalPrice)}

@@ -54,7 +54,7 @@ const AdminLogsPage = () => {
       header: 'المستخدم',
       render: (row) => (
         <div>
-          <p className="font-medium">{row.userName || row.userEmail || '—'}</p>
+          <p className="font-medium">{row.customerName || row.customerEmail || '—'}</p>
           {row.adminRole && (
             <p className="text-xs text-gray-400">{row.adminRole}</p>
           )}

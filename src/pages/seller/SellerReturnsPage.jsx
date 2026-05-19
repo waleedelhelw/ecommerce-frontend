@@ -159,7 +159,7 @@ const SellerReturnsPage = () => {
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-gray-700">
-                        {returnRequest.userName}
+                        {returnRequest.customerName}
                       </td>
                       <td className="px-4 py-3 text-gray-700">
                         <span className="flex items-center gap-1">

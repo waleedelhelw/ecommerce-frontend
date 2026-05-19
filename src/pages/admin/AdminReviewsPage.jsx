@@ -71,7 +71,7 @@ const AdminReviewsPage = () => {
       header: 'المستخدم',
       render: (row) => (
         <span className="font-medium">
-          {row.userName || row.userFirstName || 'مستخدم'}
+          {row.customerName || row.userFirstName || 'مستخدم'}
         </span>
       ),
     },

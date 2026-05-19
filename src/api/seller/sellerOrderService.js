@@ -57,8 +57,8 @@ export const getOrderPayments = async (orderId) => {
 };
 
 // ✅ 🆕 تأكيد دفع Self Mode
-export const confirmSellerPayment = async (orderId, paymentId) => {
-  const response = await API.put(`${BASE}/${orderId}/payments/${paymentId}/confirm`);
+export const confirmSellerPayment = async (orderId, paymentId, data = {}) => {
+  const response = await API.put(`${BASE}/${orderId}/payments/${paymentId}/confirm`, data);
   return response.data.data;
 };
 
@@ -68,10 +68,23 @@ export const rejectSellerPayment = async (orderId, paymentId, reason) => {
   return response.data.data;
 };
 
+// ✅ 🆕 تأكيد تسليم الطلب الخارجي
+export const confirmDelivery = async (orderId) => {
+  const response = await API.put(`${BASE}/${orderId}/confirm-delivery`);
+  return response.data.data;
+};
+
+// ✅ 🆕 إنشاء طلب خارجي (Guest Order)
+export const createGuestOrder = async (data) => {
+  const response = await API.post(`${BASE}/create-guest`, data);
+  return response.data.data;
+};
+
 const sellerOrderService = {
   getMyOrders,
   getOrders: getMyOrders,
   getOrderById,
+  createGuestOrder,
   updateOrderStatus,
   startProcessing,
   readyToShip,
@@ -81,6 +94,7 @@ const sellerOrderService = {
   getOrderPayments,
   confirmSellerPayment,
   rejectSellerPayment,
+  confirmDelivery,
 };
 
 export default sellerOrderService;

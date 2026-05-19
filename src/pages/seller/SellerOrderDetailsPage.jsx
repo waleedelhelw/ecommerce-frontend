@@ -25,6 +25,7 @@ import {
   getOrderPayments,
   confirmSellerPayment,
   rejectSellerPayment,
+  confirmDelivery,
 } from '../../api/seller/sellerOrderService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -45,6 +46,7 @@ const SellerOrderDetailsPage = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   const [showShipForm, setShowShipForm] = useState(false);
+  const [platformReceiptUrl, setPlatformReceiptUrl] = useState('');
   const [shipData, setShipData] = useState({
     shippingCompany: '',
     trackingNumber: '',
@@ -69,7 +71,7 @@ const SellerOrderDetailsPage = () => {
     fetchOrder();
   }, [id]);
 
-  const fetchOrder = async () => {
+  async function fetchOrder() {
     try {
       setLoading(true);
       setError(null);
@@ -81,7 +83,7 @@ const SellerOrderDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const fetchPayments = async () => {
     try {
@@ -196,11 +198,26 @@ const SellerOrderDetailsPage = () => {
     }
   };
 
-  const handleConfirmPayment = async (paymentId) => {
+  const handleConfirmDelivery = async () => {
+    try {
+      setActionLoading(true);
+      await confirmDelivery(id);
+      toast.success('تم تأكيد تسليم الطلب ✅');
+      fetchOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'فشل تأكيد التسليم');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmPayment = async (paymentId, receiptImageUrl) => {
     try {
       setPaymentActionLoading(true);
-      await confirmSellerPayment(id, paymentId);
+      const payload = receiptImageUrl ? { receiptImageUrl } : {};
+      await confirmSellerPayment(id, paymentId, payload);
       toast.success('تم تأكيد الدفع ✅');
+      setPlatformReceiptUrl('');
       fetchOrder();
     } catch (err) {
       toast.error(err.response?.data?.message || 'فشل تأكيد الدفع');
@@ -382,12 +399,23 @@ const SellerOrderDetailsPage = () => {
               <p className="text-sm text-orange-600">إذا لم يستلم العميل الشحنة، سجّل فشل التسليم مع السبب</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowDeliveryFailedForm(true)}
-            className="bg-orange-600 text-white px-5 py-2.5 rounded-xl hover:bg-orange-700 text-sm font-semibold transition-colors shadow-sm"
-          >
-            ⚠️ فشل التسليم
-          </button>
+          <div className="flex gap-2">
+            {order.trackingToken && (
+              <button
+                onClick={handleConfirmDelivery}
+                disabled={actionLoading}
+                className="bg-green-600 text-white px-5 py-2.5 rounded-xl hover:bg-green-700 text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
+              >
+                {actionLoading ? 'جاري...' : '✅ تأكيد التسليم'}
+              </button>
+            )}
+            <button
+              onClick={() => setShowDeliveryFailedForm(true)}
+              className="bg-orange-600 text-white px-5 py-2.5 rounded-xl hover:bg-orange-700 text-sm font-semibold transition-colors shadow-sm"
+            >
+              ⚠️ فشل التسليم
+            </button>
+          </div>
         </div>
       )}
 
@@ -819,6 +847,18 @@ const SellerOrderDetailsPage = () => {
                     {getPaymentMethodLabel(order.paymentMethod || order.payment?.paymentMethod)}
                   </span>
                 </div>
+                {order.paymentTarget && (
+                  <div className="flex justify-between text-gray-500">
+                    <span>جهة الدفع</span>
+                    <span className={`font-medium text-xs px-2.5 py-0.5 rounded-full ${
+                      order.paymentTarget === 'Platform'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {order.paymentTarget === 'Platform' ? '🏛️ محفظة المنصة' : '🏪 حساب التاجر'}
+                    </span>
+                  </div>
+                )}
                 {paymentStatus && (
                   <div className="flex justify-between items-center text-gray-500">
                     <span>حالة الدفع</span>
@@ -829,13 +869,82 @@ const SellerOrderDetailsPage = () => {
                 )}
               </div>
 
-              {order.paymentMethod === 'CashOnDelivery' && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-3">
-                  <p className="text-xs text-amber-700">
-                    💡 طلبات الدفع عند الاستلام قد تظهر ضمن المبيعات والأرباح والتقارير، لكن لا تدخل ضمن الرصيد المتاح للسحب أو السحب.
-                  </p>
-                </div>
-              )}
+              {/* Pending payment action card */}
+              {(order.status === 'PendingPayment' || payments.some(p => ['Pending', 'WaitingConfirmation'].includes(p.status))) && order.paymentMethod !== 'CashOnDelivery' && (() => {
+                const pendingPayment = payments.find(p => ['Pending', 'WaitingConfirmation'].includes(p.status));
+                const hasPaymentRecord = !!pendingPayment;
+                const paymentTarget = pendingPayment?.paymentTarget || order.paymentTarget;
+                const isSellerMode = paymentTarget === 'Seller';
+
+                if (!paymentTarget) {
+                  return (
+                    <div className="border border-gray-200 rounded-xl p-3 mt-3 space-y-2 bg-gray-50">
+                      <p className="text-xs font-bold text-gray-700">💳 في انتظار تأكيد الدفع</p>
+                      <p className="text-xs text-gray-500">
+                        {getPaymentMethodLabel(order.paymentMethod)} — {formatPrice(order.totalPrice)}
+                      </p>
+                      <p className="text-xs text-gray-400">بيانات الدفع غير متاحة حاليًا. راجع قسم المدفوعات بالأسفل.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className={`border rounded-xl p-3 mt-3 space-y-2 ${
+                    isSellerMode
+                      ? 'bg-amber-50 border-amber-200'
+                      : 'bg-blue-50 border-blue-200'
+                  }`}>
+                    <p className="text-xs font-bold text-gray-700">
+                      {isSellerMode ? '🏪 الدفع لحساب التاجر — في انتظار التأكيد' : '🏛️ الدفع لمنصة — في انتظار التأكيد'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {getPaymentMethodLabel(pendingPayment?.paymentMethod || order.paymentMethod)} — {formatPrice(pendingPayment?.amount || order.totalPrice)}
+                    </p>
+
+                    {isSellerMode ? (
+                      <button
+                        onClick={() => handleConfirmPayment(pendingPayment.id)}
+                        disabled={paymentActionLoading || !hasPaymentRecord}
+                        className="w-full flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700 disabled:opacity-50 text-xs font-semibold transition-colors"
+                      >
+                        <FiCheck size={14} /> تأكيد استلام الدفع
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <input
+                          type="url"
+                          value={platformReceiptUrl}
+                          onChange={(e) => setPlatformReceiptUrl(e.target.value)}
+                          placeholder="https://... (رابط صورة الإيصال)"
+                          className="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          dir="ltr"
+                        />
+                        <button
+                          onClick={() => handleConfirmPayment(pendingPayment.id, platformReceiptUrl.trim())}
+                          disabled={paymentActionLoading || !platformReceiptUrl.trim() || !hasPaymentRecord}
+                          className="w-full flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700 disabled:opacity-50 text-xs font-semibold transition-colors"
+                        >
+                          <FiCheck size={14} /> تأكيد الدفع مع الإيصال
+                        </button>
+                      </div>
+                    )}
+
+                    {isSellerMode && hasPaymentRecord && (
+                      <button
+                        onClick={() => {
+                          setSelectedPaymentId(pendingPayment.id);
+                          setRejectReason('');
+                          setShowRejectModal(true);
+                        }}
+                        disabled={paymentActionLoading}
+                        className="w-full flex items-center justify-center gap-1.5 bg-red-500 text-white py-2 rounded-xl hover:bg-red-600 disabled:opacity-50 text-xs font-semibold transition-colors"
+                      >
+                        <FiX size={14} /> رفض
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -936,12 +1045,12 @@ const SellerOrderDetailsPage = () => {
               <div className="flex items-center gap-2 text-gray-700">
                 <span className="text-gray-400">👤</span>
                 <span className="font-medium">
-                  {order.userName || order.customerName || 'غير معروف'}
+                  {order.customerName || 'غير معروف'}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
                 <span className="text-gray-400">📧</span>
-                <span>{order.userEmail || order.customerEmail || 'غير متوفر'}</span>
+                <span>{order.customerEmail || 'غير متوفر'}</span>
               </div>
               <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
                 <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
@@ -949,6 +1058,31 @@ const SellerOrderDetailsPage = () => {
                 </p>
                 {renderCustomerPhone()}
               </div>
+
+              {(order.trackingToken || order.guestTrackingUrl) && (
+                <div className="bg-purple-50 rounded-xl p-3 border border-purple-200">
+                  <p className="text-xs text-gray-500 mb-1.5">رابط التتبع للعميل:</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={order.guestTrackingUrl || order.trackingUrl || `${window.location.origin}/track/${order.trackingToken}`}
+                      className="flex-1 px-2 py-1.5 bg-white border rounded-lg text-xs text-gray-700 ltr font-mono"
+                      dir="ltr"
+                    />
+                    <button
+                      onClick={() => {
+                        const url = order.guestTrackingUrl || order.trackingUrl || `${window.location.origin}/track/${order.trackingToken}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('تم نسخ الرابط');
+                      }}
+                      className="p-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shrink-0"
+                    >
+                      <FiCopy size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

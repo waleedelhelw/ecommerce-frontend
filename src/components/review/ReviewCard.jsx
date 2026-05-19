@@ -12,7 +12,7 @@ const ReviewCard = ({ review }) => {
           </div>
           <div>
             <p className="font-semibold text-gray-900">
-              {review.userName || review.userFirstName || 'مستخدم'}
+              {review.customerName || review.userFirstName || 'مستخدم'}
             </p>
             <p className="text-xs text-gray-500">{formatDate(review.createdAt)}</p>
           </div>

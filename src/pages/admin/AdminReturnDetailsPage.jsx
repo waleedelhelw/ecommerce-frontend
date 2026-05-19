@@ -575,10 +575,10 @@ const AdminReturnDetailsPage = () => {
             </h2>
             <div className="space-y-2 text-sm">
               <p className="flex items-center gap-2 text-gray-700">
-                <FiUser size={14} /> {returnRequest.userName}
+                <FiUser size={14} /> {returnRequest.customerName}
               </p>
               <p className="flex items-center gap-2 text-gray-700">
-                <FiMail size={14} /> {returnRequest.userEmail}
+                <FiMail size={14} /> {returnRequest.customerEmail}
               </p>
             </div>
           </div>

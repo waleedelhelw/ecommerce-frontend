@@ -47,7 +47,7 @@ const AdminOrdersPage = () => {
     {
       header: 'العميل',
       render: (row) => (
-        <span className="font-medium">{row.customerName || row.userName || 'غير معروف'}</span>
+        <span className="font-medium">{row.customerName || 'غير معروف'}</span>
       ),
     },
     {

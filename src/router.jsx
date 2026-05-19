@@ -59,6 +59,9 @@ import SellerShippingZonesPage from './pages/seller/SellerShippingZonesPage';
 // ✅ جديد — طرق الدفع
 import SellerPaymentMethodsPage from './pages/seller/SellerPaymentMethodsPage';
 
+// Tracking Page
+import TrackingPage from './pages/public/TrackingPage';
+
 // Admin Pages
 import DashboardPage from './pages/admin/DashboardPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
@@ -175,6 +178,7 @@ const router = createBrowserRouter([
           { path: '/terms', element: <TermsPage /> },
           { path: '/shipping', element: <ShippingPage /> },
           { path: '/return-policy', element: <ReturnPolicyPage /> },
+          { path: '/track/:trackingToken', element: <TrackingPage /> },
 
           // Customer Protected
           {

@@ -97,8 +97,8 @@ const AdminReturnsPage = () => {
       header: 'العميل',
       render: (row) => (
         <div className="text-sm">
-          <p className="font-medium">{row.userName || '—'}</p>
-          <p className="text-xs text-gray-500">{row.userEmail || ''}</p>
+          <p className="font-medium">{row.customerName || '—'}</p>
+          <p className="text-xs text-gray-500">{row.customerEmail || ''}</p>
         </div>
       ),
     },
