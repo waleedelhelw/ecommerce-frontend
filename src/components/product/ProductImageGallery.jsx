@@ -106,16 +106,17 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
             aria-label="تكبير صورة المنتج"
           >
             <img
-              src={getOptimizedImage(currentSrc)}
+              src={getOptimizedImage(currentSrc, 600, 600)}
               alt={currentImage.alt}
               width={600}
               height={600}
+              fetchpriority="high"
               className={`w-full h-full object-contain p-4 sm:p-6 lg:p-8 transition-all duration-500 ${
                 imgLoaded ? 'opacity-100' : 'opacity-0'
               }`}
               loading="eager"
               onLoad={() => setImgLoaded(true)}
-              onError={() => { setImgError(true); setImgLoaded(true); }}
+              onError={() => { setImageError(true); setImgLoaded(true); }}
             />
           </button>
         </div>

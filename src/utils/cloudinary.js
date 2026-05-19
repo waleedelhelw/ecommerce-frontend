@@ -1,9 +1,9 @@
 const CLOUD_NAME = 'VITE_CLOUDINARY_CLOUD_NAME';
 const UPLOAD_PRESET = 'VITE_CLOUDINARY_UPLOAD_PRESET';
 
-export function getOptimizedImage(url) {
+export function getOptimizedImage(url, width = 400, height = 400) {
   if (!url || !url.includes('/upload/')) return url;
-  return url.replace('/upload/', '/upload/c_fill,w_400,h_400,g_center/f_auto/q_auto/');
+  return url.replace('/upload/', `/upload/c_fill,w_${width},h_${height},g_center/f_auto/q_auto/`);
 }
 
 export const uploadImage = async (file) => {

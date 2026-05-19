@@ -78,11 +78,11 @@ const ProductCard = ({ product, variant }) => {
                 )}
 
                 <img
-                  src={getOptimizedImage(product.imageUrl) || '/placeholder-product.png'}
+                  src={getOptimizedImage(product.imageUrl, 300, 300) || '/placeholder-product.png'}
                   alt={altText}
                   loading="lazy"
-                  width={400}
-                  height={400}
+                  width={300}
+                  height={300}
                   className={`relative z-10 w-full h-full object-contain p-1.5 transition-all duration-500 ${
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
@@ -163,11 +163,11 @@ const ProductCard = ({ product, variant }) => {
             <>
               {!imageLoaded && <div className="absolute inset-0 skeleton-shimmer" />}
               <img
-                src={getOptimizedImage(product.imageUrl) || '/placeholder-product.png'}
+                src={getOptimizedImage(product.imageUrl, 300, 300) || '/placeholder-product.png'}
                 alt={altText}
                 loading="lazy"
-                width={400}
-                height={400}
+                width={300}
+                height={300}
                 className={`w-full h-full object-contain p-1.5 transition-all duration-500 group-hover:scale-110 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
