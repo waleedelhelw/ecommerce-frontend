@@ -3,7 +3,12 @@ const UPLOAD_PRESET = 'VITE_CLOUDINARY_UPLOAD_PRESET';
 
 export function getOptimizedImage(url, width = 400, height = 400) {
   if (!url || !url.includes('/upload/')) return url;
-  return url.replace('/upload/', `/upload/c_fill,w_${width},h_${height},g_center/f_auto/q_auto/`);
+  return url.replace('/upload/', `/upload/c_fill,w_${width},h_${height},g_center/f_auto/q_auto:low/`);
+}
+
+export function getFullQualityImage(url) {
+  if (!url || !url.includes('/upload/')) return url;
+  return url.replace('/upload/', '/upload/c_fill,w_600,h_600,g_center/f_auto/q_auto:good/');
 }
 
 export const uploadImage = async (file) => {

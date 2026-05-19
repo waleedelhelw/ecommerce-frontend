@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { FiMaximize2, FiX } from 'react-icons/fi';
-import { getOptimizedImage } from '../../utils/cloudinary';
+import { getOptimizedImage, getFullQualityImage } from '../../utils/cloudinary';
 
 const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -106,7 +106,7 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
             aria-label="تكبير صورة المنتج"
           >
             <img
-              src={getOptimizedImage(currentSrc, 600, 600)}
+              src={getFullQualityImage(currentSrc)}
               alt={currentImage.alt}
               width={600}
               height={600}
