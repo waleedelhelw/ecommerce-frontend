@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiHeart, FiMinus, FiPlus } from 'react-icons/fi';
+import { FiShoppingCart, FiHeart, FiMinus, FiPlus, FiShare2, FiCopy, FiSend, FiFacebook } from 'react-icons/fi';
 import StarRating from '../common/StarRating';
 import Badge from '../common/Badge';
 import { formatPrice } from '../../utils/formatPrice';
@@ -196,7 +196,86 @@ const ProductInfo = ({ product }) => {
           </span>
         </div>
       )}
+
+      {/* أزرار المشاركة */}
+      <ShareButtons product={product} />
     </article>
+  );
+};
+
+const ShareButtons = ({ product }) => {
+  const productUrl = `${window.location.origin}/products/${product.id}`;
+  const shareText = `${product.name} - ${product.description?.substring(0, 100) || 'منتج مميز'} | تسوّق`;
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.name, text: shareText, url: productUrl });
+      } catch {}
+    }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard?.writeText(productUrl).then(() => toast.success('تم نسخ الرابط'));
+  };
+
+  return (
+    <div className="pt-4 border-t border-gray-100">
+      <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+        <FiShare2 size={12} />
+        شارك المنتج
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleNativeShare}
+          className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs text-gray-600 transition-colors"
+          aria-label="مشاركة"
+        >
+          <FiShare2 size={14} />
+          مشاركة
+        </button>
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + productUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 bg-green-50 hover:bg-green-100 rounded-lg text-xs text-green-600 transition-colors"
+          aria-label="مشاركة على واتساب"
+        >
+          <FiSend size={14} />
+          واتساب
+        </a>
+        <a
+          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-xs text-blue-600 transition-colors"
+          aria-label="مشاركة على فيسبوك"
+        >
+          <FiFacebook size={14} />
+          فيسبوك
+        </a>
+        <a
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(productUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-xs text-gray-500 transition-colors"
+          aria-label="مشاركة على تويتر"
+        >
+          <svg size={14} className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          X
+        </a>
+        <button
+          onClick={handleCopyLink}
+          className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs text-gray-600 transition-colors"
+          aria-label="نسخ الرابط"
+        >
+          <FiCopy size={14} />
+          نسخ
+        </button>
+      </div>
+    </div>
   );
 };
 

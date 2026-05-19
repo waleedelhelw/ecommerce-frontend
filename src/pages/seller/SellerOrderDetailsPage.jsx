@@ -690,6 +690,8 @@ const SellerOrderDetailsPage = () => {
                   <img
                     src={item.productImageUrl || item.imageUrl || '/placeholder-product.png'}
                     alt={item.productName || item.name}
+                    width={56}
+                    height={56}
                     className="w-14 h-14 rounded-xl object-cover border border-gray-200"
                     onError={(e) => {
                       e.target.src = '/placeholder-product.png';
@@ -992,6 +994,8 @@ const SellerOrderDetailsPage = () => {
                           <img
                             src={payment.receiptImageUrl}
                             alt="إيصال الدفع"
+                            width={128}
+                            height={128}
                             className="w-32 h-32 object-cover rounded-xl border border-gray-200 hover:opacity-80 transition-opacity"
                           />
                           <p className="text-xs text-blue-600 mt-1">🔍 اضغط للتكبير</p>
@@ -1138,6 +1142,8 @@ const SellerOrderDetailsPage = () => {
             <img
               src={previewImage}
               alt="إيصال الدفع"
+              width={800}
+              height={800}
               className="max-w-full max-h-[90vh] rounded-xl object-contain"
             />
             <button

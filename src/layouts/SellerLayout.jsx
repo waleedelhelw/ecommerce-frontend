@@ -50,6 +50,8 @@ const SellerLayout = () => {
                   <img
                     src={user.profilePictureUrl}
                     alt="profile"
+                    width={28}
+                    height={28}
                     className="w-7 h-7 rounded-full object-cover"
                   />
                 ) : (

@@ -52,6 +52,8 @@ const SingleImageUploader = ({ imageUrl, onChange, error }) => {
           <img
             src={imageUrl}
             alt="صورة المنتج"
+            width={192}
+            height={192}
             className="w-full h-full object-cover"
             onError={(e) => {
               e.target.onerror = null;

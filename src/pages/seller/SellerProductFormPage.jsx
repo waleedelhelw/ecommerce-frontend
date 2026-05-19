@@ -402,6 +402,8 @@ Then, tell me everything about this product in Arabic: what's it called, what's 
               <img
                 src={form.imageUrl}
                 alt="الصورة الرئيسية"
+                width={192}
+                height={192}
                 className="w-48 h-48 object-cover rounded-xl border-2 border-green-200"
               />
               <button
@@ -515,6 +517,8 @@ Then, tell me everything about this product in Arabic: what's it called, what's 
                     <img
                       src={img.imageUrl}
                       alt={img.altText || `صورة ${index + 1}`}
+                      width={160}
+                      height={128}
                       className={`w-full h-32 object-cover rounded-lg border-2 transition-colors
                         ${img.isMain ? 'border-green-500' : 'border-gray-200 group-hover:border-green-300'}`}
                     />

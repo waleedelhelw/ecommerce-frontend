@@ -108,6 +108,8 @@ const AdminPaymentReviewPage = () => {
                   <img
                     src={payment.receiptImageUrl}
                     alt="إيصال الدفع"
+                    width={400}
+                    height={192}
                     className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 flex items-center justify-center transition-all">
@@ -238,6 +240,8 @@ const AdminPaymentReviewPage = () => {
             <img
               src={previewImage}
               alt="إيصال الدفع"
+              width={800}
+              height={800}
               className="max-w-full max-h-[90vh] rounded-xl object-contain"
             />
             <button

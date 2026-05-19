@@ -402,6 +402,8 @@ const SellerReturnDetailsPage = () => {
                   <img
                     src={item.productImageUrl || '/placeholder-product.png'}
                     alt={item.productName}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-lg object-cover"
                     onError={(e) => {
                       e.target.src = '/placeholder-product.png';
@@ -440,6 +442,8 @@ const SellerReturnDetailsPage = () => {
                     <img
                       src={img.imageUrl}
                       alt={img.altText || `صورة ${idx + 1}`}
+                      width={160}
+                      height={160}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -704,6 +708,8 @@ const SellerReturnDetailsPage = () => {
           <img
             src={previewImage}
             alt="معاينة"
+            width={800}
+            height={800}
             className="max-w-full max-h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
           />

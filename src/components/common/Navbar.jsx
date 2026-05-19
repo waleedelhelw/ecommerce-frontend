@@ -153,6 +153,8 @@ const Navbar = () => {
                     <img
                       src={user.profilePictureUrl}
                       alt={`صورة ${displayName()}`}
+                      width={28}
+                      height={28}
                       className="w-7 h-7 rounded-full object-cover ring-2 ring-purple-200"
                     />
                   ) : (

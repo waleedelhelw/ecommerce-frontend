@@ -73,6 +73,8 @@ const TopSellersSection = () => {
                     <img
                       src={seller.logoUrl}
                       alt={`شعار متجر ${seller.storeName}`}
+                      width={80}
+                      height={80}
                       className="w-full h-full object-contain p-1"
                       loading="lazy"
                       onError={(e) => {

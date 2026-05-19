@@ -193,7 +193,7 @@ const PaymentCard = ({ payment, paymentInfo, onUploadReceipt, showUpload }) => {
               </label>
             ) : (
               <div className="relative">
-                <img src={receiptPreview} alt="الإيصال" className="w-full rounded-lg border max-h-40 object-contain" />
+                <img src={receiptPreview} alt="الإيصال" width={400} height={160} className="w-full rounded-lg border max-h-40 object-contain" />
                 <button
                   onClick={() => { setReceiptFile(null); setReceiptPreview(null); }}
                   className="absolute top-1 left-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs"
@@ -235,7 +235,7 @@ const PaymentCard = ({ payment, paymentInfo, onUploadReceipt, showUpload }) => {
                 </label>
               ) : (
                 <div className="relative">
-                  <img src={receiptPreview} alt="الإيصال" className="w-full rounded-lg border max-h-40 object-contain" />
+                  <img src={receiptPreview} alt="الإيصال" width={400} height={160} className="w-full rounded-lg border max-h-40 object-contain" />
                   <button onClick={() => { setReceiptFile(null); setReceiptPreview(null); }}
                     className="absolute top-1 left-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">✕</button>
                 </div>

@@ -187,6 +187,8 @@ const SellerStorePage = () => {
             <img
               src={seller.bannerUrl}
               alt={`بانر متجر ${seller.storeName}`}
+              width={1200}
+              height={256}
               className="w-full h-full object-cover"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
@@ -203,6 +205,8 @@ const SellerStorePage = () => {
                   <img
                     src={seller.logoUrl}
                     alt={`شعار متجر ${seller.storeName}`}
+                    width={80}
+                    height={80}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none';

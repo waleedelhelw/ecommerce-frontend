@@ -68,6 +68,8 @@ const AdminProductsPage = () => {
           <img
             src={row.imageUrl || '/placeholder-product.png'}
             alt={row.name}
+            width={48}
+            height={48}
             className="w-full h-full object-cover"
             onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-product.png'; }}
           />

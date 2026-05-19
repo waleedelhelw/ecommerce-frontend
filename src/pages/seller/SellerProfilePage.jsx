@@ -253,7 +253,7 @@ const SellerProfilePage = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center">
                   {form.logoUrl ? (
                     <div className="relative inline-block">
-                      <img src={form.logoUrl} alt="لوجو" className="w-32 h-32 object-cover rounded-xl mx-auto" />
+                      <img src={form.logoUrl} alt="لوجو" width={128} height={128} className="w-32 h-32 object-cover rounded-xl mx-auto" />
                       <button type="button" onClick={() => setForm((p) => ({ ...p, logoUrl: '' }))} className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
                         <FiX size={14} />
                       </button>
@@ -277,7 +277,7 @@ const SellerProfilePage = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center">
                   {form.bannerUrl ? (
                     <div className="relative inline-block w-full">
-                      <img src={form.bannerUrl} alt="بانر" className="w-full h-32 object-cover rounded-xl" />
+                      <img src={form.bannerUrl} alt="بانر" width={400} height={128} className="w-full h-32 object-cover rounded-xl" />
                       <button type="button" onClick={() => setForm((p) => ({ ...p, bannerUrl: '' }))} className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
                         <FiX size={14} />
                       </button>

@@ -108,6 +108,8 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
             <img
               src={getOptimizedImage(currentSrc)}
               alt={currentImage.alt}
+              width={600}
+              height={600}
               className={`w-full h-full object-contain p-4 sm:p-6 lg:p-8 transition-all duration-500 ${
                 imgLoaded ? 'opacity-100' : 'opacity-0'
               }`}
@@ -153,6 +155,8 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
                   src={getOptimizedImage(img.url)}
                   alt={img.alt}
                   loading="lazy"
+                  width={64}
+                  height={64}
                   className="w-full h-full object-cover bg-gray-50"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -196,6 +200,8 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
             <img
               src={getOptimizedImage(currentSrc)}
               alt={currentImage.alt}
+              width={1200}
+              height={1200}
               className="max-w-[90vw] max-h-[85vh] object-contain pointer-events-none"
               loading="eager"
               onError={(e) => {

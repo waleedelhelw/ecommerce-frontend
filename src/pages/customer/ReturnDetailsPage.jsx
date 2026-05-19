@@ -297,6 +297,8 @@ const ReturnDetailsPage = () => {
                       <img
                         src={item.productImageUrl}
                         alt={item.productName}
+                        width={64}
+                        height={64}
                         className="w-16 h-16 rounded-lg object-cover border flex-shrink-0"
                       />
                     )}
@@ -340,6 +342,8 @@ const ReturnDetailsPage = () => {
                       <img
                         src={img.imageUrl}
                         alt={img.altText || 'صورة'}
+                        width={160}
+                        height={160}
                         className="w-full h-full object-cover hover:scale-105 transition-transform"
                       />
                     </button>
@@ -550,6 +554,8 @@ const ReturnDetailsPage = () => {
             <img
               src={previewImage}
               alt="معاينة"
+              width={800}
+              height={800}
               className="max-w-full max-h-full rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />

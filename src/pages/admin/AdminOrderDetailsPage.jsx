@@ -302,6 +302,8 @@ const AdminOrderDetailsPage = () => {
                     <img
                       src={payment.receiptImageUrl}
                       alt="إيصال الدفع"
+                      width={192}
+                      height={192}
                       className="w-48 h-48 object-cover rounded-xl border-2 border-orange-200 hover:opacity-90 transition-opacity"
                     />
                     <p className="text-xs text-orange-600 mt-1">🔍 اضغط للتكبير</p>
@@ -412,6 +414,8 @@ const AdminOrderDetailsPage = () => {
                     <img
                       src={item.imageUrl || item.productImageUrl}
                       alt={item.productName || item.name}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 object-cover rounded-lg"
                     />
                   )}
@@ -806,6 +810,8 @@ const AdminOrderDetailsPage = () => {
             <img
               src={previewImage}
               alt="إيصال الدفع"
+              width={800}
+              height={800}
               className="max-w-full max-h-[90vh] rounded-xl object-contain"
             />
             <button

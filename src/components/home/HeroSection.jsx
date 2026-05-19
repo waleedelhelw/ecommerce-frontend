@@ -26,10 +26,10 @@ const HeroSection = () => {
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-3 leading-tight">
-            تسوّق بثقة
+            منصة التسوق الإلكتروني الأولى في مصر
             <br />
             <span className="bg-gradient-to-r from-yellow-300 via-orange-200 to-pink-300 bg-clip-text text-transparent">
-              واربح من بيعك
+              تسوّق بثقة واربح من بيعك
             </span>
           </h1>
 

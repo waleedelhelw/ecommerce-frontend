@@ -107,6 +107,11 @@ const CategoryProductsPage = () => {
           <p className="text-sm text-gray-500 mt-1">
             {totalCount > 0 ? `${totalCount} منتج متاح` : 'تصفّح منتجات هذا التصنيف'}
           </p>
+          {category?.description && (
+            <p className="text-sm text-gray-600 mt-3 leading-relaxed max-w-3xl">
+              {category.description}
+            </p>
+          )}
         </div>
 
         <ProductGrid products={products} loading={loading} variant="simple" />

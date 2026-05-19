@@ -204,6 +204,8 @@ const SellerProductsPage = () => {
                           <img
                             src={product.imageUrl || '/placeholder-product.png'}
                             alt={product.name}
+                            width={40}
+                            height={40}
                             className={`w-10 h-10 rounded-lg object-cover ${
                               !product.isActive ? 'opacity-50' : ''
                             }`}

@@ -290,7 +290,7 @@ const AdminPayoutsPage = () => {
               </label>
             ) : (
               <div className="relative mb-4">
-                <img src={receiptPreview} alt="إيصال" className="w-full rounded-xl border" />
+                <img src={receiptPreview} alt="إيصال" width={400} height={400} className="w-full rounded-xl border" />
                 <button
                   onClick={() => { setReceiptFile(null); setReceiptPreview(null); }}
                   className="absolute top-2 left-2 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-600"

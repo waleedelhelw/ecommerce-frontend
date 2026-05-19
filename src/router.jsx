@@ -1,9 +1,11 @@
+import React, { Suspense } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 
 // ✅ ScrollToTop
 import ScrollToTop from './components/common/ScrollToTop';
 import ForegroundMessageHandler from './components/fcm/ForegroundMessageHandler';
 import { Toaster } from 'react-hot-toast';
+import LoadingSpinner from './components/common/LoadingSpinner';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -18,91 +20,26 @@ import SellerRoute from './guards/SellerRoute';
 import CustomerRoute from './guards/CustomerRoute';
 import GuestRoute from './guards/GuestRoute';
 
-// Customer Pages
+// Eager — critical for initial render
 import HomePage from './pages/customer/HomePage';
 import ProductsPage from './pages/customer/ProductsPage';
 import ProductDetailsPage from './pages/customer/ProductDetailsPage';
 import CategoryProductsPage from './pages/customer/CategoryProductsPage';
 import CategoriesPage from './pages/customer/CategoriesPage';
-import CartPage from './pages/customer/CartPage';
-import CheckoutPage from './pages/customer/CheckoutPage';
-import OrdersPage from './pages/customer/OrdersPage';
-import OrderDetailsPage from './pages/customer/OrderDetailsPage';
-import WishlistPage from './pages/customer/WishlistPage';
-import ProfilePage from './pages/customer/ProfilePage';
 import SellersPage from './pages/customer/SellersPage';
 import SellerStorePage from './pages/customer/SellerStorePage';
-import PaymentPage from './pages/customer/PaymentPage';
-import InstallmentPaymentPage from './pages/customer/InstallmentPaymentPage';
-
-// Auth Pages
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-import RegisterSellerPage from './pages/auth/RegisterSellerPage';
-import ChangePasswordPage from './pages/auth/ChangePasswordPage';
-import VerifyEmailPage from './pages/auth/VerifyEmailPage';
-
-// Seller Pages
-import SellerDashboardPage from './pages/seller/SellerDashboardPage';
-import SellerProductsPage from './pages/seller/SellerProductsPage';
-import SellerProductFormPage from './pages/seller/SellerProductFormPage';
-import SellerOrdersPage from './pages/seller/SellerOrdersPage';
-import SellerOrderDetailsPage from './pages/seller/SellerOrderDetailsPage';
-import SellerPayoutsPage from './pages/seller/SellerPayoutsPage';
-import SellerProfilePage from './pages/seller/SellerProfilePage';
-import SellerPendingPage from './pages/seller/SellerPendingPage';
-import SellerSuspendedPage from './pages/seller/SellerSuspendedPage';
-import SellerRejectedPage from './pages/seller/SellerRejectedPage';
-import SellerFinancePage from './pages/seller/SellerFinancePage';
-// ✅ جديد — مناطق الشحن
-import SellerShippingZonesPage from './pages/seller/SellerShippingZonesPage';
-// ✅ جديد — طرق الدفع
-import SellerPaymentMethodsPage from './pages/seller/SellerPaymentMethodsPage';
-
-// Tracking Page
 import TrackingPage from './pages/public/TrackingPage';
-
-// Admin Pages
-import DashboardPage from './pages/admin/DashboardPage';
-import AdminProductsPage from './pages/admin/AdminProductsPage';
-import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
-import AdminCategoryFormPage from './pages/admin/AdminCategoryFormPage';
-import AdminOrdersPage from './pages/admin/AdminOrdersPage';
-import AdminOrderDetailsPage from './pages/admin/AdminOrderDetailsPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
-import AdminReviewsPage from './pages/admin/AdminReviewsPage';
-import AdminLogsPage from './pages/admin/AdminLogsPage';
-import AdminSellersPage from './pages/admin/AdminSellersPage';
-import AdminSellerDetailsPage from './pages/admin/AdminSellerDetailsPage';
-import AdminPayoutsPage from './pages/admin/AdminPayoutsPage';
-import AdminPaymentReviewPage from './pages/admin/AdminPaymentReviewPage';
-import AdminSettingsPage from './pages/admin/AdminSettingsPage';
-import AdminShippingOptionsPage from './pages/admin/AdminShippingOptionsPage';
-import AdminReturnsPage from './pages/admin/AdminReturnsPage';
-import AdminReturnDetailsPage from './pages/admin/AdminReturnDetailsPage';
-import AdminInstallmentPlansPage from './pages/admin/AdminInstallmentPlansPage';
-
-// Error Pages
 import NotFoundPage from './pages/errors/NotFoundPage';
-import UnauthorizedPage from './pages/errors/UnauthorizedPage';
-import ForbiddenPage from './pages/errors/ForbiddenPage';
 
-// Static Pages
-import AboutPage from './pages/static/AboutPage';
-import ContactPage from './pages/static/ContactPage';
-import FaqPage from './pages/static/FaqPage';
-import HowToSellPage from './pages/static/HowToSellPage';
-import PrivacyPage from './pages/static/PrivacyPage';
-import TermsPage from './pages/static/TermsPage';
-import ShippingPage from './pages/static/ShippingPage';
-import ReturnPolicyPage from './pages/static/ReturnPolicyPage';
-
-// Returns System Pages
-import ReturnsListPage from './pages/customer/ReturnsListPage';
-import ReturnDetailsPage from './pages/customer/ReturnDetailsPage';
-import CreateReturnPage from './pages/customer/CreateReturnPage';
-import SellerReturnsPage from './pages/seller/SellerReturnsPage';
-import SellerReturnDetailsPage from './pages/seller/SellerReturnDetailsPage';
+// Lazy loader utility
+const lazyPage = (importFn) => {
+  const Component = React.lazy(importFn);
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <Component />
+    </Suspense>
+  );
+};
 
 // ✅ Root Wrapper
 const RootLayout = () => (
@@ -128,7 +65,7 @@ const router = createBrowserRouter([
             path: '/login',
             element: (
               <GuestRoute>
-                <LoginPage />
+                {lazyPage(() => import('./pages/auth/LoginPage'))}
               </GuestRoute>
             ),
           },
@@ -136,7 +73,7 @@ const router = createBrowserRouter([
             path: '/register',
             element: (
               <GuestRoute>
-                <RegisterPage />
+                {lazyPage(() => import('./pages/auth/RegisterPage'))}
               </GuestRoute>
             ),
           },
@@ -144,13 +81,13 @@ const router = createBrowserRouter([
             path: '/register-seller',
             element: (
               <GuestRoute>
-                <RegisterSellerPage />
+                {lazyPage(() => import('./pages/auth/RegisterSellerPage'))}
               </GuestRoute>
             ),
           },
           {
             path: '/verify-email',
-            element: <VerifyEmailPage />,
+            element: lazyPage(() => import('./pages/auth/VerifyEmailPage')),
           },
         ],
       },
@@ -170,105 +107,65 @@ const router = createBrowserRouter([
           { path: '/sellers/:sellerId', element: <SellerStorePage /> },
 
           // Static Pages
-          { path: '/about', element: <AboutPage /> },
-          { path: '/contact', element: <ContactPage /> },
-          { path: '/faq', element: <FaqPage /> },
-          { path: '/how-to-sell', element: <HowToSellPage /> },
-          { path: '/privacy', element: <PrivacyPage /> },
-          { path: '/terms', element: <TermsPage /> },
-          { path: '/shipping', element: <ShippingPage /> },
-          { path: '/return-policy', element: <ReturnPolicyPage /> },
+          { path: '/about', element: lazyPage(() => import('./pages/static/AboutPage')) },
+          { path: '/contact', element: lazyPage(() => import('./pages/static/ContactPage')) },
+          { path: '/faq', element: lazyPage(() => import('./pages/static/FaqPage')) },
+          { path: '/how-to-sell', element: lazyPage(() => import('./pages/static/HowToSellPage')) },
+          { path: '/privacy', element: lazyPage(() => import('./pages/static/PrivacyPage')) },
+          { path: '/terms', element: lazyPage(() => import('./pages/static/TermsPage')) },
+          { path: '/shipping', element: lazyPage(() => import('./pages/static/ShippingPage')) },
+          { path: '/return-policy', element: lazyPage(() => import('./pages/static/ReturnPolicyPage')) },
           { path: '/track/:trackingToken', element: <TrackingPage /> },
 
           // Customer Protected
           {
             path: '/cart',
-            element: (
-              <CustomerRoute>
-                <CartPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/CartPage'))}</CustomerRoute>,
           },
           {
             path: '/checkout',
-            element: (
-              <CustomerRoute>
-                <CheckoutPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/CheckoutPage'))}</CustomerRoute>,
           },
           {
             path: '/orders',
-            element: (
-              <CustomerRoute>
-                <OrdersPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/OrdersPage'))}</CustomerRoute>,
           },
           {
             path: '/orders/:id',
-            element: (
-              <CustomerRoute>
-                <OrderDetailsPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/OrderDetailsPage'))}</CustomerRoute>,
           },
           {
             path: '/orders/:id/payment',
-            element: (
-              <CustomerRoute>
-                <PaymentPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/PaymentPage'))}</CustomerRoute>,
           },
           {
             path: '/orders/:id/installments',
-            element: (
-              <CustomerRoute>
-                <InstallmentPaymentPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/InstallmentPaymentPage'))}</CustomerRoute>,
           },
 
           // Returns
           {
             path: '/returns',
-            element: (
-              <CustomerRoute>
-                <ReturnsListPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/ReturnsListPage'))}</CustomerRoute>,
           },
           {
             path: '/returns/new/:orderId',
-            element: (
-              <CustomerRoute>
-                <CreateReturnPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/CreateReturnPage'))}</CustomerRoute>,
           },
           {
             path: '/returns/:id',
-            element: (
-              <CustomerRoute>
-                <ReturnDetailsPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/ReturnDetailsPage'))}</CustomerRoute>,
           },
 
           {
             path: '/wishlist',
-            element: (
-              <CustomerRoute>
-                <WishlistPage />
-              </CustomerRoute>
-            ),
+            element: <CustomerRoute>{lazyPage(() => import('./pages/customer/WishlistPage'))}</CustomerRoute>,
           },
           {
             path: '/profile',
             element: (
               <ProtectedRoute>
-                <ProfilePage />
+                {lazyPage(() => import('./pages/customer/ProfilePage'))}
               </ProtectedRoute>
             ),
           },
@@ -276,14 +173,14 @@ const router = createBrowserRouter([
             path: '/change-password',
             element: (
               <ProtectedRoute>
-                <ChangePasswordPage />
+                {lazyPage(() => import('./pages/auth/ChangePasswordPage'))}
               </ProtectedRoute>
             ),
           },
 
           // Errors
-          { path: '/unauthorized', element: <UnauthorizedPage /> },
-          { path: '/forbidden', element: <ForbiddenPage /> },
+          { path: '/unauthorized', element: lazyPage(() => import('./pages/errors/UnauthorizedPage')) },
+          { path: '/forbidden', element: lazyPage(() => import('./pages/errors/ForbiddenPage')) },
           { path: '*', element: <NotFoundPage /> },
         ],
       },
@@ -295,14 +192,14 @@ const router = createBrowserRouter([
         path: '/seller',
         element: <SellerLayout />,
         children: [
-          { path: 'pending-approval', element: <SellerPendingPage /> },
-          { path: 'suspended', element: <SellerSuspendedPage /> },
-          { path: 'rejected', element: <SellerRejectedPage /> },
+          { path: 'pending-approval', element: lazyPage(() => import('./pages/seller/SellerPendingPage')) },
+          { path: 'suspended', element: lazyPage(() => import('./pages/seller/SellerSuspendedPage')) },
+          { path: 'rejected', element: lazyPage(() => import('./pages/seller/SellerRejectedPage')) },
           {
             path: 'dashboard',
             element: (
               <SellerRoute>
-                <SellerDashboardPage />
+                {lazyPage(() => import('./pages/seller/SellerDashboardPage'))}
               </SellerRoute>
             ),
           },
@@ -310,7 +207,7 @@ const router = createBrowserRouter([
             path: 'products',
             element: (
               <SellerRoute>
-                <SellerProductsPage />
+                {lazyPage(() => import('./pages/seller/SellerProductsPage'))}
               </SellerRoute>
             ),
           },
@@ -318,7 +215,7 @@ const router = createBrowserRouter([
             path: 'products/new',
             element: (
               <SellerRoute>
-                <SellerProductFormPage />
+                {lazyPage(() => import('./pages/seller/SellerProductFormPage'))}
               </SellerRoute>
             ),
           },
@@ -326,7 +223,7 @@ const router = createBrowserRouter([
             path: 'products/:id/edit',
             element: (
               <SellerRoute>
-                <SellerProductFormPage />
+                {lazyPage(() => import('./pages/seller/SellerProductFormPage'))}
               </SellerRoute>
             ),
           },
@@ -334,7 +231,7 @@ const router = createBrowserRouter([
             path: 'orders',
             element: (
               <SellerRoute>
-                <SellerOrdersPage />
+                {lazyPage(() => import('./pages/seller/SellerOrdersPage'))}
               </SellerRoute>
             ),
           },
@@ -342,7 +239,7 @@ const router = createBrowserRouter([
             path: 'orders/:id',
             element: (
               <SellerRoute>
-                <SellerOrderDetailsPage />
+                {lazyPage(() => import('./pages/seller/SellerOrderDetailsPage'))}
               </SellerRoute>
             ),
           },
@@ -350,7 +247,7 @@ const router = createBrowserRouter([
             path: 'returns',
             element: (
               <SellerRoute>
-                <SellerReturnsPage />
+                {lazyPage(() => import('./pages/seller/SellerReturnsPage'))}
               </SellerRoute>
             ),
           },
@@ -358,7 +255,7 @@ const router = createBrowserRouter([
             path: 'returns/:id',
             element: (
               <SellerRoute>
-                <SellerReturnDetailsPage />
+                {lazyPage(() => import('./pages/seller/SellerReturnDetailsPage'))}
               </SellerRoute>
             ),
           },
@@ -366,7 +263,7 @@ const router = createBrowserRouter([
             path: 'finance',
             element: (
               <SellerRoute>
-                <SellerFinancePage />
+                {lazyPage(() => import('./pages/seller/SellerFinancePage'))}
               </SellerRoute>
             ),
           },
@@ -375,7 +272,7 @@ const router = createBrowserRouter([
             path: 'shipping-zones',
             element: (
               <SellerRoute>
-                <SellerShippingZonesPage />
+                {lazyPage(() => import('./pages/seller/SellerShippingZonesPage'))}
               </SellerRoute>
             ),
           },
@@ -383,7 +280,7 @@ const router = createBrowserRouter([
             path: 'payment-methods',
             element: (
               <SellerRoute>
-                <SellerPaymentMethodsPage />
+                {lazyPage(() => import('./pages/seller/SellerPaymentMethodsPage'))}
               </SellerRoute>
             ),
           },
@@ -391,7 +288,7 @@ const router = createBrowserRouter([
             path: 'payouts',
             element: (
               <SellerRoute>
-                <SellerPayoutsPage />
+                {lazyPage(() => import('./pages/seller/SellerPayoutsPage'))}
               </SellerRoute>
             ),
           },
@@ -399,7 +296,7 @@ const router = createBrowserRouter([
             path: 'profile',
             element: (
               <SellerRoute>
-                <SellerProfilePage />
+                {lazyPage(() => import('./pages/seller/SellerProfilePage'))}
               </SellerRoute>
             ),
           },
@@ -417,29 +314,29 @@ const router = createBrowserRouter([
           </SuperAdminRoute>
         ),
         children: [
-          { index: true, element: <DashboardPage /> },
-          { path: 'dashboard', element: <DashboardPage /> },
-          { path: 'sellers', element: <AdminSellersPage /> },
-          { path: 'sellers/:id', element: <AdminSellerDetailsPage /> },
-          { path: 'products', element: <AdminProductsPage /> },
-          { path: 'categories', element: <AdminCategoriesPage /> },
-          { path: 'categories/create', element: <AdminCategoryFormPage /> },
-          { path: 'categories/edit/:id', element: <AdminCategoryFormPage /> },
-          { path: 'orders', element: <AdminOrdersPage /> },
-          { path: 'orders/:id', element: <AdminOrderDetailsPage /> },
-          { path: 'returns', element: <AdminReturnsPage /> },
-          { path: 'returns/:id', element: <AdminReturnDetailsPage /> },
+          { index: true, element: lazyPage(() => import('./pages/admin/DashboardPage')) },
+          { path: 'dashboard', element: lazyPage(() => import('./pages/admin/DashboardPage')) },
+          { path: 'sellers', element: lazyPage(() => import('./pages/admin/AdminSellersPage')) },
+          { path: 'sellers/:id', element: lazyPage(() => import('./pages/admin/AdminSellerDetailsPage')) },
+          { path: 'products', element: lazyPage(() => import('./pages/admin/AdminProductsPage')) },
+          { path: 'categories', element: lazyPage(() => import('./pages/admin/AdminCategoriesPage')) },
+          { path: 'categories/create', element: lazyPage(() => import('./pages/admin/AdminCategoryFormPage')) },
+          { path: 'categories/edit/:id', element: lazyPage(() => import('./pages/admin/AdminCategoryFormPage')) },
+          { path: 'orders', element: lazyPage(() => import('./pages/admin/AdminOrdersPage')) },
+          { path: 'orders/:id', element: lazyPage(() => import('./pages/admin/AdminOrderDetailsPage')) },
+          { path: 'returns', element: lazyPage(() => import('./pages/admin/AdminReturnsPage')) },
+          { path: 'returns/:id', element: lazyPage(() => import('./pages/admin/AdminReturnDetailsPage')) },
 
           // 🆕 ✅ Installments
-          { path: 'installments', element: <AdminInstallmentPlansPage /> },
+          { path: 'installments', element: lazyPage(() => import('./pages/admin/AdminInstallmentPlansPage')) },
 
-          { path: 'users', element: <AdminUsersPage /> },
-          { path: 'reviews', element: <AdminReviewsPage /> },
-          { path: 'payouts', element: <AdminPayoutsPage /> },
-          { path: 'logs', element: <AdminLogsPage /> },
-          { path: 'payments', element: <AdminPaymentReviewPage /> },
-          { path: 'settings', element: <AdminSettingsPage /> },
-          { path: 'shipping', element: <AdminShippingOptionsPage /> },
+          { path: 'users', element: lazyPage(() => import('./pages/admin/AdminUsersPage')) },
+          { path: 'reviews', element: lazyPage(() => import('./pages/admin/AdminReviewsPage')) },
+          { path: 'payouts', element: lazyPage(() => import('./pages/admin/AdminPayoutsPage')) },
+          { path: 'logs', element: lazyPage(() => import('./pages/admin/AdminLogsPage')) },
+          { path: 'payments', element: lazyPage(() => import('./pages/admin/AdminPaymentReviewPage')) },
+          { path: 'settings', element: lazyPage(() => import('./pages/admin/AdminSettingsPage')) },
+          { path: 'shipping', element: lazyPage(() => import('./pages/admin/AdminShippingOptionsPage')) },
         ],
       },
     ],

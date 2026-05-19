@@ -11,6 +11,8 @@ const CartItem = ({ item }) => {
         <img
           src={item.imageUrl || item.productImageUrl || '/placeholder-product.png'}
           alt={item.productName}
+          width={80}
+          height={80}
           className="w-full h-full object-cover"
           onError={(e) => {
             e.target.onerror = null;

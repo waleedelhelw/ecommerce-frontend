@@ -159,6 +159,8 @@ const ReturnRequestForm = ({ order }) => {
                     <img
                       src={item.productImageUrl}
                       alt={item.productName}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 rounded-lg object-cover border"
                     />
                   )}
