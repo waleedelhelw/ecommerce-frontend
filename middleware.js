@@ -35,9 +35,6 @@ const ogHtml = (title, description, imageUrl, url, type = 'website') => {
   <meta name="twitter:title" content="${t}" />
   <meta name="twitter:description" content="${d}" />
   <meta name="twitter:image" content="${i}" />
-
-  <meta http-equiv="refresh" content="0;url=${u}" />
-  <script>window.location.href = '${u}';</script>
 </head>
 <body></body>
 </html>`;
@@ -132,10 +129,13 @@ async function handleProductPage(pathname) {
 }
 
 function respond(html) {
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(html);
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'Content-Length': String(bytes.length),
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
     },
   });
 }
