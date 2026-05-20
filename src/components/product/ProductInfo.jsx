@@ -233,7 +233,7 @@ const ShareButtons = ({ product }) => {
           مشاركة
         </button>
         <a
-          href={`https://wa.me/?text=${encodeURIComponent(product.name + '\n' + productUrl)}`}
+          href={`https://wa.me/?text=${encodeURIComponent(product.name + '\n\n' + (product.description?.substring(0, 150) || '') + '\n\nاطلب دلوقتي 🛒\n' + productUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs text-emerald-600 transition-all font-medium"
