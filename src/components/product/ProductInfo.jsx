@@ -201,7 +201,10 @@ const ProductInfo = ({ product }) => {
 
 const ShareButtons = ({ product }) => {
   const productUrl = `${window.location.origin}/products/${product.id}`;
+  const productImage = product.imageUrl || product.images?.[0]?.imageUrl || '';
   const shareText = `${product.name} - ${product.description?.substring(0, 100) || 'منتج مميز'} | تسوّق`;
+
+  const waText = `${product.name}\n\n${product.description?.substring(0, 200) || ''}\n\n${productImage}\n\n${productUrl}`;
 
   const handleNativeShare = async () => {
     if (navigator.share) {
@@ -212,7 +215,7 @@ const ShareButtons = ({ product }) => {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard?.writeText(productUrl).then(() => toast.success('تم نسخ الرابط'));
+    navigator.clipboard?.writeText(waText).then(() => toast.success('تم نسخ الرابط مع الصورة'));
   };
 
   return (
@@ -233,7 +236,7 @@ const ShareButtons = ({ product }) => {
           مشاركة
         </button>
         <a
-          href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + productUrl)}`}
+          href={`https://wa.me/?text=${encodeURIComponent(waText)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs text-emerald-600 transition-all font-medium"
