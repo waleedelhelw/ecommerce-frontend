@@ -4,34 +4,44 @@ const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 const CRAWLER_PATTERN = /WhatsApp|FacebookExternalHit|Facebot|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Pinterest|Googlebot|facebook|telegram|twitter|linkedin/i;
 
-const ogHtml = (title, description, imageUrl, url, type = 'website') => `<!DOCTYPE html>
+const esc = (s) => {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, ' ');
+};
+
+const ogHtml = (title, description, imageUrl, url, type = 'website') => {
+  const t = esc(title);
+  const d = esc(description);
+  const i = esc(imageUrl);
+  const u = esc(url);
+  return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title}</title>
-  <meta name="description" content="${description}" />
+  <title>${t}</title>
+  <meta name="description" content="${d}" />
 
   <meta property="og:type" content="${type}" />
   <meta property="og:site_name" content="تسوّق" />
-  <meta property="og:title" content="${title}" />
-  <meta property="og:description" content="${description}" />
-  <meta property="og:image" content="${imageUrl}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="${url}" />
+  <meta property="og:title" content="${t}" />
+  <meta property="og:description" content="${d}" />
+  <meta property="og:image" content="${i}" />
+  <meta property="og:image:secure_url" content="${i}" />
+  <meta property="og:url" content="${u}" />
   <meta property="og:locale" content="ar_EG" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${title}" />
-  <meta name="twitter:description" content="${description}" />
-  <meta name="twitter:image" content="${imageUrl}" />
+  <meta name="twitter:title" content="${t}" />
+  <meta name="twitter:description" content="${d}" />
+  <meta name="twitter:image" content="${i}" />
 
-  <meta http-equiv="refresh" content="0;url=${url}" />
-  <script>window.location.href = '${url}';</script>
+  <meta http-equiv="refresh" content="0;url=${u}" />
+  <script>window.location.href = '${u}';</script>
 </head>
 <body></body>
 </html>`;
+};
 
 export const config = {
   matcher: ['/sellers/:path*', '/products/:path*'],
@@ -106,7 +116,7 @@ async function handleProductPage(pathname) {
       ? product.description.replace(/<[^>]*>/g, '').substring(0, 160).trim()
       : `اشترِ ${product.name} على تسوّق`;
     const rawImage = product.images?.[0];
-    const imageUrl = (typeof rawImage === 'string' ? rawImage : rawImage?.imageUrl) || product.imageUrl || DEFAULT_IMAGE;
+    const imageUrl = product.imageUrl || (typeof rawImage === 'string' ? rawImage : rawImage?.imageUrl) || DEFAULT_IMAGE;
     const url = `${SITE_URL}/products/${id}`;
 
     return respond(ogHtml(
