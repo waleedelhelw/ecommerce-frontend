@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { FiMenu, FiLogOut, FiUser } from 'react-icons/fi';
+import { FiMenu, FiLogOut, FiUser, FiGrid } from 'react-icons/fi';
 import SellerSidebar from '../components/seller/SellerSidebar';
 import useAuth from '../hooks/useAuth';
 import useSellerNotificationCounts from '../hooks/useSellerNotificationCounts';
@@ -17,55 +17,64 @@ const SellerLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar - فقط للبائع المعتمد */}
+    <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Sidebar */}
       {isSellerApproved && (
         <SellerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} counts={counts} />
       )}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen w-full lg:w-auto">
+        {/* Top accent bar */}
+        <div className="h-1 bg-gradient-to-l from-emerald-500 via-green-500 to-teal-400" />
+
         {/* Top Bar */}
-        <header className="bg-white shadow-sm sticky top-0 z-30">
-          <div className="flex items-center justify-between px-3 sm:px-4 h-14 sm:h-16">
+        <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-30">
+          <div className="flex items-center justify-between px-4 sm:px-6 h-16">
             {isSellerApproved && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+                className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <FiMenu size={22} />
+                <FiMenu size={20} />
               </button>
             )}
 
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🏪</span>
-              <span className="text-sm font-bold text-green-600">
-                {user?.storeName || 'متجري'}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm">
+                <FiGrid size={18} className="text-white" />
+              </div>
+              <div>
+                <span className="text-sm font-bold text-gray-800 block leading-tight">
+                  {user?.storeName || 'متجري'}
+                </span>
+                <span className="text-[10px] text-gray-400">لوحة تحكم البائع</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4 mr-auto">
-              <div className="hidden sm:flex items-center gap-2">
-                {user?.profilePictureUrl ? (
-                  <img
-                    src={user.profilePictureUrl}
-                    alt="profile"
-                    width={28}
-                    height={28}
-                    className="w-7 h-7 rounded-full object-cover"
-                  />
-                ) : (
-                  <FiUser size={18} className="text-gray-500" />
-                )}
+            <div className="flex items-center gap-3 mr-auto">
+              <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 bg-gray-50 rounded-xl">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
+                  {user?.profilePictureUrl ? (
+                    <img
+                      src={user.profilePictureUrl}
+                      alt="profile"
+                      width={28}
+                      height={28}
+                      className="w-7 h-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <FiUser size={14} className="text-white" />
+                  )}
+                </div>
                 <span className="text-sm font-medium text-gray-700">
                   {user?.name || 'البائع'}
                 </span>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors"
               >
-                <FiLogOut size={16} />
+                <FiLogOut size={15} />
                 <span className="hidden sm:inline">خروج</span>
               </button>
             </div>
@@ -73,7 +82,7 @@ const SellerLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-x-hidden">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
           <Outlet />
         </main>
       </div>

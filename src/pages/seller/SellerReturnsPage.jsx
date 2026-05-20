@@ -54,46 +54,52 @@ const SellerReturnsPage = () => {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <FiRefreshCw /> طلبات الإرجاع
-        </h1>
-        <p className="text-gray-500 mt-1">إدارة طلبات الإرجاع الواردة من العملاء</p>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-2 h-2 rounded-full bg-orange-500" />
+          <span className="text-[11px] font-bold text-orange-600 uppercase tracking-wider">الإرجاع</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">طلبات الإرجاع</h1>
+        <p className="text-sm text-gray-500 mt-1">إدارة طلبات الإرجاع الواردة من العملاء</p>
       </div>
 
       {/* فلاتر الحالة */}
-      <div className="bg-white rounded-xl border p-4 mb-4">
-        <div className="flex flex-wrap gap-2">
-          {statusFilters.map((filter) => (
-            <button
-              key={filter.value}
-              onClick={() => {
-                setStatusFilter(filter.value);
-                setCurrentPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                ${
-                  statusFilter === filter.value
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      <div className="bg-white rounded-2xl border border-gray-100 p-3 mb-4 shadow-sm">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+          {statusFilters.map((filter) => {
+            const active = statusFilter === filter.value;
+            return (
+              <button
+                key={filter.value}
+                onClick={() => {
+                  setStatusFilter(filter.value);
+                  setCurrentPage(1);
+                }}
+                className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                  active
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-sm'
+                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent'
                 }`}
-            >
-              {filter.label}
-            </button>
-          ))}
+              >
+                {filter.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Pending Alert */}
       {returns.filter((r) => r.status === 'Pending').length > 0 &&
         statusFilter === '' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-center gap-3">
-            <span className="text-2xl">⚠️</span>
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-2xl p-4 mb-4 flex items-center gap-3 shadow-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+              <span className="text-white font-bold">!</span>
+            </div>
             <div>
-              <p className="font-bold text-yellow-900">
+              <p className="font-bold text-amber-900">
                 لديك {returns.filter((r) => r.status === 'Pending').length} طلب
                 إرجاع فى انتظار الرد
               </p>
-              <p className="text-sm text-yellow-700">
+              <p className="text-sm text-amber-700">
                 يرجى مراجعتها فى أقرب وقت ممكن
               </p>
             </div>
@@ -106,83 +112,68 @@ const SellerReturnsPage = () => {
       ) : error ? (
         <ErrorMessage message={error} onRetry={fetchReturns} />
       ) : returns.length === 0 ? (
-        <div className="bg-white rounded-xl border p-12 text-center">
-          <span className="text-5xl mb-3 block">📭</span>
-          <p className="text-gray-400">لا توجد طلبات إرجاع</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <FiRefreshCw size={32} className="text-orange-300" />
+          </div>
+          <p className="text-gray-400 font-medium">لا توجد طلبات إرجاع</p>
+          <p className="text-gray-300 text-sm mt-1">سيتم إشعارك عند وجود طلبات إرجاع جديدة</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    رقم الإرجاع
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    رقم الطلب
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    العميل
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    السبب
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    المبلغ
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    الحالة
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
-                    التاريخ
-                  </th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">
-                    عرض
-                  </th>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-50">
+                  <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">رقم الإرجاع</th>
+                  <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">رقم الطلب</th>
+                  <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">العميل</th>
+                  <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">السبب</th>
+                  <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">المبلغ</th>
+                  <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">الحالة</th>
+                  <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">التاريخ</th>
+                  <th className="text-center px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">عرض</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-gray-50">
                 {returns.map((returnRequest) => {
                   const reasonInfo = getReturnReasonInfo(returnRequest.reason);
                   return (
-                    <tr key={returnRequest.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-mono font-medium">
-                        {returnRequest.returnNumber || `#${returnRequest.id}`}
+                    <tr key={returnRequest.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-5 py-4">
+                        <span className="text-sm font-bold text-gray-900">{returnRequest.returnNumber || `#${returnRequest.id}`}</span>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className="px-5 py-4">
                         <Link
                           to={`/seller/orders/${returnRequest.orderId}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-blue-600 hover:text-blue-800 font-medium text-sm"
                         >
                           #{returnRequest.orderId}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {returnRequest.customerName}
+                      <td className="px-5 py-4">
+                        <span className="text-sm text-gray-700">{returnRequest.customerName}</span>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        <span className="flex items-center gap-1">
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-1.5 text-sm text-gray-600">
                           <span>{reasonInfo.icon}</span>
-                          <span className="text-xs">{reasonInfo.label}</span>
+                          <span>{reasonInfo.label}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-emerald-600 font-medium">
-                        {formatPrice(returnRequest.totalRefundAmount)}
+                      <td className="px-5 py-4">
+                        <span className="text-sm font-bold text-emerald-600">{formatPrice(returnRequest.totalRefundAmount)}</span>
                       </td>
-                      <td className="px-4 py-3">
-                        <ReturnStatusBadge
-                          status={returnRequest.status}
-                          size="sm"
-                        />
+                      <td className="px-5 py-4">
+                        <ReturnStatusBadge status={returnRequest.status} size="sm" />
                       </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
-                        {formatDate(returnRequest.createdAt)}
+                      <td className="px-5 py-4">
+                        <span className="text-xs text-gray-400">{formatDate(returnRequest.createdAt)}</span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-5 py-4 text-center">
                         <Link
                           to={`/seller/returns/${returnRequest.id}`}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg inline-block"
+                          className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-all"
+                          title="عرض التفاصيل"
                         >
                           <FiEye size={16} />
                         </Link>
@@ -195,7 +186,7 @@ const SellerReturnsPage = () => {
           </div>
 
           {totalPages > 1 && (
-            <div className="p-4 border-t">
+            <div className="p-5 border-t border-gray-50">
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}

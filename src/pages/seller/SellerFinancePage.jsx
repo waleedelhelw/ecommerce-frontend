@@ -142,13 +142,12 @@ const SellerFinancePage = () => {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <FiDollarSign className="text-green-600" />
-          المركز المالي
-        </h1>
-        <p className="text-gray-500 mt-1">
-          تابع أرباحك ومعاملاتك المالية بكل سهولة
-        </p>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-2 h-2 rounded-full bg-cyan-500" />
+          <span className="text-[11px] font-bold text-cyan-600 uppercase tracking-wider">المالية</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">المركز المالي</h1>
+        <p className="text-sm text-gray-500 mt-1">تابع أرباحك ومعاملاتك المالية بكل سهولة</p>
       </div>
 
       {error && <ErrorMessage message={error} />}

@@ -244,12 +244,14 @@ const SellerShippingZonesPage = () => {
   return (
     <div>
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">🚚 مناطق الشحن</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            إدارة المناطق التي تشحن إليها
-          </p>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">الشحن</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">مناطق الشحن</h1>
+          <p className="text-sm text-gray-500 mt-1">إدارة المناطق التي تشحن إليها</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
@@ -257,8 +259,7 @@ const SellerShippingZonesPage = () => {
               resetForm();
               setShowForm(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700
-                       font-medium text-sm flex items-center gap-2 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-xl hover:from-rose-700 hover:to-pink-700 transition-all text-sm font-medium shadow-sm"
           >
             <FiPlus size={16} /> إضافة منطقة
           </button>

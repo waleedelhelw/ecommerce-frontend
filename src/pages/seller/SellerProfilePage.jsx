@@ -180,8 +180,12 @@ const SellerProfilePage = () => {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">إعدادات المتجر</h1>
-        <p className="text-gray-500 mt-1">عرض وتعديل بيانات متجرك</p>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-2 h-2 rounded-full bg-gray-500" />
+          <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">الإعدادات</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">إعدادات المتجر</h1>
+        <p className="text-sm text-gray-500 mt-1">عرض وتعديل بيانات متجرك</p>
       </div>
 
       {/* معلومات سريعة */}

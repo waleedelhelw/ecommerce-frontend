@@ -83,7 +83,7 @@ const ProductCard = ({ product, variant }) => {
                   loading="lazy"
                   width={300}
                   height={300}
-                  className={`relative z-10 w-full h-full object-contain p-1.5 transition-all duration-500 ${
+                  className={`relative z-10 w-full h-full object-cover transition-all duration-500 ${
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
                   onLoad={() => setImageLoaded(true)}
@@ -168,7 +168,7 @@ const ProductCard = ({ product, variant }) => {
                 loading="lazy"
                 width={300}
                 height={300}
-                className={`w-full h-full object-contain p-1.5 transition-all duration-500 group-hover:scale-110 ${
+                className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 onLoad={() => setImageLoaded(true)}

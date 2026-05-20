@@ -110,10 +110,10 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
               alt={currentImage.alt}
               width={600}
               height={600}
-              fetchpriority="high"
-              className={`w-full h-full object-contain p-4 sm:p-6 lg:p-8 transition-all duration-500 ${
-                imgLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
+              fetchPriority="high"
+className={`w-full h-full object-cover transition-all duration-500 ${
+                 imgLoaded ? 'opacity-100' : 'opacity-0'
+               }`}
               loading="eager"
               onLoad={() => setImgLoaded(true)}
               onError={() => { setImageError(true); setImgLoaded(true); }}
