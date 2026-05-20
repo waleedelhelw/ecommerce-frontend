@@ -105,7 +105,8 @@ async function handleProductPage(pathname) {
     const description = product.description
       ? product.description.replace(/<[^>]*>/g, '').substring(0, 160).trim()
       : `اشترِ ${product.name} على تسوّق`;
-    const imageUrl = product.images?.[0] || product.imageUrl || DEFAULT_IMAGE;
+    const rawImage = product.images?.[0];
+    const imageUrl = (typeof rawImage === 'string' ? rawImage : rawImage?.imageUrl) || product.imageUrl || DEFAULT_IMAGE;
     const url = `${SITE_URL}/products/${id}`;
 
     return respond(ogHtml(
