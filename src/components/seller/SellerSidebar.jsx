@@ -11,11 +11,13 @@ import {
   FiTrendingUp,
   FiTruck,
   FiCreditCard,
+  FiTag,
 } from 'react-icons/fi';
 
 const iconMap = {
   dashboard: <FiHome size={18} />,
   products: <FiPackage size={18} />,
+  offers: <FiTag size={18} />,
   orders: <FiShoppingBag size={18} />,
   returns: <FiRefreshCw size={18} />,
   finance: <FiTrendingUp size={18} />,
@@ -28,6 +30,7 @@ const iconMap = {
 const iconBgMap = {
   dashboard: 'from-emerald-500 to-green-600',
   products: 'from-violet-500 to-purple-600',
+  offers: 'from-amber-500 to-orange-600',
   orders: 'from-blue-500 to-indigo-600',
   returns: 'from-orange-500 to-amber-600',
   finance: 'from-cyan-500 to-teal-600',
@@ -43,6 +46,7 @@ const SellerSidebar = ({ isOpen, onClose, counts = {} }) => {
   const menuItems = [
     { key: 'dashboard', path: '/seller/dashboard', label: 'لوحة التحكم', exact: true },
     { key: 'products', path: '/seller/products', label: 'منتجاتي' },
+    { key: 'offers', path: '/seller/offers', label: 'العروض' },
     { key: 'orders', path: '/seller/orders', label: 'طلباتي', badge: counts.pendingOrders },
     { key: 'returns', path: '/seller/returns', label: 'طلبات الإرجاع' },
     { key: 'finance', path: '/seller/finance', label: 'المركز المالي', badge: counts.pendingPayments },

@@ -249,6 +249,25 @@ const ProductDetailsPage = () => {
             <p className="text-[11px] text-gray-400 mb-0.5">الضمان</p>
             <p className="text-sm font-bold text-gray-800">14 يوم</p>
           </div>
+
+          {product.hasActiveOffer && product.offerType && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center hover:shadow-md transition-shadow">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm ${
+                product.offerType === 'Discount'
+                  ? 'bg-gradient-to-br from-orange-500 to-red-500'
+                  : 'bg-gradient-to-br from-purple-500 to-pink-500'
+              }`}>
+                <span className="text-lg">{product.offerType === 'Discount' ? '🔥' : '🎁'}</span>
+              </div>
+              <p className="text-[11px] text-gray-400 mb-0.5">العرض</p>
+              <p className="text-sm font-bold text-gray-800">
+                {product.offerType === 'Discount'
+                  ? `خصم ${product.discountPercentage}%`
+                  : 'اشتري واحصل على مجاني'
+                }
+              </p>
+            </div>
+          )}
         </div>
 
         {/* البائع */}

@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiGrid, FiShoppingCart, FiMoreHorizontal } from 'react-icons/fi';
+import { FiHome, FiGrid, FiShoppingCart, FiMoreHorizontal, FiTag } from 'react-icons/fi';
 
 const ICONS = {
   '/': FiHome,
   '/categories': FiGrid,
+  '/offers': FiTag,
   '/cart': FiShoppingCart,
   '/sellers': FiMoreHorizontal,
 };
@@ -11,6 +12,7 @@ const ICONS = {
 const navItems = [
   { to: '/', label: 'الرئيسية' },
   { to: '/categories', label: 'الأقسام' },
+  { to: '/offers', label: 'العروض' },
   { to: '/cart', label: 'السلة' },
   { to: '/sellers', label: 'المتاجر' },
 ];

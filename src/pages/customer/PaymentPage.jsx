@@ -49,6 +49,11 @@ const PaymentPage = () => {
   if (error) return <ErrorMessage message={error} onRetry={() => window.location.reload()} />;
   if (!order) return <ErrorMessage message="الطلب غير موجود" />;
 
+  if (order.paymentMethod === 'CashOnDelivery') {
+    navigate(`/orders/${id}`, { replace: true });
+    return null;
+  }
+
   const status = orderStatusMap[order.status] || orderStatusMap.PendingPayment;
   const payments = order.payments || [];
   const pendingPayments = payments.filter((p) => p.status === 'Pending' || p.status === 'Failed');

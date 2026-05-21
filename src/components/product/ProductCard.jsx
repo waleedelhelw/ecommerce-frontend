@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiHeart } from 'react-icons/fi';
 import StarRating from '../common/StarRating';
+import OfferCountdown from '../common/OfferCountdown';
 import { formatPrice } from '../../utils/formatPrice';
 import { getOptimizedImage } from '../../utils/cloudinary';
 import useAuth from '../../hooks/useAuth';
@@ -44,10 +45,18 @@ const ProductCard = ({ product, variant }) => {
     }
   };
 
-  const hasDiscount = product.discountPercentage > 0;
-  const discountPrice = hasDiscount
-    ? product.price - (product.price * product.discountPercentage) / 100
-    : null;
+  const hasOffer = product.hasActiveOffer && product.offerType;
+  const isDiscountOffer = hasOffer && product.offerType === 'Discount';
+  const isBogoOffer = hasOffer && product.offerType === 'BuyOneGetOne';
+  const hasOldDiscount = product.discountPercentage > 0 && !hasOffer;
+
+  const displayPrice = isDiscountOffer && product.offerPrice != null
+    ? product.offerPrice
+    : hasOldDiscount
+      ? product.price - (product.price * product.discountPercentage) / 100
+      : product.price;
+
+  const originalPrice = isDiscountOffer || hasOldDiscount ? product.price : null;
 
   const altText = product.categoryName
     ? `${product.name} - ${product.categoryName}${product.storeName ? ` من ${product.storeName}` : ''}`
@@ -58,7 +67,7 @@ const ProductCard = ({ product, variant }) => {
       <Link
         to={`/products/${product.id}`}
         className="group bg-white rounded-xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.97] flex flex-col"
-        aria-label={`عرض تفاصيل ${product.name} - ${formatPrice(product.price)}`}
+        aria-label={`عرض تفاصيل ${product.name} - ${formatPrice(displayPrice)}`}
       >
         <div className="relative overflow-hidden">
           <div className="aspect-square w-full relative overflow-hidden">
@@ -99,11 +108,23 @@ const ProductCard = ({ product, variant }) => {
             )}
           </div>
 
-          {hasDiscount && (
-            <span className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-              -{product.discountPercentage}%
-            </span>
-          )}
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
+            {isDiscountOffer && (
+              <span className="bg-gradient-to-l from-orange-500 to-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
+                <span>🔥</span> {product.discountPercentage}%
+              </span>
+            )}
+            {isBogoOffer && (
+              <span className="bg-gradient-to-l from-purple-500 to-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
+                <span>🎁</span> عرض
+              </span>
+            )}
+            {hasOldDiscount && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                -{product.discountPercentage}%
+              </span>
+            )}
+          </div>
 
           {product.stockQuantity === 0 && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -126,15 +147,19 @@ const ProductCard = ({ product, variant }) => {
           )}
 
           <div className="flex items-center gap-1 mt-0.5">
-            {hasDiscount ? (
+            {originalPrice != null ? (
               <>
-                <span className="text-base font-extrabold text-green-700">{formatPrice(discountPrice)}</span>
-                <span className="text-xs text-gray-400 line-through">{formatPrice(product.price)}</span>
+                <span className="text-base font-extrabold text-green-700">{formatPrice(displayPrice)}</span>
+                <span className="text-xs text-gray-400 line-through">{formatPrice(originalPrice)}</span>
               </>
             ) : (
-              <span className="text-base font-extrabold text-green-700">{formatPrice(product.price)}</span>
+              <span className="text-base font-extrabold text-green-700">{formatPrice(displayPrice)}</span>
             )}
           </div>
+
+          {hasOffer && product.offerEndDate && (
+            <OfferCountdown endDate={product.offerEndDate} />
+          )}
 
           {product.stockQuantity > 0 && (
             <button
@@ -155,7 +180,7 @@ const ProductCard = ({ product, variant }) => {
     <Link
       to={`/products/${product.id}`}
       className="group bg-white border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-lg hover:border-blue-200 active:scale-[0.99] flex flex-col"
-      aria-label={`عرض تفاصيل ${product.name} - السعر ${formatPrice(product.price)}`}
+      aria-label={`عرض تفاصيل ${product.name} - السعر ${formatPrice(displayPrice)}`}
     >
       <div className="relative bg-gradient-to-b from-gray-50 to-gray-100 overflow-hidden">
         <div className="aspect-square w-full flex items-center justify-center">
@@ -187,7 +212,17 @@ const ProductCard = ({ product, variant }) => {
 
         <div className="absolute top-2 right-2 left-2 flex items-start justify-between gap-1">
           <div className="flex flex-col gap-1">
-            {hasDiscount && (
+            {isDiscountOffer && (
+              <span className="bg-gradient-to-l from-orange-500 to-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                <span>🔥</span> {product.discountPercentage}%
+              </span>
+            )}
+            {isBogoOffer && (
+              <span className="bg-gradient-to-l from-purple-500 to-pink-500 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                <span>🎁</span> عرض
+              </span>
+            )}
+            {hasOldDiscount && (
               <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
                 -{product.discountPercentage}%
               </span>
@@ -244,33 +279,39 @@ const ProductCard = ({ product, variant }) => {
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-2 mt-auto">
-          <div className="min-w-0">
-            {hasDiscount ? (
-              <div className="flex flex-col">
-                <span className="text-base sm:text-lg font-bold text-green-700 block leading-none">
-                  {formatPrice(discountPrice)}
-                </span>
-                <span className="text-[11px] text-gray-400 line-through">
+        <div className="flex flex-col gap-1 mt-auto">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              {originalPrice != null ? (
+                <div className="flex flex-col">
+                  <span className="text-base sm:text-lg font-bold text-green-700 block leading-none">
+                    {formatPrice(displayPrice)}
+                  </span>
+                  <span className="text-[11px] text-gray-400 line-through">
+                    {formatPrice(originalPrice)}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base sm:text-lg font-bold text-green-700 block" aria-label={`السعر ${formatPrice(product.price)}`}>
                   {formatPrice(product.price)}
                 </span>
-              </div>
-            ) : (
-              <span className="text-base sm:text-lg font-bold text-green-700 block" aria-label={`السعر ${formatPrice(product.price)}`}>
-                {formatPrice(product.price)}
-              </span>
+              )}
+            </div>
+
+            {isAuthenticated && isCustomer && product.stockQuantity > 0 && (
+              <button
+                onClick={handleAddToCart}
+                className="shrink-0 p-2 border-2 border-gray-300 text-gray-500 rounded-xl hover:border-gray-800 hover:text-gray-800 active:bg-gray-100 transition-colors"
+                aria-label={`إضافة ${product.name} إلى السلة`}
+                title="إضافة إلى السلة"
+              >
+                <FiShoppingCart size={16} aria-hidden="true" />
+              </button>
             )}
           </div>
 
-          {isAuthenticated && isCustomer && product.stockQuantity > 0 && (
-            <button
-              onClick={handleAddToCart}
-              className="shrink-0 p-2 border-2 border-gray-300 text-gray-500 rounded-xl hover:border-gray-800 hover:text-gray-800 active:bg-gray-100 transition-colors"
-              aria-label={`إضافة ${product.name} إلى السلة`}
-              title="إضافة إلى السلة"
-            >
-              <FiShoppingCart size={16} aria-hidden="true" />
-            </button>
+          {hasOffer && product.offerEndDate && (
+            <OfferCountdown endDate={product.offerEndDate} />
           )}
         </div>
       </div>

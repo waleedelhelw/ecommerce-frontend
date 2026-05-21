@@ -101,6 +101,7 @@ const router = createBrowserRouter([
           { path: '/', element: <HomePage /> },
           { path: '/products', element: <ProductsPage /> },
           { path: '/products/:id', element: <ProductDetailsPage /> },
+          { path: '/offers', element: lazyPage(() => import('./pages/customer/OffersPage')) },
           { path: '/categories', element: <CategoriesPage /> },
           { path: '/categories/:id/products', element: <CategoryProductsPage /> },
           { path: '/sellers', element: <SellersPage /> },
@@ -224,6 +225,30 @@ const router = createBrowserRouter([
             element: (
               <SellerRoute>
                 {lazyPage(() => import('./pages/seller/SellerProductFormPage'))}
+              </SellerRoute>
+            ),
+          },
+          {
+            path: 'offers',
+            element: (
+              <SellerRoute>
+                {lazyPage(() => import('./pages/seller/SellerOffersPage'))}
+              </SellerRoute>
+            ),
+          },
+          {
+            path: 'offers/new',
+            element: (
+              <SellerRoute>
+                {lazyPage(() => import('./pages/seller/SellerOfferFormPage'))}
+              </SellerRoute>
+            ),
+          },
+          {
+            path: 'offers/:id/edit',
+            element: (
+              <SellerRoute>
+                {lazyPage(() => import('./pages/seller/SellerOfferFormPage'))}
               </SellerRoute>
             ),
           },

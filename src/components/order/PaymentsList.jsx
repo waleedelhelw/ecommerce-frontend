@@ -168,8 +168,8 @@ const PaymentCard = ({ payment, paymentInfo, onUploadReceipt, showUpload }) => {
           </div>
         )}
 
-        {/* رفع الإيصال */}
-        {showUpload && payment.status === 'Pending' && (
+        {/* رفع الإيصال (مش لـ COD) */}
+        {showUpload && payment.paymentMethod !== 'CashOnDelivery' && payment.status === 'Pending' && (
           <div className="border-t pt-3 mt-3 space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -213,7 +213,7 @@ const PaymentCard = ({ payment, paymentInfo, onUploadReceipt, showUpload }) => {
           </div>
         )}
 
-        {payment.status === 'Failed' && showUpload && (
+        {payment.paymentMethod !== 'CashOnDelivery' && payment.status === 'Failed' && showUpload && (
           <div className="border-t pt-3 mt-3">
             <p className="text-xs text-gray-500 mb-2">يمكنك إعادة رفع إيصال جديد:</p>
             <div className="space-y-3">

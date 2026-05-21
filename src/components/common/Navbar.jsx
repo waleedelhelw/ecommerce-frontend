@@ -87,6 +87,13 @@ const Navbar = () => {
               المنتجات
             </Link>
             <Link
+              to="/offers"
+              className="text-amber-600 hover:text-orange-600 transition-colors font-medium"
+              role="menuitem"
+            >
+              🔥 العروض
+            </Link>
+            <Link
               to="/categories"
               className="text-gray-600 hover:text-purple-600 transition-colors font-medium"
               role="menuitem"
@@ -302,6 +309,14 @@ const Navbar = () => {
               role="menuitem"
             >
               المنتجات
+            </Link>
+            <Link
+              to="/offers"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-amber-600 hover:text-orange-600"
+              role="menuitem"
+            >
+              🔥 العروض
             </Link>
             <Link
               to="/categories"

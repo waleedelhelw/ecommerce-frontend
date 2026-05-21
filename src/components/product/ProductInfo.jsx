@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiShoppingCart, FiHeart, FiMinus, FiPlus, FiShare2, FiCopy, FiSend, FiFacebook, FiCheck } from 'react-icons/fi';
 import StarRating from '../common/StarRating';
 import Badge from '../common/Badge';
+import OfferCountdown from '../common/OfferCountdown';
 import { formatPrice } from '../../utils/formatPrice';
 import useAuth from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
@@ -15,6 +16,14 @@ const ProductInfo = ({ product }) => {
   const { isAuthenticated, isAdmin } = useAuth();
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
+
+  const hasOffer = product.hasActiveOffer && product.offerType;
+  const isDiscountOffer = hasOffer && product.offerType === 'Discount';
+  const isBogoOffer = hasOffer && product.offerType === 'BuyOneGetOne';
+  const displayPrice = isDiscountOffer && product.offerPrice != null
+    ? product.offerPrice
+    : product.price;
+  const hasOfferPrice = isDiscountOffer && product.offerPrice != null;
 
   const handleAddToCart = () => {
     if (isAuthenticated && !isAdmin) {
@@ -57,12 +66,35 @@ const ProductInfo = ({ product }) => {
       </div>
 
       {/* السعر */}
-      <div className="flex items-end gap-2" aria-label={`السعر ${formatPrice(product.price)}`}>
-        <span className="text-3xl font-bold bg-gradient-to-l from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          {formatPrice(product.price)}
-        </span>
-        <span className="text-sm text-gray-400 mb-1">ج.م</span>
+      <div className="flex items-end gap-3 flex-wrap" aria-label={`السعر ${formatPrice(displayPrice)}`}>
+        <div className="flex items-end gap-2">
+          <span className="text-3xl font-bold bg-gradient-to-l from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {formatPrice(displayPrice)}
+          </span>
+          <span className="text-sm text-gray-400 mb-1">ج.م</span>
+        </div>
+        {hasOfferPrice && (
+          <span className="text-lg text-gray-400 line-through mb-1">{formatPrice(product.price)}</span>
+        )}
       </div>
+
+      {isDiscountOffer && (
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-l from-orange-500 to-red-500 text-white text-xs font-bold rounded-lg shadow-sm">
+            <span>🔥</span> خصم {product.discountPercentage}%
+          </span>
+          {product.offerEndDate && <OfferCountdown endDate={product.offerEndDate} />}
+        </div>
+      )}
+
+      {isBogoOffer && (
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-l from-purple-500 to-pink-500 text-white text-xs font-bold rounded-lg shadow-sm">
+            <span>🎁</span> عرض اشتري واحصل على مجاني
+          </span>
+          {product.offerEndDate && <OfferCountdown endDate={product.offerEndDate} />}
+        </div>
+      )}
 
       {/* الوصف */}
       <section aria-labelledby="product-description-title">

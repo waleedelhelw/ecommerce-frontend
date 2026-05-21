@@ -47,6 +47,7 @@ const SellerOrderDetailsPage = () => {
 
   const [showShipForm, setShowShipForm] = useState(false);
   const [platformReceiptUrl, setPlatformReceiptUrl] = useState('');
+  const [transactionReference, setTransactionReference] = useState('');
   const [shipData, setShipData] = useState({
     shippingCompany: '',
     trackingNumber: '',
@@ -211,13 +212,16 @@ const SellerOrderDetailsPage = () => {
     }
   };
 
-  const handleConfirmPayment = async (paymentId, receiptImageUrl) => {
+  const handleConfirmPayment = async (paymentId, receiptImageUrl, txnRef) => {
     try {
       setPaymentActionLoading(true);
-      const payload = receiptImageUrl ? { receiptImageUrl } : {};
+      const payload = {};
+      if (receiptImageUrl) payload.receiptImageUrl = receiptImageUrl;
+      if (txnRef) payload.transactionReference = txnRef;
       await confirmSellerPayment(id, paymentId, payload);
       toast.success('تم تأكيد الدفع ✅');
       setPlatformReceiptUrl('');
+      setTransactionReference('');
       fetchOrder();
     } catch (err) {
       toast.error(err.response?.data?.message || 'فشل تأكيد الدفع');
@@ -921,8 +925,16 @@ const SellerOrderDetailsPage = () => {
                           className="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                           dir="ltr"
                         />
+                        <input
+                          type="text"
+                          value={transactionReference}
+                          onChange={(e) => setTransactionReference(e.target.value)}
+                          placeholder="رقم المرجع (اختياري)"
+                          className="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          dir="ltr"
+                        />
                         <button
-                          onClick={() => handleConfirmPayment(pendingPayment.id, platformReceiptUrl.trim())}
+                          onClick={() => handleConfirmPayment(pendingPayment.id, platformReceiptUrl.trim(), transactionReference.trim())}
                           disabled={paymentActionLoading || !platformReceiptUrl.trim() || !hasPaymentRecord}
                           className="w-full flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700 disabled:opacity-50 text-xs font-semibold transition-colors"
                         >

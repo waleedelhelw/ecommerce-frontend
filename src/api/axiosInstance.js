@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://waleedecommerceapi.runasp.net/api';
 
@@ -29,6 +30,10 @@ API.interceptors.response.use(
   (error) => {
     if (error.response) {
       const status = error.response.status;
+
+      if (status === 429) {
+        toast.error('تم تجاوز الحد المسموح من الطلبات، حاول بعد دقيقة');
+      }
 
       if (status === 401) {
         const token = localStorage.getItem('token');

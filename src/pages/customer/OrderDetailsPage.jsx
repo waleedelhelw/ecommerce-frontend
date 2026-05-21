@@ -168,8 +168,9 @@ const OrderDetailsPage = () => {
 
   const status = orderStatusMap[order.status] || orderStatusMap.Pending;
   const payments = order.payments || [];
-  const pendingPayments = payments.filter((p) => p.status === 'Pending');
-  const failedPayments = payments.filter((p) => p.status === 'Failed');
+  const nonCodPayments = payments.filter((p) => p.paymentMethod !== 'CashOnDelivery');
+  const pendingPayments = nonCodPayments.filter((p) => p.status === 'Pending');
+  const failedPayments = nonCodPayments.filter((p) => p.status === 'Failed');
 
   const canCancel = ['PendingPayment', 'WaitingConfirmation', 'PaymentConfirmed', 'PaymentFailed', 'Processing'].includes(order.status);
   const canConfirmDelivery = order.status === 'Shipped';
@@ -244,7 +245,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {payments.some((p) => p.status === 'WaitingConfirmation') && (
+      {nonCodPayments.some((p) => p.status === 'WaitingConfirmation') && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center gap-3">
           <span className="text-2xl">⏳</span>
           <div>
