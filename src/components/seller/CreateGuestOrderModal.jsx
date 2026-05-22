@@ -3,7 +3,7 @@ import { FiX, FiPlus, FiTrash2, FiCopy, FiCheck, FiChevronDown } from 'react-ico
 import { createGuestOrder } from '../../api/seller/sellerOrderService';
 import { getMyProducts } from '../../api/seller/sellerProductService';
 import { getPaymentMethods } from '../../api/seller/sellerPaymentMethodService';
-import { PAYMENT_METHODS, PAYMENT_TARGET_LABELS } from '../../utils/constants';
+import { PAYMENT_METHODS, PAYMENT_TARGET_LABELS, SITE_URL } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 const PLATFORM_METHODS = PAYMENT_METHODS.filter((m) => m.value !== 'CashOnDelivery');
@@ -156,15 +156,13 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
                 <input
                   type="text"
                   readOnly
-                  value={result.guestTrackingUrl || result.trackingUrl || `${window.location.origin}/track/${result.trackingToken}`}
+                  value={result.trackingUrl || result.guestTrackingUrl || `${SITE_URL}/track/${result.trackingToken}`}
                   className="flex-1 px-3 py-2 bg-white border rounded-lg text-sm text-gray-700 ltr"
                   dir="ltr"
                 />
                 <button
                   onClick={() =>
-                    copyToClipboard(
-                      result.trackingUrl || `${window.location.origin}/track/${result.trackingToken}`
-                    )
+                    copyToClipboard(result.trackingUrl || result.guestTrackingUrl || `${SITE_URL}/track/${result.trackingToken}`)
                   }
                   className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >
@@ -176,8 +174,8 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => {
-                  const url = result.trackingUrl || `${window.location.origin}/track/${result.trackingToken}`;
-                  window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, '_blank');
+                  const url = result.trackingUrl || result.guestTrackingUrl || `${SITE_URL}/track/${result.trackingToken}`;
+                  window.open(result.whatsAppShareUrl || `https://wa.me/${(result.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(url)}`, '_blank');
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
               >

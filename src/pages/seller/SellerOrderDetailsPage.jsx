@@ -14,6 +14,7 @@ import {
   FiClock,
   FiAlertTriangle,
   FiRotateCcw,
+  FiSend,
 } from 'react-icons/fi';
 import {
   getOrderById,
@@ -33,7 +34,7 @@ import OrderTimeline from '../../components/order/OrderTimeline';
 import { formatPrice } from '../../utils/formatPrice';
 import { formatDate } from '../../utils/formatDate';
 import { orderStatusMap, getStatusInfo, paymentStatusMap } from '../../utils/orderStatusMap';
-import { PAYMENT_LABELS, PAYMENT_TARGET_LABELS, PAYMENT_STATUS_LABELS } from '../../utils/constants';
+import { PAYMENT_LABELS, PAYMENT_TARGET_LABELS, PAYMENT_STATUS_LABELS, SITE_URL } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 const SellerOrderDetailsPage = () => {
@@ -1082,20 +1083,30 @@ const SellerOrderDetailsPage = () => {
                     <input
                       type="text"
                       readOnly
-                      value={order.guestTrackingUrl || order.trackingUrl || `${window.location.origin}/track/${order.trackingToken}`}
+                      value={order.trackingUrl || order.guestTrackingUrl || `${SITE_URL}/track/${order.trackingToken}`}
                       className="flex-1 px-2 py-1.5 bg-white border rounded-lg text-xs text-gray-700 ltr font-mono"
                       dir="ltr"
                     />
                     <button
                       onClick={() => {
-                        const url = order.guestTrackingUrl || order.trackingUrl || `${window.location.origin}/track/${order.trackingToken}`;
+                        const url = order.trackingUrl || order.guestTrackingUrl || `${SITE_URL}/track/${order.trackingToken}`;
                         navigator.clipboard.writeText(url);
                         toast.success('تم نسخ الرابط');
                       }}
                       className="p-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shrink-0"
+                      title="نسخ الرابط"
                     >
                       <FiCopy size={14} />
                     </button>
+                    <a
+                      href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(`طلبك من tasawwaq.store ✅\nرقم الطلب: ${order.id}\nلمتابعة طلبك: ${order.trackingUrl || order.guestTrackingUrl || `${SITE_URL}/track/${order.trackingToken}`}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shrink-0"
+                      title="مشاركة عبر واتساب"
+                    >
+                      <FiSend size={14} />
+                    </a>
                   </div>
                 </div>
               )}

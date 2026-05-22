@@ -17,9 +17,9 @@ import settingsService from '../../api/settingsService';
 import { formatDate } from '../../utils/formatDate';
 import { formatPrice } from '../../utils/formatPrice';
 import { orderStatusMap } from '../../utils/orderStatusMap';
-import { PAYMENT_LABELS, PAYMENT_TARGET_LABELS } from '../../utils/constants';
+import { PAYMENT_LABELS, PAYMENT_TARGET_LABELS, SITE_URL } from '../../utils/constants';
 import { checkOrderReturnable } from '../../utils/returnStatusMap';
-import { FiRefreshCw, FiEye, FiTruck, FiPhone, FiCopy } from 'react-icons/fi';
+import { FiRefreshCw, FiEye, FiTruck, FiPhone, FiCopy, FiSend } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const OrderDetailsPage = () => {
@@ -729,6 +729,18 @@ const OrderDetailsPage = () => {
           >
             💳 إتمام الدفع
           </Link>
+        )}
+
+        {(order.whatsAppShareUrl || order.trackingToken) && (
+          <a
+            href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(`طلبك من tasawwaq.store ✅\nرقم الطلب: ${order.id}\nلمتابعة طلبك: ${order.trackingUrl || `${SITE_URL}/track/${order.trackingToken}`}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+          >
+            <FiSend size={16} />
+            مشاركة عبر واتساب
+          </a>
         )}
 
         {canCancel && (

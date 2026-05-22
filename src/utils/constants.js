@@ -1,3 +1,6 @@
+// ============ Site ============
+export const SITE_URL = 'https://www.tasawwaq.store';
+
 // ============ Roles ============
 export const ROLES = {
   SUPER_ADMIN: 'SuperAdmin',
