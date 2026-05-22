@@ -733,7 +733,7 @@ const OrderDetailsPage = () => {
 
         {(order.whatsAppShareUrl || order.trackingToken) && (
           <a
-            href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(`طلبك من tasawwaq.store ✅\nرقم الطلب: ${order.id}\nلمتابعة طلبك: ${order.trackingUrl?.startsWith('http') ? order.trackingUrl : `${SITE_URL}/track/${order.trackingToken}`}`)}`}
+            href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(order.trackingUrl?.startsWith('http') ? order.trackingUrl : `${SITE_URL}/track/${order.trackingToken}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"

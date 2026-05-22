@@ -1106,7 +1106,7 @@ const SellerOrderDetailsPage = () => {
                       <FiCopy size={14} />
                     </button>
                     <a
-                      href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(`طلبك من tasawwaq.store ✅\nرقم الطلب: ${order.id}\nلمتابعة طلبك: ${getOrderTrackingUrl(order)}`)}`}
+                      href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(getOrderTrackingUrl(order))}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shrink-0"
