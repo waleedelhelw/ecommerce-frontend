@@ -156,14 +156,16 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
                 <input
                   type="text"
                   readOnly
-                  value={result.trackingUrl || result.guestTrackingUrl || `${SITE_URL}/track/${result.trackingToken}`}
+                  value={(() => { const u = result.trackingUrl || result.guestTrackingUrl; return u?.startsWith('http') ? u : `${SITE_URL}${u?.startsWith('/') ? '' : '/'}${u || `track/${result.trackingToken}`}`; })()}
                   className="flex-1 px-3 py-2 bg-white border rounded-lg text-sm text-gray-700 ltr"
                   dir="ltr"
                 />
                 <button
-                  onClick={() =>
-                    copyToClipboard(result.trackingUrl || result.guestTrackingUrl || `${SITE_URL}/track/${result.trackingToken}`)
-                  }
+                  onClick={() => {
+                    const u = result.trackingUrl || result.guestTrackingUrl;
+                    const url = u?.startsWith('http') ? u : `${SITE_URL}${u?.startsWith('/') ? '' : '/'}${u || `track/${result.trackingToken}`}`;
+                    copyToClipboard(url);
+                  }}
                   className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >
                   {copied ? <FiCheck size={18} /> : <FiCopy size={18} />}
@@ -174,7 +176,8 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => {
-                  const url = result.trackingUrl || result.guestTrackingUrl || `${SITE_URL}/track/${result.trackingToken}`;
+                  const u = result.trackingUrl || result.guestTrackingUrl;
+                  const url = u?.startsWith('http') ? u : `${SITE_URL}${u?.startsWith('/') ? '' : '/'}${u || `track/${result.trackingToken}`}`;
                   window.open(result.whatsAppShareUrl || `https://wa.me/${(result.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(url)}`, '_blank');
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"

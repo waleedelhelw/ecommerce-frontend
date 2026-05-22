@@ -41,6 +41,14 @@ const SellerOrderDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const getOrderTrackingUrl = (order) => {
+    if (order.trackingUrl?.startsWith('http')) return order.trackingUrl;
+    if (order.guestTrackingUrl?.startsWith('http')) return order.guestTrackingUrl;
+    if (order.trackingUrl) return `${SITE_URL}${order.trackingUrl.startsWith('/') ? '' : '/'}${order.trackingUrl}`;
+    if (order.guestTrackingUrl) return `${SITE_URL}${order.guestTrackingUrl.startsWith('/') ? '' : '/'}${order.guestTrackingUrl}`;
+    return `${SITE_URL}/track/${order.trackingToken}`;
+  };
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1083,14 +1091,13 @@ const SellerOrderDetailsPage = () => {
                     <input
                       type="text"
                       readOnly
-                      value={order.trackingUrl || order.guestTrackingUrl || `${SITE_URL}/track/${order.trackingToken}`}
+                      value={getOrderTrackingUrl(order)}
                       className="flex-1 px-2 py-1.5 bg-white border rounded-lg text-xs text-gray-700 ltr font-mono"
                       dir="ltr"
                     />
                     <button
                       onClick={() => {
-                        const url = order.trackingUrl || order.guestTrackingUrl || `${SITE_URL}/track/${order.trackingToken}`;
-                        navigator.clipboard.writeText(url);
+                        navigator.clipboard.writeText(getOrderTrackingUrl(order));
                         toast.success('تم نسخ الرابط');
                       }}
                       className="p-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shrink-0"
@@ -1099,7 +1106,7 @@ const SellerOrderDetailsPage = () => {
                       <FiCopy size={14} />
                     </button>
                     <a
-                      href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(`طلبك من tasawwaq.store ✅\nرقم الطلب: ${order.id}\nلمتابعة طلبك: ${order.trackingUrl || order.guestTrackingUrl || `${SITE_URL}/track/${order.trackingToken}`}`)}`}
+                      href={order.whatsAppShareUrl || `https://wa.me/${(order.customerPhoneNumber || '').replace(/[^0-9]/g, '').replace(/^0/, '20') || ''}?text=${encodeURIComponent(`طلبك من tasawwaq.store ✅\nرقم الطلب: ${order.id}\nلمتابعة طلبك: ${getOrderTrackingUrl(order)}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shrink-0"
