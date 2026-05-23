@@ -114,6 +114,7 @@ const RegisterPage = () => {
         description="انضم إلى تسوّق - منصة التسوق الإلكتروني الأولى في مصر. سجّل مجاناً وابدأ التسوق من آلاف المنتجات بأفضل الأسعار."
         keywords="تسجيل, انشاء حساب, تسوق, تسوّق, حساب جديد, تسجيل عميل, اشتراك مجاني"
         url="/register"
+        noindex={true}
       />
 
       <div className="bg-white rounded-2xl shadow-lg p-8">

@@ -117,6 +117,7 @@ const RegisterSellerPage = () => {
         keywords="افتح متجرك, افتح متجر الكتروني, البيع اونلاين, متجر مجاني, كيفية البيع اونلاين, منصة بائعين, تسجيل كبائع, ربح من البيع اونلاين, متجر الكتروني مصر"
         url="/register-seller"
         structuredData={sellerStructuredData}
+        noindex={true}
       />
 
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
