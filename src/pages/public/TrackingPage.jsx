@@ -137,11 +137,28 @@ const TrackingPage = () => {
                 <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
                   <div>
                     <p className="font-medium text-sm text-gray-800">{item.productName}</p>
-                    <p className="text-xs text-gray-500">الكمية: {item.quantity}</p>
+                    <p className="text-xs text-gray-500">الكمية: {item.quantity} | السعر: {formatPrice(item.unitPrice)}</p>
                   </div>
-                  <p className="font-medium text-sm text-gray-800">{formatPrice(item.unitPrice)}</p>
+                  <p className="font-medium text-sm text-gray-800">{formatPrice(item.unitPrice * item.quantity)}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {(data.shippingCost !== undefined && data.shippingCost !== null) && (
+          <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+            <div className="flex justify-between text-gray-600">
+              <span>مجموع المنتجات</span>
+              <span>{formatPrice(data.totalPrice - data.shippingCost)}</span>
+            </div>
+            <div className="flex justify-between text-gray-600">
+              <span>تكلفة الشحن</span>
+              <span>{formatPrice(data.shippingCost)}</span>
+            </div>
+            <div className="border-t pt-2 flex justify-between font-bold text-gray-800">
+              <span>الإجمالي</span>
+              <span>{formatPrice(data.totalPrice)}</span>
             </div>
           </div>
         )}
