@@ -22,6 +22,9 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
   const [shippingCost, setShippingCost] = useState(0);
 
   const [items, setItems] = useState([{ productId: '', quantity: 1 }]);
+  const [products, setProducts] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState(null);
 
   const selectedProducts = useMemo(
     () => items.filter((item) => item.productId),
@@ -36,9 +39,6 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
     [selectedProducts, products]
   );
   const total = subtotal + Number(shippingCost);
-  const [products, setProducts] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
