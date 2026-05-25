@@ -11,6 +11,7 @@ const VerifyEmailPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [redirecting, setRedirecting] = useState(false);
   const inputRefs = useRef([]);
   const navTimerRef = useRef(null);
   const { login } = useAuth();
@@ -30,6 +31,7 @@ const VerifyEmailPage = () => {
   // لو مفيش إيميل، ارجع للتسجيل
   useEffect(() => {
     if (!email) {
+      setRedirecting(true);
       navigate('/register');
     }
   }, [email, navigate]);
@@ -163,6 +165,20 @@ const VerifyEmailPage = () => {
     }
     handleVerify(fullCode);
   };
+
+  if (redirecting) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md mx-auto">
+        <div className="text-center py-12">
+          <svg className="animate-spin h-10 w-10 mx-auto text-blue-600 mb-4" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-gray-500">جاري التحويل...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md mx-auto">

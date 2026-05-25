@@ -21,7 +21,9 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
   const [sellerPaymentMethodId, setSellerPaymentMethodId] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
 
-  const [items, setItems] = useState([{ productId: '', quantity: 1 }]);
+  const itemKeyCounter = useRef(1);
+  const createItem = () => ({ _key: itemKeyCounter.current++, productId: '', quantity: 1 });
+  const [items, setItems] = useState([createItem()]);
   const [products, setProducts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
@@ -65,7 +67,7 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
   }, []);
 
   const addItem = () => {
-    setItems([...items, { productId: '', quantity: 1 }]);
+    setItems([...items, createItem()]);
   };
 
   const removeItem = (index) => {
@@ -399,8 +401,8 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
               </div>
 
               <div className="space-y-2">
-                {items.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  {items.map((item, index) => (
+                  <div key={item._key} className="flex items-center gap-2">
                     <select
                       value={item.productId}
                       onChange={(e) => updateItem(index, 'productId', e.target.value)}

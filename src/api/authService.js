@@ -71,6 +71,22 @@ export const refreshToken = async (token, refreshToken) => {
   return response.data;
 };
 
+// ============ نسيت كلمة المرور ============
+export const forgotPassword = async (email) => {
+  const response = await API.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+// ============ إعادة تعيين كلمة المرور ============
+export const resetPassword = async (email, code, newPassword) => {
+  const response = await API.post('/auth/reset-password', {
+    email,
+    code,
+    newPassword,
+  });
+  return response.data;
+};
+
 // ============ تغيير كلمة المرور ============
 export const changePassword = async (data) => {
   const response = await API.post('/auth/change-password', {
@@ -94,6 +110,8 @@ const authService = {
   googleLogin,
   verifyEmail,
   resendVerification,
+  forgotPassword,
+  resetPassword,
   refreshToken,
   changePassword,
   logout: logoutApi,

@@ -56,29 +56,36 @@ const CheckoutPage = () => {
 
   // ✅ جلب مناطق الشحن وإعدادات المنصة
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       try {
         setZonesLoading(true);
         const zonesResult = await shippingService.getCartAvailableZones();
+        if (cancelled) return;
         setZonesData(zonesResult);
       } catch (err) {
+        if (cancelled) return;
         console.error('فشل تحميل مناطق الشحن:', err);
         toast.error('فشل تحميل مناطق الشحن، حاول تاني');
       } finally {
-        setZonesLoading(false);
+        if (!cancelled) setZonesLoading(false);
       }
 
       try {
         const paymentInfo = await settingsService.getPaymentInfo();
+        if (cancelled) return;
         if (paymentInfo && paymentInfo.codExtraFee !== undefined) {
           setCodFee(Number(paymentInfo.codExtraFee));
         }
       } catch {
-        setCodFee(20);
+        if (!cancelled) setCodFee(20);
       }
     };
 
     fetchData();
+
+    return () => { cancelled = true; };
   }, []);
 
   // ✅ استخراج بيانات المدينة المختارة

@@ -10,8 +10,6 @@ import ErrorMessage from '../../components/common/ErrorMessage';
 import productService from '../../api/productService';
 import { PAGINATION } from '../../utils/constants';
 
-const FALLBACK_SEARCH_PAGE_LIMIT = 8;
-
 const normalizeArabicSearchText = (value = '') =>
   String(value)
     .toLowerCase()
@@ -95,20 +93,12 @@ const ProductsPage = () => {
     const abortController = new AbortController();
 
     const fetchFlexibleSearchResults = async (baseParams, seedProducts = [], currentSearchTerm, currentSortBy, currentPageNumber) => {
-      const fallbackParams = { ...baseParams, pageNumber: 1, pageSize: PAGINATION.MAX_PAGE_SIZE };
+      const fallbackParams = { ...baseParams, pageNumber: 1, pageSize: 200 };
       delete fallbackParams.searchTerm;
 
-      const firstPage = await productService.getProducts(fallbackParams);
+      const response = await productService.getProducts(fallbackParams);
       if (abortController.signal.aborted) return;
-      const firstItems = firstPage.items || firstPage.products || firstPage || [];
-      const fallbackTotalPages = Math.min(firstPage.totalPages || 1, FALLBACK_SEARCH_PAGE_LIMIT);
-      const allItems = [...seedProducts, ...firstItems];
-
-      for (let pageNumber = 2; pageNumber <= fallbackTotalPages; pageNumber += 1) {
-        if (abortController.signal.aborted) return;
-        const pageData = await productService.getProducts({ ...fallbackParams, pageNumber });
-        allItems.push(...(pageData.items || pageData.products || pageData || []));
-      }
+      const allItems = [...seedProducts, ...(response.items || response.products || response || [])];
 
       if (abortController.signal.aborted) return;
 
@@ -172,7 +162,7 @@ const ProductsPage = () => {
     if (filters.sortBy && filters.sortBy !== 'newest') params.sortBy = filters.sortBy;
     if (filters.pageNumber && filters.pageNumber !== 1) params.page = filters.pageNumber;
     setSearchParams(params);
-  }, [filters, setSearchParams]);
+  }, [filters.searchTerm, filters.categoryId, filters.sellerId, filters.minPrice, filters.maxPrice, filters.minRating, filters.sortBy, filters.pageNumber, setSearchParams]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value, pageNumber: 1 }));

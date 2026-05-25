@@ -47,7 +47,8 @@ const SellerFinancePage = () => {
 
   const [loading, setLoading] = useState(true);
   const [loadingTx, setLoadingTx] = useState(false);
-  const [error, setError] = useState(null);
+  const [summaryError, setSummaryError] = useState(null);
+  const [txError, setTxError] = useState(null);
 
   const [selectedTx, setSelectedTx] = useState(null);
 
@@ -65,7 +66,7 @@ const SellerFinancePage = () => {
         setSummary(summaryData);
         setYearlyReport(reportData || null);
       } catch (err) {
-        setError(err.response?.data?.message || 'حدث خطأ في تحميل البيانات');
+        setSummaryError(err.response?.data?.message || 'حدث خطأ في تحميل البيانات');
       } finally {
         setLoading(false);
       }
@@ -95,7 +96,7 @@ const SellerFinancePage = () => {
           pageSize: data?.pageSize || filters.pageSize,
         });
       } catch (err) {
-        setError(err.response?.data?.message || 'حدث خطأ في تحميل المعاملات');
+        setTxError(err.response?.data?.message || 'حدث خطأ في تحميل المعاملات');
       } finally {
         setLoadingTx(false);
       }

@@ -99,7 +99,7 @@ const OrderDetailsPage = () => {
         setCheckingReturn(false);
       }
     }
-  }, [order]);
+  }, [order?.id]);
 
   const handleCancelOrder = async () => {
     try {

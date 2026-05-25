@@ -14,6 +14,7 @@ const extractArray = (data) => {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.items)) return data.items;
   if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.products)) return data.products;
   return [];
 };
 
@@ -42,21 +43,17 @@ const SellerProductsPage = () => {
       setLoading(true);
       setError(null);
 
-      const data = await getMyProducts({
+      const params = {
         pageNumber: currentPage,
         pageSize: 10,
         searchTerm: searchTerm || undefined,
-      });
+      };
+      if (activeFilter === 'active') params.isActive = true;
+      if (activeFilter === 'inactive') params.isActive = false;
 
+      const data = await getMyProducts(params);
       const items = extractArray(data);
-
-      const filtered = activeFilter === 'all'
-        ? items
-        : activeFilter === 'active'
-          ? items.filter((p) => p.isActive)
-          : items.filter((p) => !p.isActive);
-
-      setProducts(filtered);
+      setProducts(items);
       setTotalPages(data?.totalPages || 1);
     } catch (err) {
       setError(err.response?.data?.message || 'حدث خطأ في تحميل المنتجات');
