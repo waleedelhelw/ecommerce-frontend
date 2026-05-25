@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { FiX, FiPlus, FiTrash2, FiCopy, FiCheck, FiChevronDown } from 'react-icons/fi';
 import { createGuestOrder } from '../../api/seller/sellerOrderService';
 import { getMyProducts } from '../../api/seller/sellerProductService';
@@ -40,6 +40,13 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
   );
   const total = subtotal + Number(shippingCost);
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -133,7 +140,8 @@ const CreateGuestOrderModal = ({ onClose, onSuccess }) => {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       toast.success('تم نسخ الرابط');
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('فشل النسخ');
     }

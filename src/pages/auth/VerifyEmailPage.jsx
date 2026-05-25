@@ -12,7 +12,14 @@ const VerifyEmailPage = () => {
   const [success, setSuccess] = useState('');
   const [countdown, setCountdown] = useState(0);
   const inputRefs = useRef([]);
+  const navTimerRef = useRef(null);
   const { login } = useAuth();
+
+  useEffect(() => {
+    return () => {
+      if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    };
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -98,8 +105,7 @@ const VerifyEmailPage = () => {
         if (response.data.token) {
           login(response.data);
 
-          setTimeout(() => {
-            // التوجيه بناءً على الدور
+          navTimerRef.current = setTimeout(() => {
             if (role === 'Seller') {
               navigate('/seller/pending-approval');
             } else {

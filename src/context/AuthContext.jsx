@@ -65,7 +65,8 @@ export const AuthProvider = ({ children }) => {
           const parsedUser = JSON.parse(savedUser);
           setUser(parsedUser);
           setIsAuthenticated(true);
-          setTimeout(() => setupFcmToken(), 2000);
+          const fcmTimer = setTimeout(() => setupFcmToken(), 2000);
+          return () => clearTimeout(fcmTimer);
         } else {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');

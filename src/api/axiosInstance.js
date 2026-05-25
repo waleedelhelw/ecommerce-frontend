@@ -36,26 +36,32 @@ API.interceptors.response.use(
       }
 
       if (status === 401) {
-        const token = localStorage.getItem('token');
+        const refreshToken = localStorage.getItem('refreshToken');
 
-        if (token) {
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const isExpired = payload.exp * 1000 < Date.now();
-
-            if (isExpired) {
+        if (refreshToken) {
+          return axios.post(`${BASE_URL}/auth/refresh`, { refreshToken })
+            .then((res) => {
+              const { token: newToken, refreshToken: newRefresh } = res.data?.data || res.data;
+              if (newToken) {
+                localStorage.setItem('token', newToken);
+                if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
+                error.config.headers.Authorization = `Bearer ${newToken}`;
+                return axios(error.config);
+              }
+              throw new Error('No token in refresh response');
+            })
+            .catch(() => {
               localStorage.removeItem('token');
               localStorage.removeItem('refreshToken');
               localStorage.removeItem('user');
               window.location.href = '/login';
-            }
-          } catch (e) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
-          }
+            });
         }
+
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

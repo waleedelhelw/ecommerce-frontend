@@ -24,6 +24,9 @@ const PaymentCard = ({ payment, paymentInfo, onUploadReceipt, showUpload }) => {
     if (!file.type.startsWith('image/')) { toast.error('يرجى اختيار صورة فقط'); return; }
     if (file.size > 5 * 1024 * 1024) { toast.error('حجم الصورة لازم يكون أقل من 5 ميجا'); return; }
     setReceiptFile(file);
+    if (receiptPreview && receiptPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(receiptPreview);
+    }
     setReceiptPreview(URL.createObjectURL(file));
   };
 

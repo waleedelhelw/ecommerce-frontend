@@ -129,7 +129,7 @@ const ForegroundMessageHandler = () => {
         unsubRef.current();
       }
     };
-  }, [user]);
+  }, [user?.userId]);
 };
 
 export default ForegroundMessageHandler;
