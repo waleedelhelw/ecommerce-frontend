@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import ShippingOptionSelector from '../../components/checkout/ShippingOptionSelector';
@@ -27,6 +27,8 @@ const CheckoutPage = () => {
 
   const [paymentType, setPaymentType] = useState('CashOnDelivery');
   const [paymentTarget, setPaymentTarget] = useState('Platform');
+  const paymentTargetRef = useRef(paymentTarget);
+  paymentTargetRef.current = paymentTarget;
   const [sellerPaymentMethodId, setSellerPaymentMethodId] = useState(null);
   const [sellerPaymentMethods, setSellerPaymentMethods] = useState([]);
   const [loadingSellerMethods, setLoadingSellerMethods] = useState(false);
@@ -106,25 +108,22 @@ const CheckoutPage = () => {
           const firstSellerId = selectedCityData?.sellerShippingDetails?.[0]?.sellerId;
           if (!firstSellerId) return;
 
-          // ✅ جيب بيانات البائع عشان تعرف acceptDirectPayment و allowStartWithPartialPayment
           const sellerData = await getSellerById(firstSellerId);
           const acceptDirectPayment = sellerData?.acceptDirectPayment === true;
           setSellerSelfPaymentDisabled(!acceptDirectPayment);
           setAllowStartWithPartialPayment(sellerData?.allowStartWithPartialPayment === true);
 
-          // ✅ لو التاجر مش بيدعم الدفع المباشر وكان مختار Seller → حوله لـ Platform
           if (!acceptDirectPayment) {
             setPaymentTarget('Platform');
             setSellerPaymentMethodId(null);
             setSellerPaymentMethods([]);
-            if (paymentTarget === 'Seller') {
+            if (paymentTargetRef.current === 'Seller') {
               toast('هذا التاجر لا يقبل الدفع المباشر، تم التحويل للمنصة', { icon: 'ℹ️' });
             }
             return;
           }
 
-          // ✅ لو الدفع المباشر متاح وكان مختار Seller → جيب طرق الدفع
-          if (paymentTarget === 'Seller') {
+          if (paymentTargetRef.current === 'Seller') {
             const methods = await getSellerPaymentMethods(firstSellerId);
             setSellerPaymentMethods(methods || []);
           }
@@ -144,7 +143,7 @@ const CheckoutPage = () => {
       setSellerSelfPaymentDisabled(false);
       setAllowStartWithPartialPayment(false);
     }
-  }, [paymentType, selectedCityData, paymentTarget]);
+  }, [paymentType, selectedCityData]);
 
   // ── Handlers ──
 
