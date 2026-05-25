@@ -25,8 +25,12 @@ export const uploadImage = async (file) => {
         body: formData,
       }
     );
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.error?.message || `Cloudinary upload failed (${response.status})`);
+    }
     const data = await response.json();
-    return data.secure_url;  // ✅ ده الـ URL اللي هتخزنه في الـ DB
+    return data.secure_url;
   } catch (error) {
     console.error('Upload failed:', error);
     throw error;

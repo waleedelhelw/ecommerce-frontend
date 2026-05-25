@@ -34,13 +34,21 @@ export const WishlistProvider = ({ children }) => {
   }, [isAuthenticated, user?.role]);
 
   const addToWishlist = async (productId) => {
-    await wishlistService.addToWishlist(productId);
-    await fetchWishlist();
+    try {
+      await wishlistService.addToWishlist(productId);
+      await fetchWishlist();
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+    }
   };
 
   const removeFromWishlist = async (wishlistId) => {
-    await wishlistService.removeFromWishlist(wishlistId);
-    await fetchWishlist();
+    try {
+      await wishlistService.removeFromWishlist(wishlistId);
+      await fetchWishlist();
+    } catch (error) {
+      console.error('Failed to remove from wishlist:', error);
+    }
   };
 
   const isInWishlist = (productId) => {

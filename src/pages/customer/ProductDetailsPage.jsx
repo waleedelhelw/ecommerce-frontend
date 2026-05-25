@@ -84,7 +84,7 @@ const ProductDetailsPage = () => {
       url: `https://www.tasawwaq.store/products/${product.id}`,
       priceCurrency: 'EGP',
       price: product.price,
-      availability: product.stock > 0
+      availability: (product.stockQuantity || product.stock || 0) > 0
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
       seller: {
