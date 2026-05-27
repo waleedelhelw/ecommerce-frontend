@@ -1,5 +1,5 @@
-const CLOUD_NAME = 'VITE_CLOUDINARY_CLOUD_NAME';
-const UPLOAD_PRESET = 'VITE_CLOUDINARY_UPLOAD_PRESET';
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 export function getOptimizedImage(url, width = 400, height = 400) {
   if (!url || !url.includes('/upload/')) return url;

@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
-  apiKey: 'VITE_FIREBASE_API_KEY',
-  authDomain: 'tasawwaq-web.firebaseapp.com',
-  projectId: 'tasawwaq-web',
-  storageBucket: 'tasawwaq-web.firebasestorage.app',
-  messagingSenderId: '418672200066',
-  appId: '1:418672200066:web:2077f2dac1dfc5ce1e679b',
-  measurementId: 'G-LSCSH2F76X',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -59,4 +59,4 @@ export async function getFcmToken() {
 
 export { onMessage };
 
-export const VAPID_KEY = 'VITE_FIREBASE_VAPID_KEY';
+export const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;

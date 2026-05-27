@@ -15,7 +15,7 @@ function getDataValue(data, ...keys) {
 
 export function resolveNotificationUrl(data, user) {
   const url = getDataValue(data, 'url', 'Url', 'URL', 'deepLink', 'DeepLink', 'link');
-  if (url) return url;
+  if (url && (url.startsWith('/') || url.startsWith(window.location.origin))) return url;
 
   const orderId = getDataValue(data, 'orderId', 'OrderId', 'id', 'Id', 'order_id', 'Order_Id');
   if (!orderId) return '/';

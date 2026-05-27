@@ -12,7 +12,7 @@ import './index.css';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <HelmetProvider>
-      <GoogleOAuthProvider clientId="VITE_GOOGLE_OAUTH_CLIENT_ID">
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID}>
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>

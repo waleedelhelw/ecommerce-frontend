@@ -161,7 +161,7 @@ const SellersPage = () => {
                           width={64}
                           height={64}
                           className="w-full h-full object-cover"
-                          onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '🏪'; }}
+                          onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.textContent = '🏪'; }}
                         />
                       ) : (
                         <span className="text-2xl">🏪</span>

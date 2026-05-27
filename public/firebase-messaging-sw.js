@@ -2,13 +2,13 @@ importScripts('https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/12.13.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: 'VITE_FIREBASE_API_KEY',
-  authDomain: 'tasawwaq-web.firebaseapp.com',
-  projectId: 'tasawwaq-web',
-  storageBucket: 'tasawwaq-web.firebasestorage.app',
-  messagingSenderId: '418672200066',
-  appId: '1:418672200066:web:2077f2dac1dfc5ce1e679b',
-  measurementId: 'G-LSCSH2F76X',
+  apiKey: '__VITE_FIREBASE_API_KEY__',
+  authDomain: '__VITE_FIREBASE_AUTH_DOMAIN__',
+  projectId: '__VITE_FIREBASE_PROJECT_ID__',
+  storageBucket: '__VITE_FIREBASE_STORAGE_BUCKET__',
+  messagingSenderId: '__VITE_FIREBASE_MESSAGING_SENDER_ID__',
+  appId: '__VITE_FIREBASE_APP_ID__',
+  measurementId: '__VITE_FIREBASE_MEASUREMENT_ID__',
 });
 
 const messaging = firebase.messaging();
@@ -43,7 +43,7 @@ self.addEventListener('notificationclick', (event) => {
   // 2. Try to get orderId (try common key formats)
   const orderId = getVal(data, 'orderId', 'OrderId', 'id', 'Id', 'order_id', 'Order_Id');
 
-  if (url) {
+  if (url && (url.startsWith('/') || url.startsWith(self.location.origin))) {
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         return openOrFocus(clientList, url);
