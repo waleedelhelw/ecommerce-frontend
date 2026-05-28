@@ -152,6 +152,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/features" className="hover:text-purple-400 transition-colors">
+                  مميزات تسوّق
+                </Link>
+              </li>
+              <li>
                 <Link to="/privacy" className="hover:text-purple-400 transition-colors">
                   سياسة الخصوصية
                 </Link>

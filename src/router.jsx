@@ -117,6 +117,7 @@ const router = createBrowserRouter([
 
           // Static Pages
           { path: '/about', element: lazyPage(() => import('./pages/static/AboutPage')) },
+          { path: '/features', element: lazyPage(() => import('./pages/static/FeaturesPage')) },
           { path: '/contact', element: lazyPage(() => import('./pages/static/ContactPage')) },
           { path: '/faq', element: lazyPage(() => import('./pages/static/FaqPage')) },
           { path: '/how-to-sell', element: lazyPage(() => import('./pages/static/HowToSellPage')) },

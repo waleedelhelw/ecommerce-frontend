@@ -27,6 +27,7 @@ const Sidebar = ({ isOpen, onClose, counts = {} }) => {
     { path: '/admin/categories', icon: <FiGrid size={20} />, label: 'التصنيفات' },
     { path: '/admin/orders', icon: <FiShoppingBag size={20} />, label: 'الطلبات' },
     { path: '/admin/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع' },
+    { path: '/admin/installments', icon: <FiDollarSign size={20} />, label: 'خطط التقسيط' },
     { path: '/admin/payments', icon: <FiCreditCard size={20} />, label: 'مراجعة الإيصالات', badge: counts.pendingPayments },
     { path: '/admin/users', icon: <FiUsers size={20} />, label: 'المستخدمين' },
     { path: '/admin/reviews', icon: <FiStar size={20} />, label: 'التقييمات' },
