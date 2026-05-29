@@ -151,8 +151,6 @@ const SellerFinancePage = () => {
         <p className="text-sm text-gray-500 mt-1">تابع أرباحك ومعاملاتك المالية بكل سهولة</p>
       </div>
 
-      {error && <ErrorMessage message={error} />}
-
       {/* البطاقات الرئيسية */}
       {loading ? (
         <SummaryCardsSkeleton />
