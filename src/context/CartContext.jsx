@@ -41,13 +41,13 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   }, [fetchCart]);
 
-  const addToCart = async (productId, quantity = 1) => {
+  const addToCart = async (productId, quantity = 1, productVariantId = null) => {
     if (!isCustomer) {
       toast.error('يجب تسجيل الدخول كعميل أولاً');
       return;
     }
     try {
-      await cartService.addToCart(productId, quantity);
+      await cartService.addToCart(productId, quantity, productVariantId);
       await fetchCart();
       toast.success('تم إضافة المنتج للسلة');
     } catch (error) {

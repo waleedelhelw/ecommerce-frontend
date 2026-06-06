@@ -23,6 +23,9 @@ const CartItem = ({ item }) => {
 
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-gray-900 truncate">{item.productName}</h3>
+        {item.variantAttributes && (
+          <p className="text-xs text-gray-500 mt-0.5">{item.variantAttributes}</p>
+        )}
         <p className="text-blue-600 font-medium">{formatPrice(item.price || item.unitPrice)}</p>
       </div>
 

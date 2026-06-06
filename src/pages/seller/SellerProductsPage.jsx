@@ -236,6 +236,11 @@ const SellerProductsPage = () => {
                       <span className={`text-xs ${getStockColor(product.stockQuantity)}`}>
                         {product.stockQuantity === 0 ? 'نفذ' : `${product.stockQuantity} قطعة`}
                       </span>
+                      {product.hasVariants && (
+                        <span className="text-xs text-purple-600 font-medium">
+                          · {product.variantsCount ?? ''} متغير
+                        </span>
+                      )}
                     </div>
                   </div>
                   <StatusBadge isActive={product.isActive} />
@@ -273,6 +278,7 @@ const SellerProductsPage = () => {
                     <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">المنتج</th>
                     <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">السعر</th>
                     <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">المخزون</th>
+                    <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">المتغيرات</th>
                     <th className="text-right px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">الحالة</th>
                     <th className="text-center px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">إجراءات</th>
                   </tr>
@@ -310,6 +316,15 @@ const SellerProductsPage = () => {
                         <span className={`text-sm font-medium ${getStockColor(product.stockQuantity)}`}>
                           {product.stockQuantity === 0 ? 'نفذ من المخزون' : product.stockQuantity}
                         </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        {product.hasVariants ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
+                            <span>{product.variantsCount ?? '✓'}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="px-5 py-4">
                         <StatusBadge isActive={product.isActive} />

@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { FiMaximize2, FiX } from 'react-icons/fi';
 import { getOptimizedImage, getFullQualityImage } from '../../utils/cloudinary';
 
-const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
+const ProductImageGallery = ({ imageUrl, productName, images = [], variantImageUrl }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -13,9 +13,19 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
 
   const allImages = [];
 
+  // ✅ صورة الـ Variant في المقدمة لو موجودة
+  if (variantImageUrl) {
+    allImages.push({
+      url: variantImageUrl,
+      alt: `${productName} - المتغير المختار`,
+      isMain: true,
+    });
+  }
+
   if (images && images.length > 0) {
     const sorted = [...images].sort((a, b) => a.displayOrder - b.displayOrder);
     sorted.forEach((img, idx) => {
+      if (img.imageUrl === variantImageUrl) return;
       allImages.push({
         url: img.imageUrl,
         alt: img.altText || `${productName} - صورة ${idx + 1}`,
@@ -42,6 +52,13 @@ const ProductImageGallery = ({ imageUrl, productName, images = [] }) => {
 
   const currentImage = allImages[selectedIndex] || allImages[0];
   const hasMultipleImages = allImages.length > 1;
+
+  // ✅ reset index and image state when variant changes
+  useEffect(() => {
+    setSelectedIndex(0);
+    setImgError(false);
+    setImgLoaded(false);
+  }, [variantImageUrl]);
 
   const goToPrevious = useCallback(() => {
     setImgError(false);
@@ -116,7 +133,7 @@ className={`w-full h-full object-cover transition-all duration-500 ${
                }`}
               loading="eager"
               onLoad={() => setImgLoaded(true)}
-              onError={() => { setImageError(true); setImgLoaded(true); }}
+              onError={() => { setImgError(true); setImgLoaded(true); }}
             />
           </button>
         </div>

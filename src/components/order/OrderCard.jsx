@@ -21,6 +21,8 @@ const OrderCard = ({ order }) => {
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
           <span>{order.itemCount || order.orderItems?.length || 0} منتجات</span>
+          {order.hasVariants && <span className="mx-2">·</span>}
+          {order.hasVariants && <span className="text-xs text-gray-400">متغيرات</span>}
           <span className="mx-2">|</span>
           <span className="font-bold text-gray-900">{formatPrice(order.totalAmount || order.totalPrice)}</span>
         </div>

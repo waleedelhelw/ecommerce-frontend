@@ -6,8 +6,10 @@ const cartService = {
     return response.data.data;
   },
 
-  addToCart: async (productId, quantity = 1) => {
-    const response = await API.post('/customer/cart', { productId, quantity });
+  addToCart: async (productId, quantity = 1, productVariantId = null) => {
+    const payload = { productId, quantity };
+    if (productVariantId) payload.productVariantId = productVariantId;
+    const response = await API.post('/customer/cart', payload);
     return response.data.data;
   },
 

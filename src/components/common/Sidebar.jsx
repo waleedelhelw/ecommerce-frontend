@@ -25,6 +25,7 @@ const Sidebar = ({ isOpen, onClose, counts = {} }) => {
     { path: '/admin/sellers', icon: <FiUserCheck size={20} />, label: 'البائعين' },
     { path: '/admin/products', icon: <FiPackage size={20} />, label: 'المنتجات' },
     { path: '/admin/categories', icon: <FiGrid size={20} />, label: 'التصنيفات' },
+    { path: '/admin/attributes', icon: <FiStar size={20} />, label: 'الخصائص' },
     { path: '/admin/orders', icon: <FiShoppingBag size={20} />, label: 'الطلبات' },
     { path: '/admin/returns', icon: <FiRefreshCw size={20} />, label: 'طلبات الإرجاع' },
     { path: '/admin/installments', icon: <FiDollarSign size={20} />, label: 'خطط التقسيط' },

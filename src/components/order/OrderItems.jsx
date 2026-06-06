@@ -27,6 +27,9 @@ const OrderItems = ({ items }) => {
             </div>
             <div className="flex-1">
               <h4 className="font-medium">{item.productName}</h4>
+              {item.variantSnapshot && (
+                <p className="text-xs text-gray-400 mt-0.5">{item.variantSnapshot}</p>
+              )}
               <p className="text-sm text-gray-500">
                 {formatPrice(item.unitPrice || item.price)} × {item.quantity}
               </p>

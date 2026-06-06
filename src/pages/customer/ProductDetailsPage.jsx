@@ -15,6 +15,7 @@ const ProductDetailsPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   const fetchProduct = async () => {
     try {
@@ -52,6 +53,11 @@ const ProductDetailsPage = () => {
   const productImages = product.images && product.images.length > 0
     ? product.images.map(img => img.imageUrl || img)
     : [product.imageUrl].filter(Boolean);
+
+  const variantImageUrl = selectedVariant?.imageUrl || null;
+  const displayImages = variantImageUrl
+    ? [variantImageUrl, ...productImages.filter((img) => img !== variantImageUrl)]
+    : productImages;
 
   const seoDescription = product.description
     ? product.description.substring(0, 160).trim() + (product.description.length > 160 ? '...' : '')
@@ -185,12 +191,13 @@ const ProductDetailsPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <ProductImageGallery
-            imageUrl={product.imageUrl}
+            imageUrl={variantImageUrl || product.imageUrl}
             productName={product.name}
             images={product.images || []}
+            variantImageUrl={variantImageUrl}
           />
           <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 lg:p-8 shadow-sm">
-            <ProductInfo product={product} />
+            <ProductInfo product={product} onVariantChange={setSelectedVariant} />
           </div>
         </div>
 

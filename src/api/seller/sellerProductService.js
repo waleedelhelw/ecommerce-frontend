@@ -52,3 +52,15 @@ export const deleteProduct = async (id) => {
   const response = await API.delete(`${BASE}/${id}`);
   return response.data.data;
 };
+
+// ============ ربط الخصائص بالمنتج ============
+export const attachAttributesToProduct = async (productId, attributeIds) => {
+  const response = await API.post(`${BASE}/${productId}/attributes`, attributeIds);
+  return response.data.data || response.data;
+};
+
+// ============ الخصائص المرتبطة بمنتج ============
+export const getProductAttributes = async (productId) => {
+  const response = await API.get(`${BASE}/${productId}/attributes`);
+  return response.data.data || response.data;
+};
